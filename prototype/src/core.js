@@ -1,5 +1,5 @@
 /* ---------- Core: state, helpers, workflow engine ---------- */
-const STORE_KEY = 'saja-medlr-demo-v4';
+const STORE_KEY = 'saja-medlr-demo-v5';
 let S = load();
 const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, history: [], modal: null, pop: null, navOpen: false, guide: false, search: '', toasts: [], f: {}, draft: null, sel: {}, wfSel: null };
 
@@ -97,12 +97,30 @@ function eligibility(m, a) {
 }
 
 /* workflow engine */
-function stepLabel(st) { return st.fn + ' · ' + (st.req === 'approve' ? (st.seniority + ' approval') : (st.seniority + ' review')); }
+const isNotify = s => !!s && s.kind === 'notify';
+function notifyTo(s) { const names = (s.recipients || []).map(id => S.users.find(u => u.id === id)).filter(Boolean).map(u => u.name); const ext = String(s.emails || '').split(/[,;\s]+/).filter(Boolean); return [...names, ...ext]; }
+function notifyStep(extra) { return { id: uid('s'), kind: 'notify', fn: 'Email', recipients: [], emails: '', subject: 'Step approved — next action', message: 'The previous review step has been approved. No action is needed unless you are the next reviewer.', ...(extra || {}) }; }
+function stepTitle(s) { return isNotify(s) ? 'Email notification' : s.fn + ' · ' + (s.req === 'approve' ? 'Final approval' : 'Review'); }
+function reviewSteps(wf) { return wf.steps.filter(s => !isNotify(s)); }
+function reviewPos(wf, i) { return wf.steps.slice(0, i + 1).filter(s => !isNotify(s)).length; }
+// Email steps fire as soon as the review reaches them (i.e. the step before was approved) and then pass straight on.
+function runNotifies(obj, kind, v) {
+  const wf = wfById(obj.review.wf); let sent = 0;
+  while (isNotify(wf.steps[obj.review.step])) {
+    const s = wf.steps[obj.review.step]; const to = notifyTo(s);
+    S.outbox = S.outbox || []; S.outbox.push({ id: uid('e'), ts: Date.now(), to, toIds: [...(s.recipients || [])], subject: s.subject, objType: kind, objId: obj.id });
+    S.audit.push({ id: uid('a'), ts: Date.now(), user: S.personaId, action: 'Email sent', objType: kind, objId: obj.id, version: v, note: (to.length ? 'To ' + to.join(', ') : 'No recipients') + ' · ' + (s.subject || ''), toIds: [...(s.recipients || [])], auto: true });
+    obj.review.comments.push({ by: S.personaId, at: Date.now(), text: s.subject || '', decision: 'Email sent', step: obj.review.step, fn: 'Email', to });
+    obj.review.step++; sent += to.length;
+  }
+  return sent;
+}
+function stepLabel(st) { if (isNotify(st)) return 'Email notification'; return st.fn + ' · ' + (st.req === 'approve' ? (st.seniority + ' approval') : (st.seniority + ' review')); }
 function curStep(obj) { if (!obj.review) return null; const wf = wfById(obj.review.wf); return wf.steps[obj.review.step] || null; }
 function assigneeFor(st) { return S.users.filter(u => u.status === 'Active' && u.type === REVIEWER_OF[st.fn] && u.seniority === st.seniority); }
 function canActOn(u, obj) { const st = curStep(obj); return !!st && u.type === REVIEWER_OF[st.fn] && u.seniority === st.seniority; }
 function nextLabel(obj) {
-  const wf = wfById(obj.review.wf); const st = wf.steps[obj.review.step]; const nx = wf.steps[obj.review.step + 1];
+  const wf = wfById(obj.review.wf); const st = wf.steps[obj.review.step]; const nx = wf.steps.slice(obj.review.step + 1).find(s => !isNotify(s));
   if (!nx) return 'Complete review';
   if (nx.fn === st.fn && nx.seniority === 'Senior') return 'Send to Senior';
   return 'Send to ' + nx.fn;
@@ -129,11 +147,11 @@ function decide(obj, kind, decision, note) {
   const push = d => obj.review.comments.push({ by: S.personaId, at: Date.now(), text: note || '', decision: d, step: obj.review.step, fn: st.fn, seniority: st.seniority });
   if (decision === 'send') {
     const lbl = nextLabel(obj); push(lbl); log(lbl, kind, obj.id, v, note);
-    obj.review.step++; save(); return { done: false, msg: lbl === 'Send to Senior' ? 'Sent to Senior ' + st.fn + ' Reviewer' : 'Review completed — moved to ' + (wf.steps[obj.review.step] ? stepLabel(wf.steps[obj.review.step]) : 'approval') };
+    obj.review.step++; const mailed = runNotifies(obj, kind, v); save(); return { done: false, msg: (lbl === 'Send to Senior' ? 'Sent to Senior ' + st.fn + ' Reviewer' : 'Review completed — moved to ' + (wf.steps[obj.review.step] ? stepLabel(wf.steps[obj.review.step]) : 'approval')) + (mailed ? ' · email sent to ' + mailed : '') };
   }
   if (decision === 'approve') {
     push('Final ' + st.fn + ' approval'); log('Final ' + st.fn + ' approval', kind, obj.id, v, note);
-    obj.review.step++;
+    obj.review.step++; const mailed = runNotifies(obj, kind, v);
     if (obj.review.step >= wf.steps.length) {
       if (isMod) {
         const l = latest(obj); const prev = live(obj);
@@ -147,7 +165,7 @@ function decide(obj, kind, decision, note) {
       }
       save(); return { done: true };
     }
-    save(); return { done: false, msg: 'Final ' + st.fn + ' approval recorded — moved to ' + stepLabel(wf.steps[obj.review.step]) };
+    save(); return { done: false, msg: 'Final ' + st.fn + ' approval recorded — moved to ' + stepLabel(wf.steps[obj.review.step]) + (mailed ? ' · email sent to ' + mailed : '') };
   }
   if (decision === 'return') {
     const j = juniorStepIndex(obj); push('Returned to Junior'); log('Returned to Junior', kind, obj.id, v, note);
@@ -252,7 +270,7 @@ const IC = {
   flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>'
 };
 const icon = (n, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n] || ''}</svg>`;
-const FN_ICON = { Medical: 'stethoscope', Legal: 'scale', Regulatory: 'filecheck' };
+const FN_ICON = { Medical: 'stethoscope', Legal: 'scale', Regulatory: 'filecheck', Email: 'mail' };
 function fnBadge(fn, cls = '') { return `<span class="fn-badge fn-${String(fn).toLowerCase()} ${cls}" title="${fn}">${icon(FN_ICON[fn] || 'shieldcheck', 'sm')}</span>`; }
 const TYPE_ICON = { 'Clinical Claim': 'quote', 'Safety Statement': 'alert', 'Headline': 'type', 'Supporting Evidence': 'evidence', 'CTA': 'pointer', 'Reference': 'book', 'new': 'edit' };
 const typeIco = t => `<span class="type-ico" aria-hidden="true">${icon(TYPE_ICON[t] || 'file', 'sm')}</span>`;

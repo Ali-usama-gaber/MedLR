@@ -68,14 +68,14 @@ function switchPersona(id, then, target, silent) {
 /* ===== Modals ===== */
 const modalShell = (icoName, tone, title, sub, body, foot, wide) => `<div class="scrim" data-act="modal-bg"><div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="m-title"><div class="modal-head"><div class="m-ico ${tone}">${icon(icoName)}</div><div style="flex:1;min-width:0"><h2 id="m-title">${title}</h2>${sub ? `<p class="ink2" style="margin-top:4px">${sub}</p>` : ''}</div><button class="btn icon sm" data-act="modal-close" aria-label="Close">${icon('x', 'sm')}</button></div><div class="modal-body">${body}</div><div class="modal-foot">${foot}</div></div></div>`;
 function wfVisual(wf) {
-  const groups = []; wf.steps.forEach(s => { const g = groups[groups.length - 1]; if (g && g.fn === s.fn) g.steps.push(s); else groups.push({ fn: s.fn, steps: [s] }); });
-  return `<div class="row" style="gap:8px;align-items:stretch">${groups.map((g, i) => `<div style="flex:1;min-width:140px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2)"><b style="font-size:13px">${esc(g.fn)} review</b><div class="stack" style="gap:6px;margin-top:8px">${g.steps.map(s => `<div class="row nowrap" style="gap:6px;font-size:12.5px">${sen(s.seniority)}${s.req === 'approve' ? 'Final approval' : 'Review'}</div>`).join('')}</div></div>${i < groups.length - 1 ? `<span style="align-self:center;color:var(--ink-3)">${icon('arrow', 'sm')}</span>` : ''}`).join('')}</div>`;
+  const groups = []; wf.steps.forEach(s => { const g = groups[groups.length - 1]; if (g && g.fn === s.fn && !isNotify(s)) g.steps.push(s); else groups.push({ fn: s.fn, steps: [s] }); });
+  return `<div class="row" style="gap:8px;align-items:stretch">${groups.map((g, i) => `<div style="flex:1;min-width:140px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2)"><b style="font-size:13px">${isNotify(g.steps[0]) ? icon('mail', 'sm') + ' Email' : esc(g.fn) + ' review'}</b><div class="stack" style="gap:6px;margin-top:8px">${g.steps.map(s => `<div class="row nowrap" style="gap:6px;font-size:12.5px">${isNotify(s) ? 'To ' + esc(notifyTo(s).length + ' ' + (notifyTo(s).length === 1 ? 'person' : 'people')) : sen(s.seniority) + (s.req === 'approve' ? 'Final approval' : 'Review')}</div>`).join('')}</div></div>${i < groups.length - 1 ? `<span style="align-self:center;color:var(--ink-3)">${icon('arrow', 'sm')}</span>` : ''}`).join('')}</div>`;
 }
 function viewModal() {
   if (UI.modal && UI.modal.type === 'wf-view') {
     const w = wfById(UI.modal.id); const team = fn => S.teams.find(t => t.fn === fn);
     return modalShell('workflow', '', esc(w.name), esc(w.desc), `${flowPreview(w.steps, w.system ? 'Asset submitted' : 'Submitted', w.system ? 'Asset ready' : 'Approved')}
-      <div class="wf" style="margin-top:6px">${w.steps.map((s, i) => { const who = assigneeFor(s); return `<div class="wf-step"><div class="wf-dot">${i + 1}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${esc((team(s.fn) || {}).name || s.fn)} · ${who.length ? esc(who.map(x => x.name).join(', ')) : 'No active reviewer'}</div></div></div>`; }).join('')}</div>`,
+      <div class="wf" style="margin-top:6px">${w.steps.map((s, i) => { if (isNotify(s)) return `<div class="wf-step notify"><div class="wf-dot">${icon('mail', 'sm')}</div><div><div class="t">${fnBadge('Email', 'sm')}Email notification</div><div class="s">To ${esc(notifyTo(s).join(', ') || 'no one')} · “${esc(s.subject || '')}”</div></div></div>`; const who = assigneeFor(s); return `<div class="wf-step"><div class="wf-dot">${reviewPos(w, i)}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${esc((team(s.fn) || {}).name || s.fn)} · ${who.length ? esc(who.map(x => x.name).join(', ')) : 'No active reviewer'}</div></div></div>`; }).join('')}</div>`,
       `${btn('Close', 'modal-close')}${isAdmin(me()) ? `<button class="btn primary" data-act="wf-open" data-id="${w.id}">${icon('edit', 'sm')}Open in builder</button>` : ''}`, true);
   }
   const M = UI.modal; const u = me();
@@ -182,7 +182,7 @@ const ACT = {
   'submit-wf': el => { UI.modal.wf = el.dataset.v; render(); },
   'submit-confirm': el => {
     const m = modById(el.dataset.id); const r = submitModule(m);
-    if (r === 'in-review') { m.review.wf = UI.modal.wf || 'WF-STD'; save(); const st = curStep(m); UI.modal = null; render(); toast('Submitted · now with ' + st.seniority + ' ' + REVIEWER_OF[st.fn] + ' (' + assigneeFor(st).map(x => x.name).join(', ') + ')'); }
+    if (r === 'in-review') { m.review.wf = UI.modal.wf || 'WF-STD'; runNotifies(m, 'Module', latest(m).v); save(); const st = curStep(m); UI.modal = null; render(); toast('Submitted · now with ' + st.seniority + ' ' + REVIEWER_OF[st.fn] + ' (' + assigneeFor(st).map(x => x.name).join(', ') + ')'); }
     else { UI.modal = null; render(); toast('Sent to Senior Content Owner for submission'); }
   },
   'new-version': el => { UI.draft = null; go('module-edit', { id: el.dataset.id, newVersion: true }); },
@@ -236,7 +236,7 @@ const ACT = {
   'asset-submit-confirm': el => {
     const a = assetById(el.dataset.id); const u = me();
     if (u.type === 'Marketing User' && u.seniority === 'Junior') { a.status = 'Awaiting Senior submit'; log('Sent to Senior Marketing User', 'Asset', a.id, 1); UI.modal = null; save(); go('asset', { id: a.id }); toast('Sent to Senior Marketing User'); return; }
-    a.review = { wf: assetWorkflow(a), step: 0, submittedAt: Date.now(), comments: [] }; a.status = 'In Review'; a.changes = null;
+    a.review = { wf: assetWorkflow(a), step: 0, submittedAt: Date.now(), comments: [] }; a.status = 'In Review'; a.changes = null; runNotifies(a, 'Asset', 1);
     log(a.blocks.some(b => b.kind === 'new') ? 'Submitted asset — new content, full review' : 'Submitted asset — streamlined review', 'Asset', a.id, 1);
     UI.modal = null; save(); go('asset', { id: a.id }); const st = curStep(a); toast('Submitted · now with ' + st.seniority + ' ' + REVIEWER_OF[st.fn]);
   },
@@ -252,12 +252,16 @@ const ACT = {
   'market-new': () => { UI.modal = { type: 'simple', kind: 'market', title: 'Add market', fields: [['name', 'Country', 'text', 'e.g. Kuwait'], ['code', 'Code', 'text', 'e.g. KW'], ['auth', 'Health authority', 'text', 'e.g. MOH Kuwait']] }; render(); },
   'material-new': () => { UI.modal = { type: 'simple', kind: 'material', title: 'Add material type', fields: [['name', 'Material type', 'text', 'e.g. Congress poster'], ['channel', 'Channel', 'select', S.channels], ['wf', 'Workflow', 'select', S.workflows.filter(w => !w.hidden).map(w => [w.id, w.name])]] }; render(); },
   'wf-new': () => go('workflow-new'),
+  'wf-add-mail': el => { const i = +el.dataset.i; UI.wfDraft.steps.splice(i, 0, notifyStep()); UI.wfSel = i; render(); toast('Email step added — choose who receives it'); },
+  'wf-kind': el => { const st = UI.wfDraft.steps; const cur = st[UI.wfSel]; if (el.dataset.v === 'notify' && !isNotify(cur)) st[UI.wfSel] = notifyStep(); if (el.dataset.v === 'review' && isNotify(cur)) st[UI.wfSel] = { id: uid('s'), fn: 'Medical', seniority: 'Junior', req: 'review' }; render(); },
+  'wf-rcpt': el => { const s = UI.wfDraft.steps[UI.wfSel]; const r = s.recipients || (s.recipients = []); const k = r.indexOf(el.dataset.v); k < 0 ? r.push(el.dataset.v) : r.splice(k, 1); render(); },
+  'nwf-rcpt': el => { const s = UI.nwf.steps[+el.dataset.i]; const r = s.recipients || (s.recipients = []); const k = r.indexOf(el.dataset.v); k < 0 ? r.push(el.dataset.v) : r.splice(k, 1); render(); },
   'wf-view': el => { UI.modal = { type: 'wf-view', id: el.dataset.id }; render(); },
   'wf-open': el => { UI.modal = null; go('workflow', { id: el.dataset.id }); },
   pg: el => { const st = UI.pg[decodeURIComponent(el.dataset.k)]; if (!st) return; st.p = +el.dataset.p; render(); const t = document.querySelectorAll('table.tbl')[+el.dataset.ti]; if (t && t.getBoundingClientRect().top < 70) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
   'nwf-use': el => { UI.nwf.use = el.dataset.v; render(); },
   'nwf-tpl': el => { const v = el.dataset.v, mk = (fn, seniority, req) => ({ id: uid('s'), fn, seniority, req }); UI.nwf.steps = v === 'std' ? ['Medical', 'Legal', 'Regulatory'].flatMap(fn => [mk(fn, 'Junior', 'review'), mk(fn, 'Senior', 'approve')]) : v === 'senior' ? ['Medical', 'Legal', 'Regulatory'].map(fn => mk(fn, 'Senior', 'approve')) : []; render(); },
-  'nwf-add': el => { UI.nwf.steps.push({ id: uid('s'), fn: el.dataset.v, seniority: 'Senior', req: 'approve' }); render(); toast(el.dataset.v + ' step added'); },
+  'nwf-add': el => { UI.nwf.steps.push(el.dataset.v === 'Email' ? notifyStep() : { id: uid('s'), fn: el.dataset.v, seniority: 'Senior', req: 'approve' }); render(); toast(el.dataset.v === 'Email' ? 'Email step added — choose who receives it' : el.dataset.v + ' step added'); },
   'nwf-set': el => { const s = UI.nwf.steps[+el.dataset.i]; s[el.dataset.k] = el.dataset.v; if (el.dataset.k === 'req' && el.dataset.v === 'approve') s.seniority = 'Senior'; if (el.dataset.k === 'seniority' && el.dataset.v === 'Junior') s.req = 'review'; render(); },
   'nwf-move': el => { const st = UI.nwf.steps, i = +el.dataset.i, j = i + +el.dataset.dir; if (j < 0 || j >= st.length) return; [st[i], st[j]] = [st[j], st[i]]; render(); },
   'nwf-del': el => { UI.nwf.steps.splice(+el.dataset.i, 1); render(); },
@@ -323,6 +327,8 @@ document.addEventListener('input', ev => {
   if (t.dataset.d && t.tagName !== 'SELECT') { UI.draft[t.dataset.d] = t.value; if (t.dataset.d === 'body' || t.dataset.d === 'title') renderSoon(); return; }
   if (t.dataset.u && t.tagName !== 'SELECT') { UI.udraft[t.dataset.u] = t.value; return; }
   if (t.dataset.w) { UI.nwf[t.dataset.w] = t.value; return; }
+  if (t.dataset.wfn) { UI.wfDraft.steps[UI.wfSel][t.dataset.wfn] = t.value; renderSoon(); return; }
+  if (t.dataset.nwfn) { UI.nwf.steps[+t.dataset.i][t.dataset.nwfn] = t.value; renderSoon(); return; }
   if (t.dataset.an && t.tagName !== 'SELECT') { UI.modal.d[t.dataset.an] = t.value; return; }
   if (t.dataset.assetProp && t.tagName === 'INPUT') { const a = assetById(t.dataset.id); a[t.dataset.assetProp] = t.value; save(); return; }
 });
@@ -338,7 +344,7 @@ document.addEventListener('change', ev => {
   if (t.dataset.u) { UI.udraft[t.dataset.u] = t.value; render(); return; }
   if (t.dataset.an) { const D = UI.modal.d; D[t.dataset.an] = t.value; if (t.dataset.an === 'type') { const mt = S.materialTypes.find(x => x.name === t.value); D.channel = mt.channel; D.name = t.value + ' — ' + (D.name.split('—')[1] || '').trim(); } if (t.dataset.an === 'product') D.audience = t.value === 'P-B' ? 'HCP – Pulmonologists' : 'HCP – Cardiologists'; render(); return; }
   if (t.dataset.assetProp) { const a = assetById(t.dataset.id); a[t.dataset.assetProp] = t.value; save(); render(); return; }
-  if (t.dataset.w) return;
+  if (t.dataset.w || t.dataset.wfn || t.dataset.nwfn) return;
   if (t.dataset.nwf) { UI.nwf.steps[+t.dataset.i][t.dataset.nwf] = t.value; render(); return; }
   if (t.dataset.wf) { UI.wfDraft.steps[UI.wfSel][t.dataset.wf] = t.value; render(); return; }
 });

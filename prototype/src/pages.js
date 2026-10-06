@@ -60,7 +60,7 @@ function notificationsFor(u) {
   const mine = new Set();
   S.modules.forEach(m => { if (m.owner === u.id || (m.review && canActOn(u, m))) mine.add(m.id); });
   S.assets.forEach(a => { if (a.owner === u.id || (a.review && canActOn(u, a))) mine.add(a.id); });
-  return S.audit.filter(e => mine.has(e.objId) && e.user !== u.id).sort((a, b) => b.ts - a.ts).slice(0, 8);
+  return S.audit.filter(e => ((e.toIds || []).includes(u.id)) || (mine.has(e.objId) && e.user !== u.id && !e.auto)).sort((a, b) => b.ts - a.ts).slice(0, 8);
 }
 function viewNotifPop(list) {
   return `<div class="pop" role="menu"><div class="grp">Notifications</div>${list.length ? list.map(e => { const x = user(e.user); return `<button class="pop-item" ${goAttr(e.objType === 'Asset' ? 'asset' : 'module', e.objId)} role="menuitem">${avatar(x, 'sm')}<span style="flex:1;min-width:0;font-size:12.5px"><b>${esc(x.name)}</b> ${sen(x.seniority)}<br>${esc(e.action)} · ${esc(e.objId)}<br><span class="muted">${ago(e.ts)}</span></span></button>`; }).join('') : '<div class="empty" style="padding:20px">No notifications yet.</div>'}</div>`;
@@ -80,7 +80,7 @@ function viewSearchPop() {
 function viewLogin() {
   const err = UI.f.loginErr;
   const steps = [['Medical', 'Junior', 'Ahmed Ali'], ['Medical', 'Senior', 'Sara Ahmed'], ['Legal', 'Senior', 'Rania Haddad'], ['Regulatory', 'Senior', 'Layla Nasser']];
-  return `<div class="login">
+  return `<div class="login-page"><div class="login">
   <section class="login-brand"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
     <img class="login-logo" src="${LOGO}" alt="SAJA">
     <div class="login-hero"><span class="eyebrow">SAJA MedLR · Modular content &amp; MLR review</span><h1>Create once.<br><em>Approve once.</em><br>Reuse safely.</h1>
@@ -105,7 +105,7 @@ function viewLogin() {
       <div class="demo-accts">${['u-omar', 'u-ahmed', 'u-sara', 'u-karim', 'u-ali'].map(id => { const x = user(id); return `<button type="button" data-act="login-as" data-id="${id}">${avatar(x, 'sm')}<span class="da-txt"><b>${esc(x.name)}</b><span>${esc(x.type)}</span></span>${sen(x.seniority)}${icon('chevron', 'sm')}</button>`; }).join('')}</div>
       <p class="muted" style="font-size:12px">Any password works in the prototype. Switch user any time from the top-right menu.</p>
     </form>`}
-  </section></div>`;
+  </section></div><p class="login-legal">© SAJA Pharma · MedLR prototype for client review · Fictional data</p></div>`;
 }
 function viewForgot() {
   if (UI.f.resetSent) return `<div class="login-card"><div class="m-ico">${icon('mail')}</div><h2>Check your email</h2><p class="ink2">If an account exists for <b>${esc(UI.f.resetSent)}</b>, we have sent a link to reset your password. The link expires in 30 minutes.</p><button class="btn primary" ${goAttr('login')} style="height:44px">Back to sign in</button></div>`;
@@ -125,17 +125,27 @@ function viewHome() {
   const counts = st => S.modules.filter(m => st.includes(lifeStatus(m))).length;
   const pipe = [['Draft', ['Draft', 'Awaiting Senior submit']], ['In review', ['In Review']], ['Changes requested', ['Changes Requested']], ['Approved & active', ['Approved', 'Active']], ['Expiring / review', ['Expiring', 'Review Required']]];
   const recent = [...S.audit].sort((x, y) => y.ts - x.ts).slice(0, 6);
-  return `<div class="hello"><div class="stack" style="gap:6px"><h1>Welcome, ${esc(first)}</h1><div class="row ink2">${esc(u.type)} ${sen(u.seniority)} <span class="muted">·</span> ${icon(a.final ? 'key' : 'eye', 'sm')} ${esc(a.short)}</div></div></div>
-  <div class="quick">${quick.map(q => `<button ${q[3] === 'asset-new' ? 'data-act="asset-new"' : goAttr(q[3], q[4])}><span class="qi">${icon(q[2])}</span><b>${q[0]}</b><span>${q[1]}</span></button>`).join('')}</div>
-  <div class="grid cols-main">
-    <section class="panel"><div class="panel-head"><h3>Waiting on you</h3><span class="chip plain">${tasks.length}</span><div class="grow" style="flex:1"></div><button class="btn ghost sm" ${goAttr('tasks')}>View all</button></div>
-      ${tasks.length ? tasks.slice(0, 5).map(viewTaskRow).join('') : `<div class="empty"><h4>You are all caught up</h4><p>New review tasks appear here as soon as they are assigned to ${esc(roleLabel(u))}s.</p></div>`}
-    </section>
-    <div class="stack">
-      <section class="panel"><div class="panel-head"><h3>Content pipeline</h3></div><div class="panel-body stack" style="gap:6px">${pipe.map(p => `<button class="task" style="padding:8px 4px" ${goAttr('modules', null, ` data-status="${p[1][0]}"`)}><span class="body"><b style="font-size:13px">${p[0]}</b></span><b class="num">${counts(p[1])}</b>${icon('chevron', 'sm')}</button>`).join('')}</div></section>
-      <section class="panel"><div class="panel-head"><h3>Recent activity</h3><div style="flex:1"></div><button class="btn ghost sm" ${goAttr('audit')}>Audit trail</button></div><div class="panel-body">${viewTimeline(recent, true)}</div></section>
+  const stats = [['Waiting on you', tasks.length, 'inbox', goAttr('tasks')], ['In review', counts(['In Review']), 'shieldcheck', goAttr('modules', null, ' data-status="In Review"')], ['Approved & active', counts(['Approved', 'Active']), 'check', goAttr('library')], ['Expiring / review', counts(['Expiring', 'Review Required']), 'clock', goAttr('lifecycle')]];
+  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const total = S.modules.length || 1;
+  return `<div class="home">
+  <section class="hero2">
+    <div class="h-main"><span class="eyebrow">${esc(today)}</span><h1>Welcome, ${esc(first)}</h1><div class="row ink2" style="gap:8px">${esc(u.type)} ${sen(u.seniority)} <span class="muted">·</span> ${icon(a.final ? 'key' : 'eye', 'sm')} ${esc(a.short)}</div>
+      <div class="row" style="margin-top:6px">${quick.slice(0, 2).map((q, i) => `<button class="btn ${i ? '' : 'primary'}" ${q[3] === 'asset-new' ? 'data-act="asset-new"' : goAttr(q[3], q[4])}>${icon(q[2], 'sm')}${q[0]}</button>`).join('')}</div></div>
+    <div class="h-stats">${stats.map(s => `<button class="h-stat" ${s[3]}><span class="hs-ico">${icon(s[2], 'sm')}</span><b>${s[1]}</b><span>${s[0]}</span></button>`).join('')}</div>
+  </section>
+  <div class="home-grid">
+    <div class="stack" style="gap:16px">
+      <section class="panel"><div class="panel-head"><h3>Waiting on you</h3><span class="chip plain">${tasks.length}</span><span class="grow"></span><button class="btn ghost sm" ${goAttr('tasks')}>View all</button></div>
+        ${tasks.length ? tasks.slice(0, 4).map(viewTaskRow).join('') : `<div class="empty"><h4>You are all caught up</h4><p>New review tasks appear here as soon as they are assigned to ${esc(roleLabel(u))}s.</p></div>`}
+      </section>
+      <section class="panel"><div class="panel-head"><h3>Content pipeline</h3><span class="grow"></span><button class="btn ghost sm" ${goAttr('modules')}>All modules</button></div><div class="pipe2">${pipe.map(pp => { const n = counts(pp[1]); return `<button class="p2" ${goAttr('modules', null, ` data-status="${pp[1][0]}"`)}><span class="p2-top"><span>${pp[0]}</span><b>${n}</b></span><span class="p2-bar"><span style="width:${Math.max(4, Math.round(n / total * 100))}%"></span></span></button>`; }).join('')}</div></section>
     </div>
-  </div>`;
+    <div class="stack" style="gap:16px">
+      <section class="panel"><div class="panel-head"><h3>Shortcuts</h3></div><div class="quick2">${quick.map(q => `<button ${q[3] === 'asset-new' ? 'data-act="asset-new"' : goAttr(q[3], q[4])}><span class="qi">${icon(q[2], 'sm')}</span><span class="qt"><b>${q[0]}</b><span>${q[1]}</span></span>${icon('chevron', 'sm')}</button>`).join('')}</div></section>
+      <section class="panel"><div class="panel-head"><h3>Recent activity</h3><span class="grow"></span><button class="btn ghost sm" ${goAttr('audit')}>Audit trail</button></div><div class="panel-body">${viewTimeline(recent.slice(0, 4), true)}</div></section>
+    </div>
+  </div></div>`;
 }
 function taskMeta(t) {
   if (t.kind === 'review') return `${esc(t.step.fn)} · ${t.step.seniority === 'Senior' ? 'Senior approval' : 'Junior review'}`;
@@ -300,9 +310,10 @@ function wfProgress(obj, isMod) {
   const hist = obj.review ? obj.review.comments : (isMod ? (latest(obj).history || latest(obj).lastReview || []) : (obj.history || obj.lastReview || []));
   const approved = isMod ? latest(obj).status === 'Approved' : obj.status === 'Approved';
   return `<div class="wf">${wf.steps.map((s, i) => { const done = approved || (cur > i); const now = cur === i; const by = [...hist].reverse().find(c => c.step === i && /Send|Final|Complete/.test(c.decision));
-    return `<div class="wf-step ${done ? 'done' : ''} ${now ? 'current' : ''}"><div class="wf-dot">${done ? icon('check', 'sm') : i + 1}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${done && by ? esc(user(by.by).name) + ' · ' + fmtDT(by.at) : now ? 'In progress — ' + assigneeFor(s).map(x => esc(x.name)).join(', ') : done ? 'Completed' : 'Pending'}</div></div></div>`; }).join('')}</div>`;
+    if (isNotify(s)) { const sentC = [...hist].reverse().find(c => c.step === i && c.decision === 'Email sent'); return `<div class="wf-step notify ${done ? 'done' : ''}"><div class="wf-dot">${icon('mail', 'sm')}</div><div><div class="t">${fnBadge('Email', 'sm')}Email notification</div><div class="s">${done ? 'Sent to ' + esc((sentC && sentC.to ? sentC.to : notifyTo(s)).join(', ') || 'no one') : 'Sends to ' + esc(notifyTo(s).join(', ') || 'no one yet') + ' when the step before is approved'}</div></div></div>`; }
+    return `<div class="wf-step ${done ? 'done' : ''} ${now ? 'current' : ''}"><div class="wf-dot">${done ? icon('check', 'sm') : reviewPos(wf, i)}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${done && by ? esc(user(by.by).name) + ' · ' + fmtDT(by.at) : now ? 'In progress — ' + assigneeFor(s).map(x => esc(x.name)).join(', ') : done ? 'Completed' : 'Pending'}</div></div></div>`; }).join('')}</div>`;
 }
-function wfInline(wf, cur, approved) { return `<div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill ${approved || cur > i ? 'done' : cur === i ? 'current' : ''}">${fnBadge(s.fn)}${esc(s.fn)} ${s.seniority === 'Senior' ? 'S' : 'J'}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div>`; }
+function wfInline(wf, cur, approved) { return `<div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill ${approved || cur > i ? 'done' : cur === i ? 'current' : ''}">${fnBadge(s.fn)}${isNotify(s) ? 'Email' : esc(s.fn) + ' ' + (s.seniority === 'Senior' ? 'S' : 'J')}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div>`; }
 function commentsList(list, highlightFn) {
   if (!list || !list.length) return '<p class="muted">No review comments yet.</p>';
   return `<div class="stack" style="gap:10px">${list.map(c => { const x = user(c.by); return `<div class="comment ${c.seniority === 'Junior' ? 'junior' : ''}"><div class="who">${avatar(x, 'sm')}<b>${esc(x.name)}</b>${sen(c.seniority || x.seniority)}<span class="muted" style="font-size:12px">${esc((c.fn || FUNCTION_OF[x.type] || '') + ' · ' + fmtDT(c.at))}</span></div>${c.decision ? `<div style="margin-bottom:4px">${chip(c.decision === 'Comment' ? 'Comment' : c.decision, '')}</div>` : ''}${c.text ? `<p style="font-size:13.5px">${esc(c.text)}</p>` : ''}</div>`; }).join('')}</div>`;
@@ -337,7 +348,7 @@ function decisionButtons(obj, kind) {
 function authorityBanner(obj) {
   const st = curStep(obj); const u = me(); const mine = canActOn(u, obj); const as = mine ? [u] : assigneeFor(st); const wf = wfById(obj.review.wf); const nx = wf.steps[obj.review.step + 1];
   const who = as[0] || { name: '—', seniority: st.seniority };
-  return `<div class="authority"><div><div class="lbl">${esc(st.fn)} review</div><div class="v">${icon('shieldcheck', 'sm')}Step ${obj.review.step + 1} of ${wf.steps.length}</div></div>
+  return `<div class="authority"><div><div class="lbl">${esc(st.fn)} review</div><div class="v">${icon('shieldcheck', 'sm')}Step ${reviewPos(wf, obj.review.step)} of ${reviewSteps(wf).length}</div></div>
   <div><div class="lbl">Current reviewer</div><div class="v">${avatar(who, 'sm')}${esc(who.name)} ${sen(st.seniority)}</div></div>
   <div><div class="lbl">${st.req === 'approve' ? 'Authority' : 'Status'}</div><div class="v">${icon(st.req === 'approve' ? 'key' : 'eye', 'sm')}${st.req === 'approve' ? 'Final ' + esc(st.fn) + ' approval' : 'Initial review'}</div></div>
   <div><div class="lbl">Next</div><div class="v">${icon('arrow', 'sm')}${nx ? esc(stepLabel(nx)) : 'Approved → Library'}</div></div></div>`;
@@ -450,7 +461,7 @@ function viewAssemble() {
        ${['Approved', 'Market eligible', 'Channel eligible', 'Not expired'].map((lbl, k) => { const fails = V.mods.filter(x => !eligibility(x.m, a).checks[k][1]); return `<div class="check-row">${fails.length ? `<span class="no">${icon('x', 'sm')}</span>${esc(lbl)} — ${fails.length} module${fails.length > 1 ? 's' : ''} fail` : `<span class="ok">${icon('check', 'sm')}</span>${esc(lbl)}`}</div>`; }).join('')}
      </div>
      ${V.nNew ? `<div class="banner warn">${icon('alert')}<div class="txt"><b>New content detected</b><p>${V.nNew} block${V.nNew > 1 ? 's are' : ' is'} not based on an approved module and require${V.nNew > 1 ? '' : 's'} additional MLR review.</p></div></div>` : ''}
-     <div class="stack" style="gap:6px"><span class="section-title">Review route</span><b>${esc(wf.name)}</b><div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill">${fnBadge(s.fn)}${esc(s.fn)} ${sen(s.seniority)}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></div>
+     <div class="stack" style="gap:6px"><span class="section-title">Review route</span><b>${esc(wf.name)}</b><div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill">${fnBadge(s.fn)}${isNotify(s) ? 'Email' : esc(s.fn) + ' ' + sen(s.seniority)}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></div>
    </div></section></div>`;
 }
 function viewAsset() {
@@ -608,8 +619,8 @@ function viewWorkflows() {
   ${list.map(w => { const n = inflight(w); return `<tr class="click" ${goAttr('workflow', w.id)} tabindex="0">
     <td><div class="row nowrap" style="gap:12px"><span class="type-ico">${icon('workflow', 'sm')}</span><div style="min-width:0"><div class="title">${esc(w.name)}</div><div class="muted" style="font-size:12px;max-width:42ch">${esc(w.desc)}</div></div></div></td>
     <td>${w.system ? '<span class="tag">Assets</span>' : '<span class="tag">Modules</span>'}</td>
-    <td><div class="fn-strip">${w.steps.map(s => fnBadge(s.fn, s.req === 'approve' ? 'final' : '')).join('')}</div></td>
-    <td><b>${w.steps.length}</b> <span class="muted" style="font-size:12px">· ${w.steps.filter(s => s.req === 'approve').length} approval${w.steps.filter(s => s.req === 'approve').length === 1 ? '' : 's'}</span></td>
+    <td><div class="fn-strip">${w.steps.map(s => fnBadge(s.fn, s.req === 'approve' ? 'final' : isNotify(s) ? 'mailstep' : '')).join('')}</div></td>
+    <td><b>${reviewSteps(w).length}</b>${w.steps.some(isNotify) ? ` <span class="chip plain" title="Email steps">${icon('mail', 'sm')}${w.steps.filter(isNotify).length}</span>` : ''} <span class="muted" style="font-size:12px">· ${w.steps.filter(s => s.req === 'approve').length} approval${w.steps.filter(s => s.req === 'approve').length === 1 ? '' : 's'}</span></td>
     <td>${n ? `<span class="chip info">${n} in flight</span>` : '<span class="muted">—</span>'}</td>
     <td>${w.active === false ? chip('Inactive') : '<span class="chip ok">Active</span>'}</td>
     <td style="text-align:right"><div class="row nowrap" style="justify-content:flex-end;gap:6px"><button class="btn icon sm" data-act="wf-view" data-id="${w.id}" aria-label="View review flow for ${esc(w.name)}" title="View review flow">${icon('eye', 'sm')}</button><button class="btn icon sm" ${goAttr('workflow', w.id)} aria-label="Edit ${esc(w.name)}" title="Edit in builder">${icon('edit', 'sm')}</button></div></td>
@@ -621,15 +632,21 @@ function viewWorkflow() {
   const D = UI.wfDraft; const selI = UI.wfSel; const s = D.steps[selI];
   const issues = wfIssues(D); const dirty = JSON.stringify(D) !== JSON.stringify(w);
   const teamFor = fn => S.teams.find(t => t.fn === fn);
-  const node = (st, i) => `<button class="flow-node ${i === selI ? 'sel' : ''}" data-act="wf-sel" data-i="${i}" draggable="true" data-drag="step" title="Drag to reorder"><span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span><span class="idx">${i + 1}</span>${fnBadge(st.fn, 'lg')}<span class="body"><b>${esc(st.fn)} · ${st.req === 'approve' ? 'Final approval' : 'Review'}</b><span class="muted" style="font-size:12px">${esc((teamFor(st.fn) || {}).name || '')} · ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</span></span>${sen(st.seniority)}${st.req === 'approve' ? icon('key', 'sm') : ''}</button>`;
-  const addBtn = i => `<button class="flow-add" data-act="wf-add" data-i="${i}" aria-label="Add step here" title="Add step">${icon('plus', 'sm')}</button>`;
+  const node = (st, i) => isNotify(st) ? `<button class="flow-node notify ${i === selI ? 'sel' : ''}" data-act="wf-sel" data-i="${i}" draggable="true" data-drag="step" title="Drag to reorder"><span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span><span class="idx">${icon('mail', 'sm')}</span>${fnBadge('Email', 'lg')}<span class="body"><b>Email notification</b><span class="muted" style="font-size:12px">${notifyTo(st).length ? 'To ' + esc(notifyTo(st).join(', ')) : 'No recipients yet'}</span><span class="muted" style="font-size:11.5px">Sends when the step before is approved</span></span></button>` : `<button class="flow-node ${i === selI ? 'sel' : ''}" data-act="wf-sel" data-i="${i}" draggable="true" data-drag="step" title="Drag to reorder"><span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span><span class="idx">${i + 1}</span>${fnBadge(st.fn, 'lg')}<span class="body"><b>${esc(st.fn)} · ${st.req === 'approve' ? 'Final approval' : 'Review'}</b><span class="muted" style="font-size:12px">${esc((teamFor(st.fn) || {}).name || '')} · ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</span></span>${sen(st.seniority)}${st.req === 'approve' ? icon('key', 'sm') : ''}</button>`;
+  const addBtn = i => `<span class="flow-adds"><button class="flow-add" data-act="wf-add" data-i="${i}" aria-label="Add review step here" title="Add review step">${icon('plus', 'sm')}</button><button class="flow-add mail" data-act="wf-add-mail" data-i="${i}" aria-label="Add email step here" title="Add email step">${icon('mail', 'sm')}</button></span>`;
   return pageHead(esc(D.name), esc(D.desc), `${dirty ? btn('Discard changes', 'wf-discard', 'ghost') : ''}${btn('Save workflow', 'wf-save', 'primary', issues.some(x => x[0] === 'bad') ? 'disabled' : '', 'check')}`, [['Workflows', 'workflows'], [D.name]]) +
   `${dirty ? `<div class="banner info" style="margin-bottom:14px">${icon('edit')}<div class="txt"><b>Unsaved changes</b><p>Saving applies to new submissions. Items already in review keep the route they started with.</p></div></div>` : ''}
   <div class="builder"><div class="flow" data-drop="flow"><span class="flow-term">${icon('send', 'sm')}Submitted by ${D.system ? 'Marketing User' : 'Content Owner'}</span><span class="flow-link"></span>${addBtn(0)}<span class="flow-link"></span>
   ${D.steps.map((st, i) => node(st, i) + `<span class="flow-link"></span>${addBtn(i + 1)}<span class="flow-link"></span>`).join('')}
   <span class="flow-term">${icon('check', 'sm')}Approved → ${D.system ? 'Asset ready' : 'Approved Library'}</span></div>
   <div class="stack" style="position:sticky;top:84px">
-   ${s ? `<section class="panel"><div class="panel-head"><span class="idx" style="width:26px;height:26px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-weight:800;font-size:12px">${selI + 1}</span><h3>Configure step</h3></div><div class="panel-body form">
+   ${s && isNotify(s) ? `<section class="panel"><div class="panel-head">${fnBadge('Email')}<h3>Email step</h3></div><div class="panel-body form">
+    <div class="field"><span class="label">Step type</span><div class="seg">${[['review', 'Review step'], ['notify', 'Email notification']].map(x => `<button type="button" class="${(x[0] === 'notify') ? 'on' : ''}" data-act="wf-kind" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><span class="hint">Sends automatically as soon as the step before it is approved, then the review moves on.</span></div>
+    ${notifyFields(s, 'wf')}
+    <div class="row">${btn('Move up', 'wf-move', 'sm', `data-dir="-1" ${selI === 0 ? 'disabled' : ''}`, 'up')}${btn('Move down', 'wf-move', 'sm', `data-dir="1" ${selI === D.steps.length - 1 ? 'disabled' : ''}`, 'down')}${btn('Delete step', 'wf-del', 'sm danger', '', 'trash')}</div>
+   </div></section>` : ''}
+   ${s && !isNotify(s) ? `<section class="panel"><div class="panel-head"><span class="idx" style="width:26px;height:26px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-weight:800;font-size:12px">${selI + 1}</span><h3>Configure step</h3></div><div class="panel-body form">
+    <div class="field"><span class="label">Step type</span><div class="seg">${[['review', 'Review step'], ['notify', 'Email notification']].map(x => `<button type="button" class="${x[0] === 'review' ? 'on' : ''}" data-act="wf-kind" data-v="${x[0]}">${x[1]}</button>`).join('')}</div></div>
     <div class="field"><label for="wf-team">Team</label><select class="select" id="wf-team" data-wf="fn">${['Medical', 'Legal', 'Regulatory'].map(fn => opt(fn, s.fn, teamFor(fn).name)).join('')}</select></div>
     <div class="field"><span class="label">Reviewer type</span><div class="input" style="display:flex;align-items:center;background:var(--surface-2)">${esc(REVIEWER_OF[s.fn])}</div></div>
     <div class="field"><span class="label">Seniority</span><div class="seg">${['Junior', 'Senior'].map(x => `<button type="button" class="${s.seniority === x ? 'on' : ''}" data-act="wf-set" data-k="seniority" data-v="${x}">${x}</button>`).join('')}</div></div>
@@ -637,7 +654,7 @@ function viewWorkflow() {
     <div class="row">${btn('Move up', 'wf-move', 'sm', `data-dir="-1" ${selI === 0 ? 'disabled' : ''}`, 'up')}${btn('Move down', 'wf-move', 'sm', `data-dir="1" ${selI === D.steps.length - 1 ? 'disabled' : ''}`, 'down')}${btn('Delete step', 'wf-del', 'sm danger', D.steps.length <= 1 ? 'disabled' : '', 'trash')}</div>
    </div></section>` : ''}
    <section class="panel"><div class="panel-head"><h3>Checks</h3></div><div class="panel-body stack" style="gap:8px">${issues.length ? issues.map(([t, msg]) => `<div class="check-row"><span class="${t === 'bad' ? 'no' : 'ok'}" style="${t === 'warn' ? 'color:var(--warn)' : ''}">${icon(t === 'bad' ? 'x' : 'alert', 'sm')}</span>${esc(msg)}</div>`).join('') : `<div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Workflow is valid</div>`}
-   <div class="check-row"><span class="ok">${icon('check', 'sm')}</span>${D.steps.length} steps · ${D.steps.filter(x => x.req === 'approve').length} final approvals</div></div></section>
+   <div class="check-row"><span class="ok">${icon('check', 'sm')}</span>${reviewSteps(D).length} review steps · ${D.steps.filter(x => x.req === 'approve').length} final approvals${D.steps.some(isNotify) ? ' · ' + D.steps.filter(isNotify).length + ' email' : ''}</div></div></section>
   </div></div>`;
 }
 
@@ -652,15 +669,24 @@ function validateWf(D) {
   else { const bad = wfIssues(D).filter(x => x[0] === 'bad'); if (bad.length) e.steps = bad.map(x => x[1]).join(' '); }
   return e;
 }
+function notifyFields(s, scope, i) {
+  const at = scope === 'wf' ? '' : ` data-i="${i}"`; const act = scope === 'wf' ? 'wf-rcpt' : 'nwf-rcpt'; const inp = scope === 'wf' ? 'data-wfn' : 'data-nwfn';
+  const people = S.users.filter(u => u.status === 'Active');
+  return `<div class="field"><span class="label">Send to</span><div class="rcpts">${people.map(u => { const on = (s.recipients || []).includes(u.id); return `<button type="button" class="rcpt ${on ? 'on' : ''}" data-act="${act}"${at} data-v="${u.id}" aria-pressed="${on}">${avatar(u, 'sm')}<span><b>${esc(u.name)}</b><span>${esc(roleLabel(u))}</span></span>${on ? icon('check', 'sm') : ''}</button>`; }).join('')}</div></div>
+    <div class="field"><label>Other email addresses <span class="muted" style="font-weight:500">(optional, comma separated)</span></label><input class="input" ${inp}="emails"${at} id="${scope}-emails-${i == null ? 0 : i}" value="${esc(s.emails || '')}" placeholder="e.g. brand.team@saja-demo.com"></div>
+    <div class="field"><label>Subject</label><input class="input" ${inp}="subject"${at} id="${scope}-subject-${i == null ? 0 : i}" value="${esc(s.subject || '')}"></div>
+    <div class="field"><label>Message</label><textarea class="textarea" ${inp}="message"${at} id="${scope}-message-${i == null ? 0 : i}" rows="3">${esc(s.message || '')}</textarea></div>
+    <div class="mail-preview"><div class="mp-head">${icon('mail', 'sm')}<b>${esc(s.subject || 'No subject')}</b></div><div class="mp-to">To: ${esc(notifyTo(s).join(', ') || '—')}</div><p>${esc(s.message || '')}</p><div class="mp-btn">Open in SAJA MedLR</div></div>`;
+}
 function flowPreview(steps, start, end) {
-  return `<div class="flowx">${start ? `<div class="fx-term">${icon('send', 'sm')}<span>${start}</span></div><span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}${steps.map((s, i) => `<div class="fx-node ${s.req === 'approve' ? 'final' : ''}">${fnBadge(s.fn, 'lg')}<b>${esc(s.fn)}</b><span>${s.req === 'approve' ? 'Final approval' : 'Review'}</span>${sen(s.seniority)}</div>${i < steps.length - 1 || end ? `<span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}`).join('')}${end ? `<div class="fx-term ok">${icon('check', 'sm')}<span>${end}</span></div>` : ''}</div>`;
+  return `<div class="flowx">${start ? `<div class="fx-term">${icon('send', 'sm')}<span>${start}</span></div><span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}${steps.map((s, i) => `${isNotify(s) ? `<div class="fx-node notify">${fnBadge('Email', 'lg')}<b>Email</b><span>To ${notifyTo(s).length || 0} ${notifyTo(s).length === 1 ? 'person' : 'people'}</span></div>` : `<div class="fx-node ${s.req === 'approve' ? 'final' : ''}">${fnBadge(s.fn, 'lg')}<b>${esc(s.fn)}</b><span>${s.req === 'approve' ? 'Final approval' : 'Review'}</span>${sen(s.seniority)}</div>`}${i < steps.length - 1 || end ? `<span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}`).join('')}${end ? `<div class="fx-term ok">${icon('check', 'sm')}<span>${end}</span></div>` : ''}</div>`;
 }
 function viewWorkflowNew() {
   if (!UI.nwf) UI.nwf = { step: 0, maxStep: 0, triedSteps: [], name: '', desc: '', use: 'Promotional modules', steps: [] };
   const D = UI.nwf; const E = wizErrors(D, WSTEPS, validateWf(D)); const st = D.step; const hid = i => i === st ? '' : ' hidden';
   const err = k => E[k] ? `<span class="err">${esc(E[k])}</span>` : '';
   const issues = D.steps.length ? wfIssues(D) : [];
-  const row = (s, i) => `<div class="nwf-step">
+  const row = (s, i) => isNotify(s) ? `<div class="nwf-step notify"><span class="idx">${icon('mail', 'sm')}</span>${fnBadge('Email', 'lg')}<div class="nwf-fields" style="flex-direction:column;align-items:stretch"><b>Email notification <span class="muted" style="font-weight:500">· sends when the step before is approved</span></b>${notifyFields(s, 'nwf', i)}</div><div class="nwf-tools" style="align-self:flex-start"><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === D.steps.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button type="button" class="btn icon sm danger" data-act="nwf-del" data-i="${i}" aria-label="Remove step">${icon('trash', 'sm')}</button></div></div>` : `<div class="nwf-step">
     <span class="idx">${i + 1}</span>${fnBadge(s.fn, 'lg')}
     <div class="nwf-fields">
       <select class="select" data-nwf="fn" data-i="${i}" aria-label="Team for step ${i + 1}">${['Medical', 'Legal', 'Regulatory'].map(fn => opt(fn, s.fn, fn + ' — ' + REVIEWER_OF[fn])).join('')}</select>
@@ -680,7 +706,7 @@ function viewWorkflowNew() {
   <section class="panel"${hid(1)}><div class="panel-head"><h3>Review flow</h3><span class="chip plain">${D.steps.length} step${D.steps.length === 1 ? '' : 's'}</span></div><div class="panel-body stack">
     <div class="row"><span class="label" style="margin:0">Start from</span>${[['std', 'Standard — Junior then Senior'], ['senior', 'Senior only'], ['blank', 'Blank']].map(t => `<button type="button" class="btn sm" data-act="nwf-tpl" data-v="${t[0]}">${t[1]}</button>`).join('')}</div>
     ${D.steps.length ? `<div class="nwf-list">${D.steps.map(row).join('<span class="nwf-link"></span>')}</div>` : `<div class="empty" style="padding:26px"><p>No steps yet. Pick a template above or add a step below.</p></div>`}
-    <div class="nwf-add">${['Medical', 'Legal', 'Regulatory'].map(fn => `<button type="button" class="btn" data-act="nwf-add" data-v="${fn}">${fnBadge(fn)}Add ${fn}</button>`).join('')}</div>
+    <div class="nwf-add">${['Medical', 'Legal', 'Regulatory'].map(fn => `<button type="button" class="btn" data-act="nwf-add" data-v="${fn}">${fnBadge(fn)}Add ${fn}</button>`).join('')}<button type="button" class="btn" data-act="nwf-add" data-v="Email">${fnBadge('Email')}Add email step</button></div>
     ${err('steps')}
   </div></section>
   ${st === WSTEPS.length - 1 ? `${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} item${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b><p>Use Edit to go back to that step.</p></div></div>` : ''}
@@ -688,7 +714,7 @@ function viewWorkflowNew() {
   <section class="panel sum"><div class="panel-head"><h3>Review flow</h3><span class="grow"></span><button type="button" class="btn ghost sm" data-act="wiz-go" data-form="workflow" data-i="1">${icon('edit', 'sm')}Edit</button></div><div class="panel-body">${flowPreview(D.steps, 'Submitted', 'Approved')}</div></section>` : ''}
   ${wizFoot('workflow', WSTEPS, D, goAttr('workflows'), 'Create workflow')}</div>
   <aside class="stack" style="position:sticky;top:84px">
-    <section class="panel"><div class="panel-head"><h3>Review flow preview</h3></div><div class="panel-body">${D.steps.length ? `<div class="wf">${D.steps.map((s, i) => `<div class="wf-step"><div class="wf-dot">${i + 1}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${esc(s.seniority)} ${esc(REVIEWER_OF[s.fn])}</div></div></div>`).join('')}</div>` : '<p class="muted">Steps appear here as you add them.</p>'}</div></section>
+    <section class="panel"><div class="panel-head"><h3>Review flow preview</h3></div><div class="panel-body">${D.steps.length ? `<div class="wf">${D.steps.map((s, i) => isNotify(s) ? `<div class="wf-step notify"><div class="wf-dot">${icon('mail', 'sm')}</div><div><div class="t">${fnBadge('Email', 'sm')}Email notification</div><div class="s">To ${esc(notifyTo(s).join(', ') || 'no one yet')}</div></div></div>` : `<div class="wf-step"><div class="wf-dot">${reviewPos(D, i)}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${esc(s.seniority)} ${esc(REVIEWER_OF[s.fn])}</div></div></div>`).join('')}</div>` : '<p class="muted">Steps appear here as you add them.</p>'}</div></section>
     <section class="panel"><div class="panel-head"><h3>Checks</h3></div><div class="panel-body stack" style="gap:8px">${!D.steps.length ? `<div class="check-row"><span class="no">${icon('x', 'sm')}</span>Add at least one step</div>` : issues.length ? issues.map(([t, msg]) => `<div class="check-row"><span class="${t === 'bad' ? 'no' : 'ok'}" style="${t === 'warn' ? 'color:var(--warn)' : ''}">${icon(t === 'bad' ? 'x' : 'alert', 'sm')}</span>${esc(msg)}</div>`).join('') : `<div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Route is valid</div>`}</div></section>
   </aside></form>`;
 }
@@ -696,8 +722,9 @@ function viewWorkflowNew() {
 function wfIssues(D) {
   const out = [];
   if (!D.steps.length) out.push(['bad', 'Add at least one step.']);
+  D.steps.forEach((s, i) => { if (isNotify(s) && !notifyTo(s).length) out.push(['bad', 'Step ' + (i + 1) + ': choose who receives the email.']); });
   D.steps.forEach((s, i) => { if (s.req === 'approve' && s.seniority === 'Junior') out.push(['bad', 'Step ' + (i + 1) + ': final approval must be held by a Senior reviewer.']); });
-  const last = D.steps[D.steps.length - 1]; if (last && last.req !== 'approve') out.push(['bad', 'The last step must be a final approval.']);
+  const rv = D.steps.filter(s => !isNotify(s)); const last = rv[rv.length - 1]; if (!rv.length) out.push(['bad', 'Add at least one review step.']); if (last && last.req !== 'approve') out.push(['bad', 'The last step must be a final approval.']);
   ['Medical', 'Legal', 'Regulatory'].forEach(fn => { const st = D.steps.filter(s => s.fn === fn); if (st.length && !st.some(s => s.req === 'approve')) out.push(['warn', fn + ' has a review step but no Senior approval.']); });
   return out;
 }

@@ -64,7 +64,8 @@ const SEED = () => ({
     ] },
     { id: 'WF-LOW', name: 'Low-risk updates — Senior only', desc: 'Reference and formatting updates with no new claims.', active: true, steps: [
       { id: 'l1', fn: 'Medical', seniority: 'Senior', req: 'approve' },
-      { id: 'l2', fn: 'Regulatory', seniority: 'Senior', req: 'approve' }
+      { id: 'l2', fn: 'Regulatory', seniority: 'Senior', req: 'approve' },
+      { id: 'l3', kind: 'notify', fn: 'Email', recipients: ['u-karim', 'u-omar'], emails: '', subject: 'New version approved — check impacted assets', message: 'A new module version has been approved. Replace it in any asset that still uses the previous version.' }
     ] }
   ],
   references: [
