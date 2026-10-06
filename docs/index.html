@@ -908,6 +908,24 @@ body.drag-mod .sheet[data-drop], body.drag-blk .sheet[data-drop] { outline-color
 .login-page .lp-float { right: -24px; bottom: -14px; }
 .flow-node.notify .body span { display: block; }
 
+/* ---------- Clear status colours: green approved · yellow pending · red rejected ---------- */
+:root { --st-ok: #127a3f; --st-ok-bg: #dff3e6; --st-ok-bd: #9fd6b3; --st-warn: #8a5d00; --st-warn-bg: #fff3cc; --st-warn-bd: #f1d27a; --st-bad: #b4161f; --st-bad-bg: #fde3e3; --st-bad-bd: #f3aeb1; }
+.chip.ok { background: var(--st-ok-bg); color: var(--st-ok); box-shadow: 0 0 0 1px var(--st-ok-bd) inset; }
+.chip.warn { background: var(--st-warn-bg); color: var(--st-warn); box-shadow: 0 0 0 1px var(--st-warn-bd) inset; }
+.chip.bad { background: var(--st-bad-bg); color: var(--st-bad); box-shadow: 0 0 0 1px var(--st-bad-bd) inset; }
+.chip.dim { box-shadow: 0 0 0 1px var(--line) inset; }
+.chip.has-ico { padding-left: 7px; gap: 5px; }
+.chip.has-ico::before { display: none; }
+.chip.has-ico .ico { width: 12px; height: 12px; stroke-width: 2.6; flex: none; }
+/* progress timelines follow the same colours */
+.wf-step.current .wf-dot { border-color: #e0b43a; background: var(--st-warn-bg); color: var(--st-warn); box-shadow: 0 0 0 4px rgba(241, 210, 122, .35); }
+.wf-step.done .wf-dot { background: #1f8a4c; border-color: #1f8a4c; }
+.wf-pill.current { background: var(--st-warn-bg); border-color: var(--st-warn-bd); color: var(--st-warn); box-shadow: none; }
+.wf-pill.done { background: var(--st-ok-bg); color: var(--st-ok); }
+.p2-bar span { background: var(--grad-accent); }
+.status-legend { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--ink-3); }
+.banner.pending { background: var(--st-warn-bg); border-color: var(--st-warn-bd); color: var(--st-warn); }
+
 </style>
 </head>
 <body>
@@ -1139,8 +1157,18 @@ function lifeStatus(m) {
   return usedInApproved(m.id) ? 'Active' : 'Approved';
 }
 const usedInApproved = id => S.assets.some(a => a.status === 'Approved' && a.blocks.some(b => b.moduleId === id));
-const STATUS_TONE = { 'Draft': 'dim', 'In Review': 'info', 'Awaiting Senior submit': 'info', 'Changes Requested': 'warn', 'Approved': 'ok', 'Active': 'ok', 'Expiring': 'warn', 'Review Required': 'bad', 'Superseded': 'dim', 'Archived': 'dim', 'Rejected': 'bad', 'Re-approval required': 'warn' };
-const chip = (s, extra = '') => `<span class="chip ${STATUS_TONE[s] || ''}">${esc(s)}${extra}</span>`;
+// Status colours: approved = green, pending / waiting = yellow, rejected / blocked = red, inactive = grey.
+const STATUS_TONE = { 'Draft': 'dim', 'In Review': 'warn', 'Awaiting Senior submit': 'warn', 'Pending': 'warn', 'Changes Requested': 'warn', 'Approved': 'ok', 'Active': 'ok', 'Expiring': 'warn', 'Review Required': 'bad', 'Superseded': 'dim', 'Archived': 'dim', 'Rejected': 'bad', 'Re-approval required': 'warn', 'Inactive': 'dim' };
+function toneOf(s) {
+  if (STATUS_TONE[s]) return STATUS_TONE[s];
+  if (/reject/i.test(s)) return 'bad';
+  if (/approv|complete/i.test(s)) return 'ok';
+  if (/email/i.test(s)) return 'dim';
+  if (/request|return|send|sent|pending|review|await/i.test(s)) return 'warn';
+  return '';
+}
+const TONE_ICON = { ok: 'check', warn: 'clock', bad: 'x' };
+const chip = (s, extra = '') => { const t = toneOf(s); const ic = TONE_ICON[t]; return `<span class="chip ${t}${ic ? ' has-ico' : ''}">${ic ? icon(ic, 'sm') : ''}${esc(s)}${extra}</span>`; };
 const sen = s => s ? `<span class="sen ${s === 'Senior' ? 'senior' : 'junior'}">${s === 'Senior' ? icon('shield', 'sm') : ''}${s}</span>` : '';
 const avatar = (u, cls = '') => `<span class="avatar ${cls}" aria-hidden="true">${esc(initials(u.name))}</span>`;
 
@@ -1624,7 +1652,7 @@ function viewModule() {
   if (l.status === 'Changes Requested') { const lr = (l.lastReview || []).slice(-1)[0]; banners += `<div class="banner warn">${icon('undo')}<div class="txt"><b>Changes requested${lr ? ' by ' + esc(user(lr.by).name) + ' (' + esc(lr.seniority + ' ' + lr.fn) + ' Reviewer)' : ''}</b><p>“${esc(m.changes || '')}”</p></div>${owner ? goBtn('Revise', 'module-edit', m.id, 'sm') : ''}</div>`; }
   if (l.status === 'Rejected') banners += `<div class="banner bad">${icon('x')}<div class="txt"><b>Rejected</b><p>“${esc(m.changes || '')}”</p></div></div>`;
   if (l.status === 'Awaiting Senior submit') banners += `<div class="banner info">${icon('inbox')}<div class="txt"><b>Waiting for a Senior Content Owner to submit</b><p>Junior Content Owners prepare drafts; a Senior Content Owner submits them for MLR review.</p></div></div>`;
-  if (m.review) { const as = assigneeFor(st); banners += `<div class="banner info">${icon('shieldcheck')}<div class="txt"><b>In review · ${esc(stepLabel(st))}</b><p>Assigned to ${as.map(x => esc(x.name)).join(', ') || 'the ' + esc(st.fn) + ' team'} (${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}). Step ${m.review.step + 1} of ${wfById(m.review.wf).steps.length}.</p></div>${canActOn(u, m) ? goBtn('Open review', 'review', m.id, 'sm primary') : ''}</div>`; }
+  if (m.review) { const as = assigneeFor(st); banners += `<div class="banner pending">${icon('shieldcheck')}<div class="txt"><b>In review · ${esc(stepLabel(st))}</b><p>Assigned to ${as.map(x => esc(x.name)).join(', ') || 'the ' + esc(st.fn) + ' team'} (${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}). Step ${m.review.step + 1} of ${wfById(m.review.wf).steps.length}.</p></div>${canActOn(u, m) ? goBtn('Open review', 'review', m.id, 'sm primary') : ''}</div>`; }
   if (lv && lv !== l && l.status !== 'Approved') banners += `<div class="banner">${icon('layers')}<div class="txt"><b>Version ${l.v} is ${esc(l.status.toLowerCase())} · version ${lv.v} is still live</b><p>Assets keep using v${lv.v} until v${l.v} is approved.</p></div></div>`;
   if (imp.length) banners += `<div class="banner warn">${icon('alert')}<div class="txt"><b>${imp.length} asset${imp.length > 1 ? 's are' : ' is'} using a previous version of this module</b><p>Version ${lv.v} is approved. Update each asset to the new version.</p></div><button class="btn sm" ${goAttr('module', m.id, ' data-tab="lifecycle"')}>Review impacted assets</button></div>`;
   if (ls === 'Expiring') banners += `<div class="banner warn">${icon('clock')}<div class="txt"><b>Expires in ${daysTo(m.expiry)} days (${fmtD(m.expiry)})</b><p>Create a new version or confirm the content is still valid before it expires.</p></div></div>`;
@@ -1815,7 +1843,7 @@ function viewAsset() {
   const wf = a.review ? wfById(a.review.wf) : wfById(assetWorkflow(a));
   return pageHead(esc(a.name), `<span class="row" style="gap:8px">${chip(a.status)}<span class="mono">${a.id}</span><span class="muted">·</span>${esc(a.type)}<span class="muted">·</span>${esc(market(a.market).name)}<span class="muted">·</span>${esc(a.channel)}</span>`, actions, [['Assets', 'assets'], [a.id]]) +
   (outdated.length ? `<div class="banner warn" style="margin-bottom:14px">${icon('alert')}<div class="txt"><b>${outdated.length} module${outdated.length > 1 ? 's have' : ' has'} a newer approved version</b><p>Replace the outdated version below. Swapping in a newer approved version of the same module does not need a new review.</p></div></div>` : '') +
-  (a.review ? `<div class="banner info" style="margin-bottom:14px">${icon('shieldcheck')}<div class="txt"><b>In review · ${esc(stepLabel(curStep(a)))}</b><p>Assigned to ${assigneeFor(curStep(a)).map(x => esc(x.name)).join(', ')}.</p></div>${!canActOn(u, a) && assigneeFor(curStep(a))[0] ? `<button class="btn sm" data-act="persona" data-id="${assigneeFor(curStep(a))[0].id}" data-then="asset-review" data-target="${a.id}">Switch to ${esc(assigneeFor(curStep(a))[0].name)}</button>` : ''}</div>` : '') +
+  (a.review ? `<div class="banner pending" style="margin-bottom:14px">${icon('shieldcheck')}<div class="txt"><b>In review · ${esc(stepLabel(curStep(a)))}</b><p>Assigned to ${assigneeFor(curStep(a)).map(x => esc(x.name)).join(', ')}.</p></div>${!canActOn(u, a) && assigneeFor(curStep(a))[0] ? `<button class="btn sm" data-act="persona" data-id="${assigneeFor(curStep(a))[0].id}" data-then="asset-review" data-target="${a.id}">Switch to ${esc(assigneeFor(curStep(a))[0].name)}</button>` : ''}</div>` : '') +
   `<div class="grid cols-main"><div class="canvas">${sheet(a, false, false)}</div><div class="stack">
   <section class="panel"><div class="panel-head"><h3>Summary</h3></div><div class="panel-body"><dl class="kv" style="grid-template-columns:110px 1fr"><dt>Product</dt><dd>${esc(product(a.product).name)}</dd><dt>Market</dt><dd>${esc(market(a.market).name)}</dd><dt>Channel</dt><dd>${esc(a.channel)}</dd><dt>Audience</dt><dd>${esc(a.audience)}</dd><dt>Content</dt><dd>${V.mods.length} approved modules${V.nNew ? ', ' + V.nNew + ' new' : ''}</dd><dt>Owner</dt><dd>${esc(user(a.owner).name)}</dd>${a.approvedAt ? `<dt>Approved</dt><dd>${fmtD(a.approvedAt)}</dd>` : ''}</dl></div></section>
   <section class="panel"><div class="panel-head"><h3>Review route</h3><span class="muted" style="font-size:12px">${esc(wf.name)}</span></div><div class="panel-body">${wfProgress(a, false)}</div></section>

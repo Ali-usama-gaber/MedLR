@@ -897,3 +897,21 @@ body.drag-mod .sheet[data-drop], body.drag-blk .sheet[data-drop] { outline-color
 .login-page .login-brand { justify-content: center; }
 .login-page .lp-float { right: -24px; bottom: -14px; }
 .flow-node.notify .body span { display: block; }
+
+/* ---------- Clear status colours: green approved · yellow pending · red rejected ---------- */
+:root { --st-ok: #127a3f; --st-ok-bg: #dff3e6; --st-ok-bd: #9fd6b3; --st-warn: #8a5d00; --st-warn-bg: #fff3cc; --st-warn-bd: #f1d27a; --st-bad: #b4161f; --st-bad-bg: #fde3e3; --st-bad-bd: #f3aeb1; }
+.chip.ok { background: var(--st-ok-bg); color: var(--st-ok); box-shadow: 0 0 0 1px var(--st-ok-bd) inset; }
+.chip.warn { background: var(--st-warn-bg); color: var(--st-warn); box-shadow: 0 0 0 1px var(--st-warn-bd) inset; }
+.chip.bad { background: var(--st-bad-bg); color: var(--st-bad); box-shadow: 0 0 0 1px var(--st-bad-bd) inset; }
+.chip.dim { box-shadow: 0 0 0 1px var(--line) inset; }
+.chip.has-ico { padding-left: 7px; gap: 5px; }
+.chip.has-ico::before { display: none; }
+.chip.has-ico .ico { width: 12px; height: 12px; stroke-width: 2.6; flex: none; }
+/* progress timelines follow the same colours */
+.wf-step.current .wf-dot { border-color: #e0b43a; background: var(--st-warn-bg); color: var(--st-warn); box-shadow: 0 0 0 4px rgba(241, 210, 122, .35); }
+.wf-step.done .wf-dot { background: #1f8a4c; border-color: #1f8a4c; }
+.wf-pill.current { background: var(--st-warn-bg); border-color: var(--st-warn-bd); color: var(--st-warn); box-shadow: none; }
+.wf-pill.done { background: var(--st-ok-bg); color: var(--st-ok); }
+.p2-bar span { background: var(--grad-accent); }
+.status-legend { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--ink-3); }
+.banner.pending { background: var(--st-warn-bg); border-color: var(--st-warn-bd); color: var(--st-warn); }

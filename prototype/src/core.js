@@ -75,8 +75,18 @@ function lifeStatus(m) {
   return usedInApproved(m.id) ? 'Active' : 'Approved';
 }
 const usedInApproved = id => S.assets.some(a => a.status === 'Approved' && a.blocks.some(b => b.moduleId === id));
-const STATUS_TONE = { 'Draft': 'dim', 'In Review': 'info', 'Awaiting Senior submit': 'info', 'Changes Requested': 'warn', 'Approved': 'ok', 'Active': 'ok', 'Expiring': 'warn', 'Review Required': 'bad', 'Superseded': 'dim', 'Archived': 'dim', 'Rejected': 'bad', 'Re-approval required': 'warn' };
-const chip = (s, extra = '') => `<span class="chip ${STATUS_TONE[s] || ''}">${esc(s)}${extra}</span>`;
+// Status colours: approved = green, pending / waiting = yellow, rejected / blocked = red, inactive = grey.
+const STATUS_TONE = { 'Draft': 'dim', 'In Review': 'warn', 'Awaiting Senior submit': 'warn', 'Pending': 'warn', 'Changes Requested': 'warn', 'Approved': 'ok', 'Active': 'ok', 'Expiring': 'warn', 'Review Required': 'bad', 'Superseded': 'dim', 'Archived': 'dim', 'Rejected': 'bad', 'Re-approval required': 'warn', 'Inactive': 'dim' };
+function toneOf(s) {
+  if (STATUS_TONE[s]) return STATUS_TONE[s];
+  if (/reject/i.test(s)) return 'bad';
+  if (/approv|complete/i.test(s)) return 'ok';
+  if (/email/i.test(s)) return 'dim';
+  if (/request|return|send|sent|pending|review|await/i.test(s)) return 'warn';
+  return '';
+}
+const TONE_ICON = { ok: 'check', warn: 'clock', bad: 'x' };
+const chip = (s, extra = '') => { const t = toneOf(s); const ic = TONE_ICON[t]; return `<span class="chip ${t}${ic ? ' has-ico' : ''}">${ic ? icon(ic, 'sm') : ''}${esc(s)}${extra}</span>`; };
 const sen = s => s ? `<span class="sen ${s === 'Senior' ? 'senior' : 'junior'}">${s === 'Senior' ? icon('shield', 'sm') : ''}${s}</span>` : '';
 const avatar = (u, cls = '') => `<span class="avatar ${cls}" aria-hidden="true">${esc(initials(u.name))}</span>`;
 
