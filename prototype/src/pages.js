@@ -81,22 +81,23 @@ function viewLogin() {
   const err = UI.f.loginErr;
   const steps = [['Medical', 'Junior', 'Ahmed Ali'], ['Medical', 'Senior', 'Sara Ahmed'], ['Legal', 'Senior', 'Rania Haddad'], ['Regulatory', 'Senior', 'Layla Nasser']];
   return `<div class="login-page"><div class="login">
-  <section class="login-brand"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
+  <section class="login-brand">
     <img class="login-logo" src="${LOGO}" alt="SAJA">
-    <div class="login-hero"><span class="eyebrow">SAJA MedLR · Modular content &amp; MLR review</span><h1>Create once.<br><em>Approve once.</em><br>Reuse safely.</h1>
-    <p class="lede">Medical, Legal and Regulatory review built into every module — so approved content can be reused with confidence across markets and channels.</p></div>
-    <div class="login-preview" aria-hidden="true">
-      <div class="lp-card">
-        <div class="lp-head"><span class="lp-ico">${icon('quote', 'sm')}</span><div class="lp-title"><b>Clinical Claim A — Hospitalisation reduction</b><span class="mono">MOD-A-014 · v2</span></div><span class="chip ok lp-approved">Approved</span></div>
-        <div class="lp-steps"><span class="lp-rail" aria-hidden="true"></span>${steps.map((x, i) => `<div class="lp-step" style="animation-delay:${0.35 + i * 0.32}s"><span class="lp-dot">${icon('check', 'sm')}</span><span class="lp-fn">${x[0]}</span>${sen(x[1])}<span class="lp-who">${x[2]}</span></div>`).join('')}</div>
+    <div class="login-hero"><span class="eyebrow">MedLR · Medical, Legal &amp; Regulatory review</span><h1>Create once.<br><em>Approve once.</em><br>Reuse safely.</h1>
+    <p class="lede">Each claim is reviewed once by Medical, Legal and Regulatory, then reused in every asset where it is approved for the market and channel.</p></div>
+    <figure class="doc" aria-hidden="true">
+      <div class="doc-sheet">
+        <div class="doc-top"><span class="mono">MOD-A-014 · v2</span><span class="doc-tag">Clinical claim · HCP</span></div>
+        <p class="doc-claim">Product A reduced heart-failure hospitalisation by 21% versus standard care.<sup>1</sup></p>
+        <p class="doc-ref"><sup>1</sup> ALPHA-HF study, primary results. Demo J Cardiol 2025;12:101–112.</p>
+        <ul class="doc-sign">${[['Medical', 'Sara Ahmed', '12 Jun'], ['Legal', 'Rania Haddad', '14 Jun'], ['Regulatory', 'Layla Nasser', '16 Jun']].map((x, i) => `<li style="--d:${0.55 + i * 0.28}s"><span class="tick">${icon('check', 'sm')}</span>${fnBadge(x[0], 'sm')}<b>${x[0]}</b><span>${x[1]} · ${x[2]}</span></li>`).join('')}</ul>
       </div>
-      <div class="lp-float"><span class="lp-ico">${icon('layers', 'sm')}</span><span><b>Reused in 4 assets</b><span>Saudi Arabia · UAE</span></span></div>
-    </div>
-    <p class="login-foot">Prototype for client review. All products, studies, people and data are fictional.</p>
+      <div class="stamp"><span class="s-top">Approved</span><b>MLR</b><span class="s-bot mono">EXP 06/2027</span></div>
+    </figure>
   </section>
   <section class="login-form">
     ${UI.route.name === 'forgot' ? viewForgot() : `<form class="login-card" data-form="login" novalidate>
-      <div class="login-title"><span class="login-mark">${icon('shieldcheck')}</span><h2>Sign in</h2><p class="ink2">Welcome back. Use your SAJA work email.</p></div>
+      <div class="login-title"><h2>Sign in</h2><p class="ink2">Welcome back. Use your SAJA work email.</p></div>
       ${err ? `<div class="banner bad" role="alert">${icon('alert')}<div class="txt"><b>${esc(err)}</b></div></div>` : ''}
       <div class="field"><label for="login-email">Work email</label><input class="input" id="login-email" name="email" type="email" autocomplete="username" value="${esc(F('loginEmail', 'omar.khalil@saja-demo.com'))}" required></div>
       <div class="field"><div class="row between"><label for="login-pass">Password</label><button type="button" class="btn ghost sm" ${goAttr('forgot')}>Forgot password?</button></div><input class="input" id="login-pass" name="password" type="password" autocomplete="current-password" value="demo-password" required></div>
@@ -125,26 +126,29 @@ function viewHome() {
   const counts = st => S.modules.filter(m => st.includes(lifeStatus(m))).length;
   const pipe = [['Draft', ['Draft', 'Awaiting Senior submit']], ['In review', ['In Review']], ['Changes requested', ['Changes Requested']], ['Approved & active', ['Approved', 'Active']], ['Expiring / review', ['Expiring', 'Review Required']]];
   const recent = [...S.audit].sort((x, y) => y.ts - x.ts).slice(0, 6);
-  const stats = [['Waiting on you', tasks.length, 'inbox', goAttr('tasks')], ['In review', counts(['In Review']), 'shieldcheck', goAttr('modules', null, ' data-status="In Review"')], ['Approved & active', counts(['Approved', 'Active']), 'check', goAttr('library')], ['Expiring / review', counts(['Expiring', 'Review Required']), 'clock', goAttr('lifecycle')]];
+  const nWait = tasks.length, nRev = counts(['In Review']), nOk = counts(['Approved', 'Active']), nBad = counts(['Expiring', 'Review Required']);
+  const kpis = [['Waiting on you', nWait, nWait ? 'warn' : 'ok', nWait ? 'Oldest ' + ago(Math.min(...tasks.map(t => t.since))) : 'Nothing pending', goAttr('tasks')], ['In review', nRev, 'warn', 'Across Medical, Legal, Regulatory', goAttr('modules', null, ' data-status="In Review"')], ['Approved & active', nOk, 'ok', 'Ready to reuse in assets', goAttr('library')], ['Expiring or overdue', nBad, nBad ? 'bad' : 'ok', 'Need re-approval', goAttr('lifecycle')]];
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const total = S.modules.length || 1;
+  const segs = [['Draft', counts(['Draft', 'Awaiting Senior submit']), 'dim', 'Draft'], ['In review', nRev, 'warn', 'In Review'], ['Changes requested', counts(['Changes Requested']), 'warn2', 'Changes Requested'], ['Approved & active', nOk, 'ok', 'Approved'], ['Expiring or overdue', nBad, 'bad', 'Expiring']];
+  const segTotal = segs.reduce((s, x) => s + x[1], 0) || 1;
   return `<div class="home">
-  <section class="hero2">
-    <div class="h-main"><span class="eyebrow">${esc(today)}</span><h1>Welcome, ${esc(first)}</h1><div class="row ink2" style="gap:8px">${esc(u.type)} ${sen(u.seniority)} <span class="muted">·</span> ${icon(a.final ? 'key' : 'eye', 'sm')} ${esc(a.short)}</div>
-      <div class="row" style="margin-top:6px">${quick.slice(0, 2).map((q, i) => `<button class="btn ${i ? '' : 'primary'}" ${q[3] === 'asset-new' ? 'data-act="asset-new"' : goAttr(q[3], q[4])}>${icon(q[2], 'sm')}${q[0]}</button>`).join('')}</div></div>
-    <div class="h-stats">${stats.map(s => `<button class="h-stat" ${s[3]}><span class="hs-ico">${icon(s[2], 'sm')}</span><b>${s[1]}</b><span>${s[0]}</span></button>`).join('')}</div>
-  </section>
+  <header class="home-head">
+    <div class="hh-text"><span class="eyebrow">${esc(today)}</span><h1>Welcome, ${esc(first)}</h1><div class="row ink2" style="gap:8px">${esc(u.type)} ${sen(u.seniority)} <span class="muted">·</span> ${icon(a.final ? 'key' : 'eye', 'sm')} ${esc(a.short)}</div></div>
+    <div class="row">${quick.slice(0, 2).reverse().map((q, i) => `<button class="btn ${i ? 'primary' : ''}" ${q[3] === 'asset-new' ? 'data-act="asset-new"' : goAttr(q[3], q[4])}>${icon(q[2], 'sm')}${q[0]}</button>`).join('')}</div>
+  </header>
+  <div class="kpis">${kpis.map(k => `<button class="kpi" ${k[4]}><span class="k-label"><span class="k-dot ${k[2]}"></span>${k[0]}</span><b>${k[1]}</b><span class="k-sub">${esc(k[3])}</span></button>`).join('')}</div>
   <div class="home-grid">
-    <div class="stack" style="gap:16px">
-      <section class="panel"><div class="panel-head"><h3>Waiting on you</h3><span class="chip plain">${tasks.length}</span><span class="grow"></span><button class="btn ghost sm" ${goAttr('tasks')}>View all</button></div>
-        ${tasks.length ? tasks.slice(0, 4).map(viewTaskRow).join('') : `<div class="empty"><h4>You are all caught up</h4><p>New review tasks appear here as soon as they are assigned to ${esc(roleLabel(u))}s.</p></div>`}
-      </section>
-      <section class="panel"><div class="panel-head"><h3>Content pipeline</h3><span class="grow"></span><button class="btn ghost sm" ${goAttr('modules')}>All modules</button></div><div class="pipe2">${pipe.map(pp => { const n = counts(pp[1]); return `<button class="p2" ${goAttr('modules', null, ` data-status="${pp[1][0]}"`)}><span class="p2-top"><span>${pp[0]}</span><b>${n}</b></span><span class="p2-bar"><span style="width:${Math.max(4, Math.round(n / total * 100))}%"></span></span></button>`; }).join('')}</div></section>
-    </div>
-    <div class="stack" style="gap:16px">
-      <section class="panel"><div class="panel-head"><h3>Shortcuts</h3></div><div class="quick2">${quick.map(q => `<button ${q[3] === 'asset-new' ? 'data-act="asset-new"' : goAttr(q[3], q[4])}><span class="qi">${icon(q[2], 'sm')}</span><span class="qt"><b>${q[0]}</b><span>${q[1]}</span></span>${icon('chevron', 'sm')}</button>`).join('')}</div></section>
-      <section class="panel"><div class="panel-head"><h3>Recent activity</h3><span class="grow"></span><button class="btn ghost sm" ${goAttr('audit')}>Audit trail</button></div><div class="panel-body">${viewTimeline(recent.slice(0, 4), true)}</div></section>
-    </div>
+    <div class="home-main">
+    <section class="panel"><div class="panel-head"><h3>Needs your action</h3><span class="chip plain">${tasks.length}</span><span class="grow"></span><button class="btn ghost sm" ${goAttr('tasks')}>All tasks</button></div>
+      ${tasks.length ? tasks.slice(0, 5).map(viewTaskRow).join('') : `<div class="empty"><h4>You are all caught up</h4><p>New review tasks appear here as soon as they are assigned to ${esc(roleLabel(u))}s.</p></div>`}
+    </section>
+      <section class="side-block pipe-block"><div class="sb-head"><h3>Content pipeline</h3><span class="muted mono">${S.modules.length} modules</span></div>
+        <div class="pbar" role="img" aria-label="Modules by status">${segs.filter(s => s[1]).map(s => `<span class="${s[2]}" style="flex:${s[1]}" title="${s[0]}: ${s[1]}"></span>`).join('')}</div>
+        <div class="plegend">${segs.map(s => `<button ${goAttr('modules', null, ` data-status="${s[3]}"`)}><span class="k-dot ${s[2]}"></span><span>${s[0]}</span><b>${s[1]}</b><span class="pct mono">${Math.round(s[1] / segTotal * 100)}%</span></button>`).join('')}</div>
+      </div>
+    <aside class="home-side">
+      <section class="side-block"><div class="sb-head"><h3>Recent activity</h3><button class="btn ghost sm" ${goAttr('audit')}>Audit trail</button></div>${viewTimeline(recent.slice(0, 4), true)}</section>
+    </aside>
   </div></div>`;
 }
 function taskMeta(t) {
