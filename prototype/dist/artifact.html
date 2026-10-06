@@ -541,6 +541,131 @@ button.life-st:hover { border-color: var(--ink-3); }
   .quick button > span:last-child { font-size: 11.5px; }
 }
 
+/* =========================================================
+   Elevated theme — layered shadows, soft gradients, glass
+   ========================================================= */
+:root {
+  --line: #e6ebe8;
+  --shadow-1: 0 1px 1px rgba(16, 24, 20, .03), 0 2px 4px rgba(16, 24, 20, .03), 0 10px 24px -10px rgba(16, 24, 20, .10);
+  --shadow-2: 0 30px 70px -18px rgba(16, 24, 20, .28), 0 10px 24px -8px rgba(16, 24, 20, .10);
+  --shadow-3: 0 2px 4px rgba(16, 24, 20, .04), 0 22px 44px -14px rgba(16, 24, 20, .22);
+  --shadow-accent: 0 1px 0 rgba(255, 255, 255, .22) inset, 0 8px 20px -6px rgba(23, 113, 61, .55), 0 2px 4px rgba(23, 113, 61, .18);
+  --grad-accent: linear-gradient(180deg, #1f8a4c 0%, #156a39 100%);
+  --r-lg: 18px;
+}
+body {
+  background:
+    radial-gradient(1100px 520px at 105% -8%, rgba(23, 113, 61, .07), transparent 62%),
+    radial-gradient(900px 480px at -8% -6%, rgba(53, 89, 143, .055), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* glass chrome */
+.side { background: rgba(255, 255, 255, .72); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); border-right-color: rgba(16, 24, 20, .06); box-shadow: 1px 0 0 rgba(255, 255, 255, .6) inset, 8px 0 30px -18px rgba(16, 24, 20, .18); }
+.topbar { background: rgba(250, 251, 250, .7); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); border-bottom-color: rgba(16, 24, 20, .06); }
+.nav-item { transition: background .15s, color .15s, transform .15s; }
+.nav-item.active { background: linear-gradient(180deg, #ffffff, #f1f7f3); color: var(--accent-ink); box-shadow: 0 1px 2px rgba(16, 24, 20, .06), 0 6px 16px -8px rgba(23, 113, 61, .35), 0 0 0 1px rgba(23, 113, 61, .14) inset; }
+.nav-item.active::before { content: ""; position: absolute; left: -14px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
+.nav-item { position: relative; }
+.search input { box-shadow: 0 1px 2px rgba(16, 24, 20, .04); transition: box-shadow .15s, border-color .15s; }
+.search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(23, 113, 61, .12); }
+.userbtn { box-shadow: 0 1px 2px rgba(16, 24, 20, .05); }
+.avatar { background: linear-gradient(145deg, #eef2f0, #dfe6e2); box-shadow: 0 0 0 2px #fff, 0 1px 3px rgba(16, 24, 20, .12); }
+
+/* surfaces */
+.panel { border-color: rgba(16, 24, 20, .07); box-shadow: var(--shadow-1); background: linear-gradient(180deg, #ffffff 0%, #fdfefd 100%); }
+.panel-head { border-bottom-color: rgba(16, 24, 20, .06); }
+.panel-head h3 { letter-spacing: -0.01em; }
+.page-head h1, .hello h1 { letter-spacing: -0.025em; }
+.page-head h1 { font-size: 28px; }
+
+/* buttons */
+.btn { transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease; box-shadow: 0 1px 2px rgba(16, 24, 20, .05); }
+.btn:hover:not([disabled]) { transform: translateY(-1px); box-shadow: 0 6px 14px -6px rgba(16, 24, 20, .2); }
+.btn:active:not([disabled]) { transform: translateY(0); }
+.btn.primary { background: var(--grad-accent); border-color: #13633a; box-shadow: var(--shadow-accent); }
+.btn.primary:hover:not([disabled]) { background: linear-gradient(180deg, #23955a 0%, #177340 100%); box-shadow: 0 1px 0 rgba(255, 255, 255, .22) inset, 0 12px 26px -8px rgba(23, 113, 61, .6), 0 2px 4px rgba(23, 113, 61, .2); }
+.btn.ghost, .btn.ghost:hover:not([disabled]) { box-shadow: none; }
+.input, .select, .textarea { box-shadow: 0 1px 2px rgba(16, 24, 20, .04); transition: box-shadow .15s, border-color .15s; }
+.input:focus, .select:focus, .textarea:focus { box-shadow: 0 0 0 4px rgba(23, 113, 61, .12); }
+
+/* home hero */
+.hello { position: relative; overflow: hidden; padding: 26px 28px; border-radius: 22px; border: 1px solid rgba(16, 24, 20, .07); background: linear-gradient(120deg, #ffffff 0%, #f4f8f6 55%, #eaf3ee 100%); box-shadow: var(--shadow-1); }
+.hello::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(16, 24, 20, .09) 1px, transparent 1px); background-size: 20px 20px; -webkit-mask-image: linear-gradient(90deg, transparent 35%, #000 100%); mask-image: linear-gradient(90deg, transparent 35%, #000 100%); pointer-events: none; }
+.hello::after { content: ""; position: absolute; width: 360px; height: 360px; right: -90px; top: -180px; border-radius: 50%; background: radial-gradient(closest-side, rgba(23, 113, 61, .14), transparent); pointer-events: none; }
+.hello > * { position: relative; z-index: 1; }
+.hello h1 { font-size: 30px; }
+
+/* quick actions + clickable cards lift */
+.quick button { border-color: rgba(16, 24, 20, .07); background: linear-gradient(180deg, #fff, #fbfcfb); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.quick button:hover { transform: translateY(-3px); box-shadow: var(--shadow-3); border-color: rgba(23, 113, 61, .35); }
+.quick .qi { background: linear-gradient(145deg, #edf6f0, #d9ece0); box-shadow: 0 1px 0 #fff inset, 0 4px 10px -4px rgba(23, 113, 61, .35); }
+.task { transition: background .15s; }
+.tbl tr.click td { transition: background .15s; }
+.metrics > div, .pipeline > * { transition: background .15s; }
+.lib-item { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; box-shadow: 0 1px 2px rgba(16, 24, 20, .04); }
+.lib-item:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow-3); }
+.lib-item[draggable="true"] { cursor: grab; }
+.chip { box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset; }
+.sen.senior { box-shadow: 0 2px 6px -2px rgba(34, 52, 43, .5); }
+
+/* modals & pops */
+.scrim { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); background: rgba(16, 24, 20, .32); }
+.modal { box-shadow: 0 40px 100px -20px rgba(16, 24, 20, .4), 0 0 0 1px rgba(16, 24, 20, .06); border-radius: 22px; }
+.pop, .search-pop { box-shadow: 0 24px 60px -16px rgba(16, 24, 20, .28), 0 0 0 1px rgba(16, 24, 20, .05); border-color: transparent; backdrop-filter: blur(16px); }
+.toast { box-shadow: 0 18px 40px -12px rgba(16, 24, 20, .4); }
+.guide-fab { background: linear-gradient(180deg, #2a3a32, #17201c); box-shadow: 0 1px 0 rgba(255, 255, 255, .12) inset, 0 16px 34px -10px rgba(16, 24, 20, .55); transition: transform .15s; }
+.guide-fab:hover { transform: translateY(-2px); }
+.guide { box-shadow: 0 40px 90px -24px rgba(16, 24, 20, .4), 0 0 0 1px rgba(16, 24, 20, .05); }
+
+/* asset canvas */
+.canvas { background: linear-gradient(180deg, #eef2f0, #e6ebe8); background-image: radial-gradient(rgba(16, 24, 20, .08) 1px, transparent 1px), linear-gradient(180deg, #eef2f0, #e7ece9); background-size: 18px 18px, auto; box-shadow: 0 1px 3px rgba(16, 24, 20, .06) inset; }
+.sheet { border-radius: 14px; border-color: transparent; box-shadow: 0 2px 4px rgba(16, 24, 20, .05), 0 30px 60px -24px rgba(16, 24, 20, .3); transition: box-shadow .2s, outline-color .2s; outline: 2px dashed transparent; outline-offset: 6px; }
+.block { transition: transform .15s ease, box-shadow .15s ease, opacity .15s; box-shadow: 0 1px 2px rgba(16, 24, 20, .04); }
+.block[draggable="true"] { cursor: grab; }
+.block[draggable="true"]:hover { box-shadow: 0 10px 24px -12px rgba(16, 24, 20, .3); transform: translateY(-1px); }
+.grip { display: inline-grid; place-items: center; color: var(--ink-3); margin: -2px 0 0 -4px; cursor: grab; }
+.drop-hint { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 36px 22px; border-radius: 14px; background: repeating-linear-gradient(135deg, transparent 0 10px, rgba(23, 113, 61, .03) 10px 20px); }
+.drop-hint .ico { width: 26px; height: 26px; color: var(--accent); }
+.drop-hint b { color: var(--ink); }
+.drop-hint span { font-size: 12.5px; font-weight: 500; }
+
+/* drag states */
+.dragging { opacity: .4; transform: scale(.98); }
+body.drag-mod .sheet[data-drop], body.drag-blk .sheet[data-drop] { outline-color: rgba(23, 113, 61, .35); }
+.sheet.drop-over { outline-color: var(--accent) !important; box-shadow: 0 0 0 8px rgba(23, 113, 61, .08), 0 30px 60px -24px rgba(16, 24, 20, .3); }
+.sheet.drop-over .drop-hint { border-color: var(--accent); background: var(--accent-soft); }
+.block.drop-before, .flow-node.drop-before { box-shadow: 0 -3px 0 0 var(--accent), 0 -10px 18px -10px rgba(23, 113, 61, .6); }
+.block.drop-after, .flow-node.drop-after { box-shadow: 0 3px 0 0 var(--accent), 0 10px 18px -10px rgba(23, 113, 61, .6); }
+
+/* workflow builder */
+.flow { box-shadow: 0 1px 3px rgba(16, 24, 20, .05) inset; }
+.flow-node { position: relative; cursor: grab; border-color: rgba(16, 24, 20, .07); background: linear-gradient(180deg, #fff, #fbfcfb); transition: transform .15s ease, box-shadow .15s ease, border-color .15s; box-shadow: 0 1px 2px rgba(16, 24, 20, .04), 0 8px 20px -12px rgba(16, 24, 20, .2); }
+.flow-node:hover { transform: translateY(-2px); box-shadow: var(--shadow-3); }
+.flow-node.sel { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(23, 113, 61, .12), 0 14px 30px -14px rgba(23, 113, 61, .45); }
+.flow-node .idx { background: linear-gradient(145deg, #f2f5f3, #e3e9e5); box-shadow: 0 1px 0 #fff inset; }
+.flow-node.sel .idx { background: var(--grad-accent); color: #fff; box-shadow: var(--shadow-accent); }
+.flow-term { box-shadow: var(--shadow-1); }
+.flow-add { box-shadow: 0 2px 6px -2px rgba(16, 24, 20, .18); transition: transform .15s; }
+.flow-add:hover { transform: scale(1.12); }
+
+/* login polish */
+.login-card .btn.primary { height: 48px !important; border-radius: 12px; font-size: 14.5px; }
+.demo-accts button { box-shadow: 0 1px 2px rgba(16, 24, 20, .04); }
+.demo-accts button:hover { box-shadow: var(--shadow-3); }
+
+@media (max-width: 760px) {
+  .hello { padding: 20px; border-radius: 18px; }
+  .hello h1 { font-size: 24px; }
+  .side { background: rgba(255, 255, 255, .86); box-shadow: 0 -10px 30px -12px rgba(16, 24, 20, .2); }
+  .nav-item.active::before { left: 50%; top: -6px; bottom: auto; width: 24px; height: 3px; transform: translateX(-50%); border-radius: 0 0 3px 3px; }
+}
+@media (max-width: 1024px) and (min-width: 761px) {
+  .nav-item.active::before { left: -10px; }
+}
+.sheet .drop-hint { min-height: 220px; justify-content: center; }
+
 </style>
 <div id="app"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -917,6 +1042,7 @@ const IC = {
   chevron: '<path d="m9 18 6-6-6-6"/>',
   down: '<path d="m6 9 6 6 6-6"/>',
   up: '<path d="m18 15-6-6-6 6"/>',
+  grip: '<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
   shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
   shieldcheck: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
   quote: '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>',
@@ -1332,16 +1458,16 @@ function viewAssets() {
 const assetTarget = a => (['Draft', 'Changes Requested'].includes(a.status) && canCreateAsset(me())) ? 'assemble' : (a.review && canActOn(me(), a) ? 'asset-review' : 'asset');
 
 function blockHTML(a, b, i, editable, reviewMode) {
-  if (b.kind === 'new') return `<div class="block new"><div class="meta">${icon('edit', 'sm')}${b.approved ? 'Content approved in this asset' : 'New content · not an approved module'}${editable ? blockTools(i, a) : ''}</div><div class="txt">${esc(b.text)}</div>${reviewMode ? `<div class="checks"><span class="x">${icon('alert', 'sm')} Requires your review</span></div>` : ''}</div>`;
+  if (b.kind === 'new') return `<div class="block new" ${editable ? `draggable="true" data-drag="blk" data-i="${i}"` : ''}><div class="meta">${editable ? `<span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span>` : ''}${icon('edit', 'sm')}${b.approved ? 'Content approved in this asset' : 'New content · not an approved module'}${editable ? blockTools(i, a) : ''}</div><div class="txt">${esc(b.text)}</div>${reviewMode ? `<div class="checks"><span class="x">${icon('alert', 'sm')} Requires your review</span></div>` : ''}</div>`;
   const m = modById(b.moduleId); const v = ver(m, b.v) || latest(m); const el = eligibility(m, a); const lv = live(m); const outdated = lv && b.v < lv.v;
   const k = { 'Headline': 'k-headline', 'CTA': 'k-cta', 'Safety Statement': 'k-safety' }[m.type] || '';
-  return `<div class="block approved ${k}"><div class="meta">${icon('lock', 'sm')}${reviewMode ? 'Approved content · locked' : esc(m.type)} · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span>${outdated ? `<span class="chip warn">v${lv.v} available</span>` : ''}${editable ? blockTools(i, a) : ''}</div><div class="txt">${esc(v.body)}</div>
+  return `<div class="block approved ${k}" ${editable ? `draggable="true" data-drag="blk" data-i="${i}"` : ''}><div class="meta">${editable ? `<span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span>` : ''}${icon('lock', 'sm')}${reviewMode ? 'Approved content · locked' : esc(m.type)} · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span>${outdated ? `<span class="chip warn">v${lv.v} available</span>` : ''}${editable ? blockTools(i, a) : ''}</div><div class="txt">${esc(v.body)}</div>
   <div class="checks">${el.checks.map(c => `<span class="${c[1] ? '' : 'x'}">${icon(c[1] ? 'check' : 'x', 'sm')} ${esc(c[0])}</span>`).join('')}${outdated && canCreateAsset(me()) && !reviewMode ? `<button class="btn sm" data-act="replace-version" data-asset="${a.id}" data-module="${m.id}">Replace with v${lv.v}</button>` : ''}</div></div>`;
 }
 function blockTools(i, a) { return `<span class="tools"><button data-act="blk-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button data-act="blk-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === a.blocks.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button data-act="blk-del" data-i="${i}" aria-label="Remove">${icon('trash', 'sm')}</button></span>`; }
 function sheet(a, editable, reviewMode) {
-  return `<div class="sheet"><div class="sheet-head"><img src="${LOGO}" alt="SAJA"><span class="muted" style="font-size:12px;font-weight:700">${esc(a.type)} · ${esc(market(a.market).name)} · ${esc(a.channel)}</span></div>
-  ${a.blocks.length ? a.blocks.map((b, i) => blockHTML(a, b, i, editable, reviewMode)).join('') : '<div class="drop-hint">Add approved modules from the left panel to build this asset.</div>'}
+  return `<div class="sheet" ${editable ? `data-drop="sheet" data-id="${a.id}"` : ''}><div class="sheet-head"><img src="${LOGO}" alt="SAJA"><span class="muted" style="font-size:12px;font-weight:700">${esc(a.type)} · ${esc(market(a.market).name)} · ${esc(a.channel)}</span></div>
+  ${a.blocks.length ? a.blocks.map((b, i) => blockHTML(a, b, i, editable, reviewMode)).join('') : `<div class="drop-hint">${icon('layers')}<b>${editable ? 'Drag approved modules here' : 'No content yet'}</b>${editable ? '<span>or click a module on the left to add it</span>' : ''}</div>`}
   <div style="padding:10px 18px 16px;font-size:11px;color:var(--ink-3)">For healthcare professionals in ${esc(market(a.market).name)}. Fictional demo content.</div></div>`;
 }
 function assetValidation(a) {
@@ -1361,7 +1487,7 @@ function viewAssemble() {
    <section class="panel"><div class="panel-head"><h3>Approved modules</h3><span class="chip plain">${avail.length}</span></div>
     <div style="padding:12px 12px 0" class="stack"><div class="toolbar" style="margin:0">${searchBox('asq', F('asq'), 'Search modules')}</div><select class="select" style="height:36px" data-filter="astf" aria-label="Module type">${opt('', tf, 'All module types')}${S.moduleTypes.map(t => opt(t, tf)).join('')}</select>
     <button class="btn" data-act="new-text" data-id="${a.id}">${icon('plus', 'sm')}Add new text</button></div>
-    <div class="lib-list">${avail.map(m => { const el = eligibility(m, a); const added = inAsset(m.id); return `<button class="lib-item" data-act="blk-add" data-id="${a.id}" data-module="${m.id}" ${!el.ok || added ? 'disabled' : ''}><div class="row nowrap" style="gap:8px"><span class="tag">${esc(m.type)}</span><span class="mono muted">v${live(m).v}</span>${added ? '<span class="chip ok plain" style="margin-left:auto">Added</span>' : el.ok ? `<span style="margin-left:auto;color:var(--accent)">${icon('plus', 'sm')}</span>` : ''}</div><b style="font-size:13px">${esc(m.title)}</b><span class="muted" style="font-size:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(live(m).body)}</span>${!el.ok ? `<span class="why">${icon('x', 'sm')} Not eligible: ${esc(el.reason)}</span>` : ''}</button>`; }).join('') || '<p class="muted" style="padding:8px">No modules match.</p>'}</div></section>
+    <div class="lib-list">${avail.map(m => { const el = eligibility(m, a); const added = inAsset(m.id); return `<button class="lib-item" data-act="blk-add" data-id="${a.id}" data-module="${m.id}" ${!el.ok || added ? 'disabled' : `draggable="true" data-drag="mod" title="Drag onto the asset, or click to add"`}><div class="row nowrap" style="gap:8px"><span class="tag">${esc(m.type)}</span><span class="mono muted">v${live(m).v}</span>${added ? '<span class="chip ok plain" style="margin-left:auto">Added</span>' : el.ok ? `<span style="margin-left:auto;color:var(--accent)">${icon('plus', 'sm')}</span>` : ''}</div><b style="font-size:13px">${esc(m.title)}</b><span class="muted" style="font-size:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(live(m).body)}</span>${!el.ok ? `<span class="why">${icon('x', 'sm')} Not eligible: ${esc(el.reason)}</span>` : ''}</button>`; }).join('') || '<p class="muted" style="padding:8px">No modules match.</p>'}</div></section>
    <div class="canvas">${sheet(a, true, false)}</div>
    <section class="panel props"><div class="panel-head"><h3>Asset properties</h3></div><div class="panel-body form">
      <div class="field"><label for="ap-name">Asset name</label><input class="input" id="ap-name" data-asset-prop="name" data-id="${a.id}" value="${esc(a.name)}"></div>
@@ -1530,11 +1656,11 @@ function viewWorkflow() {
   const D = UI.wfDraft; const selI = UI.wfSel; const s = D.steps[selI];
   const issues = wfIssues(D); const dirty = JSON.stringify(D) !== JSON.stringify(w);
   const teamFor = fn => S.teams.find(t => t.fn === fn);
-  const node = (st, i) => `<button class="flow-node ${i === selI ? 'sel' : ''}" data-act="wf-sel" data-i="${i}"><span class="idx">${i + 1}</span><span class="body"><b>${esc(st.fn)} · ${st.req === 'approve' ? 'Final approval' : 'Review'}</b><span class="muted" style="font-size:12px">${esc((teamFor(st.fn) || {}).name || '')} · ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</span></span>${sen(st.seniority)}${st.req === 'approve' ? icon('key', 'sm') : ''}</button>`;
+  const node = (st, i) => `<button class="flow-node ${i === selI ? 'sel' : ''}" data-act="wf-sel" data-i="${i}" draggable="true" data-drag="step" title="Drag to reorder"><span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span><span class="idx">${i + 1}</span><span class="body"><b>${esc(st.fn)} · ${st.req === 'approve' ? 'Final approval' : 'Review'}</b><span class="muted" style="font-size:12px">${esc((teamFor(st.fn) || {}).name || '')} · ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</span></span>${sen(st.seniority)}${st.req === 'approve' ? icon('key', 'sm') : ''}</button>`;
   const addBtn = i => `<button class="flow-add" data-act="wf-add" data-i="${i}" aria-label="Add step here" title="Add step">${icon('plus', 'sm')}</button>`;
   return pageHead(esc(D.name), esc(D.desc), `${dirty ? btn('Discard changes', 'wf-discard', 'ghost') : ''}${btn('Save workflow', 'wf-save', 'primary', issues.some(x => x[0] === 'bad') ? 'disabled' : '', 'check')}`, [['Workflows', 'workflows'], [D.name]]) +
   `${dirty ? `<div class="banner info" style="margin-bottom:14px">${icon('edit')}<div class="txt"><b>Unsaved changes</b><p>Saving applies to new submissions. Items already in review keep the route they started with.</p></div></div>` : ''}
-  <div class="builder"><div class="flow"><span class="flow-term">${icon('send', 'sm')}Submitted by ${D.system ? 'Marketing User' : 'Content Owner'}</span><span class="flow-link"></span>${addBtn(0)}<span class="flow-link"></span>
+  <div class="builder"><div class="flow" data-drop="flow"><span class="flow-term">${icon('send', 'sm')}Submitted by ${D.system ? 'Marketing User' : 'Content Owner'}</span><span class="flow-link"></span>${addBtn(0)}<span class="flow-link"></span>
   ${D.steps.map((st, i) => node(st, i) + `<span class="flow-link"></span>${addBtn(i + 1)}<span class="flow-link"></span>`).join('')}
   <span class="flow-term">${icon('check', 'sm')}Approved → ${D.system ? 'Asset ready' : 'Approved Library'}</span></div>
   <div class="stack" style="position:sticky;top:84px">
@@ -1926,5 +2052,49 @@ function saveUserForm() {
 }
 
 render();
+
+/* ---------- Drag and drop: modules → asset canvas, block reorder, workflow step reorder ---------- */
+const DND = { src: null, idx: null };
+function dndZone(ev) {
+  if (!DND.src) return null;
+  if (!ev.target.closest) return null;
+  if (DND.src.kind === 'step') return ev.target.closest('[data-drop="flow"]');
+  const c = ev.target.closest('.canvas'); return ev.target.closest('[data-drop="sheet"]') || (c && c.querySelector('[data-drop="sheet"]'));
+}
+function dndClear() { document.querySelectorAll('.drop-before, .drop-after, .drop-over').forEach(e => e.classList.remove('drop-before', 'drop-after', 'drop-over')); }
+document.addEventListener('dragstart', ev => {
+  const el = ev.target.closest && ev.target.closest('[data-drag]'); if (!el) return;
+  DND.src = { kind: el.dataset.drag, i: +el.dataset.i, module: el.dataset.module }; DND.idx = null;
+  try { ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', el.dataset.module || String(el.dataset.i)); } catch (e) {}
+  requestAnimationFrame(() => el.classList.add('dragging'));
+  document.body.classList.add('is-dragging', 'drag-' + DND.src.kind);
+});
+document.addEventListener('dragover', ev => {
+  const zone = dndZone(ev); if (!zone) return;
+  ev.preventDefault(); try { ev.dataTransfer.dropEffect = 'move'; } catch (e) {}
+  const items = [...zone.querySelectorAll(DND.src.kind === 'step' ? '.flow-node' : '.block')];
+  let idx = items.length; for (let k = 0; k < items.length; k++) { const r = items[k].getBoundingClientRect(); if (ev.clientY < r.top + r.height / 2) { idx = k; break; } }
+  if (idx === DND.idx && zone.classList.contains('drop-over')) return;
+  dndClear(); DND.idx = idx; zone.classList.add('drop-over');
+  if (items.length) { if (idx < items.length) items[idx].classList.add('drop-before'); else items[items.length - 1].classList.add('drop-after'); }
+});
+document.addEventListener('dragleave', ev => { const zone = dndZone(ev); const box = zone && (zone.closest('.canvas') || zone); if (box && !box.contains(ev.relatedTarget)) { dndClear(); DND.idx = null; } });
+document.addEventListener('drop', ev => {
+  const zone = dndZone(ev); if (!zone || DND.idx == null) return; ev.preventDefault();
+  const src = DND.src; let to = DND.idx; dndClear();
+  if (src.kind === 'step') {
+    const st = UI.wfDraft.steps; const [x] = st.splice(src.i, 1); if (src.i < to) to--; st.splice(to, 0, x); UI.wfSel = to;
+    if (src.i !== to) toast('Step moved to position ' + (to + 1));
+  } else {
+    const a = assetById(zone.dataset.id); if (!a) return;
+    if (src.kind === 'mod') {
+      const m = modById(src.module); if (!m || !live(m) || a.blocks.some(b => b.moduleId === m.id)) return;
+      a.blocks.splice(to, 0, { id: uid('b'), kind: 'module', moduleId: m.id, v: live(m).v }); toast('Added ' + m.type + ' · ' + m.id + ' v' + live(m).v);
+    } else { const [x] = a.blocks.splice(src.i, 1); if (src.i < to) to--; a.blocks.splice(to, 0, x); }
+    save();
+  }
+  render();
+});
+document.addEventListener('dragend', () => { DND.src = null; DND.idx = null; dndClear(); document.body.classList.remove('is-dragging', 'drag-mod', 'drag-blk', 'drag-step'); document.querySelectorAll('.dragging').forEach(e => e.classList.remove('dragging')); });
 
 </script>

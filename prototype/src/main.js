@@ -337,3 +337,47 @@ function saveUserForm() {
 }
 
 render();
+
+/* ---------- Drag and drop: modules → asset canvas, block reorder, workflow step reorder ---------- */
+const DND = { src: null, idx: null };
+function dndZone(ev) {
+  if (!DND.src) return null;
+  if (!ev.target.closest) return null;
+  if (DND.src.kind === 'step') return ev.target.closest('[data-drop="flow"]');
+  const c = ev.target.closest('.canvas'); return ev.target.closest('[data-drop="sheet"]') || (c && c.querySelector('[data-drop="sheet"]'));
+}
+function dndClear() { document.querySelectorAll('.drop-before, .drop-after, .drop-over').forEach(e => e.classList.remove('drop-before', 'drop-after', 'drop-over')); }
+document.addEventListener('dragstart', ev => {
+  const el = ev.target.closest && ev.target.closest('[data-drag]'); if (!el) return;
+  DND.src = { kind: el.dataset.drag, i: +el.dataset.i, module: el.dataset.module }; DND.idx = null;
+  try { ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', el.dataset.module || String(el.dataset.i)); } catch (e) {}
+  requestAnimationFrame(() => el.classList.add('dragging'));
+  document.body.classList.add('is-dragging', 'drag-' + DND.src.kind);
+});
+document.addEventListener('dragover', ev => {
+  const zone = dndZone(ev); if (!zone) return;
+  ev.preventDefault(); try { ev.dataTransfer.dropEffect = 'move'; } catch (e) {}
+  const items = [...zone.querySelectorAll(DND.src.kind === 'step' ? '.flow-node' : '.block')];
+  let idx = items.length; for (let k = 0; k < items.length; k++) { const r = items[k].getBoundingClientRect(); if (ev.clientY < r.top + r.height / 2) { idx = k; break; } }
+  if (idx === DND.idx && zone.classList.contains('drop-over')) return;
+  dndClear(); DND.idx = idx; zone.classList.add('drop-over');
+  if (items.length) { if (idx < items.length) items[idx].classList.add('drop-before'); else items[items.length - 1].classList.add('drop-after'); }
+});
+document.addEventListener('dragleave', ev => { const zone = dndZone(ev); const box = zone && (zone.closest('.canvas') || zone); if (box && !box.contains(ev.relatedTarget)) { dndClear(); DND.idx = null; } });
+document.addEventListener('drop', ev => {
+  const zone = dndZone(ev); if (!zone || DND.idx == null) return; ev.preventDefault();
+  const src = DND.src; let to = DND.idx; dndClear();
+  if (src.kind === 'step') {
+    const st = UI.wfDraft.steps; const [x] = st.splice(src.i, 1); if (src.i < to) to--; st.splice(to, 0, x); UI.wfSel = to;
+    if (src.i !== to) toast('Step moved to position ' + (to + 1));
+  } else {
+    const a = assetById(zone.dataset.id); if (!a) return;
+    if (src.kind === 'mod') {
+      const m = modById(src.module); if (!m || !live(m) || a.blocks.some(b => b.moduleId === m.id)) return;
+      a.blocks.splice(to, 0, { id: uid('b'), kind: 'module', moduleId: m.id, v: live(m).v }); toast('Added ' + m.type + ' · ' + m.id + ' v' + live(m).v);
+    } else { const [x] = a.blocks.splice(src.i, 1); if (src.i < to) to--; a.blocks.splice(to, 0, x); }
+    save();
+  }
+  render();
+});
+document.addEventListener('dragend', () => { DND.src = null; DND.idx = null; dndClear(); document.body.classList.remove('is-dragging', 'drag-mod', 'drag-blk', 'drag-step'); document.querySelectorAll('.dragging').forEach(e => e.classList.remove('dragging')); });
