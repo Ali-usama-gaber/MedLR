@@ -283,4 +283,4 @@ const icon = (n, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-
 const FN_ICON = { Medical: 'stethoscope', Legal: 'scale', Regulatory: 'filecheck', Email: 'mail' };
 function fnBadge(fn, cls = '') { return `<span class="fn-badge fn-${String(fn).toLowerCase()} ${cls}" title="${fn}">${icon(FN_ICON[fn] || 'shieldcheck', 'sm')}</span>`; }
 const TYPE_ICON = { 'Clinical Claim': 'quote', 'Safety Statement': 'alert', 'Headline': 'type', 'Supporting Evidence': 'evidence', 'CTA': 'pointer', 'Reference': 'book', 'new': 'edit' };
-const typeIco = t => `<span class="type-ico" aria-hidden="true">${icon(TYPE_ICON[t] || 'file', 'sm')}</span>`;
+const typeIco = t => `<span class="type-ico t-${String(t || 'file').toLowerCase().replace(/[^a-z]+/g, '-')}" aria-hidden="true">${icon(TYPE_ICON[t] || 'file', 'sm')}</span>`;

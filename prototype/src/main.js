@@ -33,10 +33,21 @@ function render() {
   html += UI.modal ? viewModal() : '';
   app.innerHTML = html;
   paginateTables();
+  // One orchestrated entrance per page: only when the route changes, never on in-page updates.
+  const rk = UI.route.name + JSON.stringify(UI.route.p || {}) + (S.signedIn ? 1 : 0);
+  if (rk !== UI._rk) { UI._rk = rk; const c = document.getElementById('content'); if (c) { c.classList.add('enter'); countUp(c); } }
   app.querySelectorAll('table.tbl').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (hs[i]) td.setAttribute('data-label', hs[i]); })); });
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch (e) {} } }
 }
 
+function countUp(root) {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  root.querySelectorAll('.kpi b, .sb-legend b').forEach(el => {
+    const m = /^(\d+)(%?)$/.exec(el.textContent.trim()); if (!m) return; const to = +m[1]; if (to < 2) return;
+    const t0 = performance.now(), dur = 650; const tick = now => { const k = Math.min(1, (now - t0) / dur); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + m[2]; if (k < 1) requestAnimationFrame(tick); };
+    el.textContent = '0' + m[2]; requestAnimationFrame(tick);
+  });
+}
 const PAGE_SIZE = 10;
 function paginateTables() {
   UI.pg = UI.pg || {}; const base = UI.route.name + ':' + JSON.stringify(UI.route.p || {});
