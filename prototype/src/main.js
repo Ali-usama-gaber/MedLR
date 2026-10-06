@@ -281,7 +281,7 @@ const ACT = {
   'toggle-mkt': el => { const m = S.markets.find(x => x.id === el.dataset.id); m.active = !m.active; save(); render(); toast(m.name + (m.active ? ' activated' : ' deactivated')); },
 
   /* workflow builder */
-  'wf-sel': el => { UI.wfSel = +el.dataset.i; render(); },
+  'wf-sel': el => { UI.wfSel = +el.dataset.i; render(); if (window.innerWidth < 1180) { const c = document.querySelector('.builder > .stack'); c && c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } },
   'wf-set': el => { const s = UI.wfDraft.steps[UI.wfSel]; s[el.dataset.k] = el.dataset.v; if (el.dataset.k === 'req' && el.dataset.v === 'approve') s.seniority = 'Senior'; render(); },
   'wf-add': el => { const i = +el.dataset.i; const ref = UI.wfDraft.steps[i - 1] || UI.wfDraft.steps[i]; UI.wfDraft.steps.splice(i, 0, { id: uid('s'), fn: ref ? ref.fn : 'Medical', seniority: 'Junior', req: 'review' }); UI.wfSel = i; render(); toast('Step added — configure it on the right'); },
   'wf-del': () => { if (UI.wfDraft.steps.length <= 1) return; UI.wfDraft.steps.splice(UI.wfSel, 1); UI.wfSel = Math.max(0, UI.wfSel - 1); render(); },

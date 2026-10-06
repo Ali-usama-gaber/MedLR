@@ -1,4 +1,4 @@
-<!-- SAJA MedLR prototype build 2026-10-06 12:32 UTC -->
+<!-- SAJA MedLR prototype build 2026-10-06 13:19 UTC -->
 <title>SAJA MedLR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1110,6 +1110,58 @@ body.drag-mod .sheet[data-drop], body.drag-blk .sheet[data-drop] { outline-color
 .life-st.on .k-dot { box-shadow: 0 0 0 2px #fff; }
 @media (max-width: 760px) { .kpis.strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpis.strip .kpi + .kpi { border-left: 0; } .kpis.strip .kpi { border-top: 1px solid var(--line); } }
 
+/* =========== Mobile pass =========== */
+@media (max-width: 760px) {
+  /* page actions: full-width grid, primary action first */
+  .page-head { align-items: stretch; }
+  .page-head .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 8px; }
+  .page-head .actions .btn { width: 100%; min-height: 44px; padding: 0 10px; }
+  .page-head .actions .btn.primary { grid-column: 1 / -1; order: -1; }
+  .page-head .actions .btn:only-child { grid-column: 1 / -1; }
+  .page-head h1 { font-size: 26px; line-height: 1.12; }
+  /* status strips scroll sideways instead of stacking */
+  .kpis.strip { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -14px; border-radius: 0; border-inline: 0; }
+  .kpis.strip::-webkit-scrollbar { display: none; }
+  .kpis.strip .kpi { flex: 0 0 auto; min-width: 138px; scroll-snap-align: start; border-top: 0; }
+  .kpis.strip .kpi + .kpi { border-left: 1px solid var(--line); }
+  .kpis.strip .kpi b { font-size: 22px; }
+  /* filters: search full width, selects two per row */
+  .toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .toolbar > .search-box, .toolbar > :first-child { grid-column: 1 / -1; }
+  .toolbar select, .toolbar .select { width: 100%; min-width: 0; height: 42px; }
+  .toolbar > .muted { grid-column: 1 / -1; margin-left: 0 !important; text-align: right; }
+  /* bigger touch targets */
+  .btn.sm { min-height: 38px; }
+  .seg button, .seg.sm button { min-height: 36px; }
+  .flow-add { width: 36px; height: 36px; }
+  .pg button { min-width: 40px; height: 40px; }
+  /* review/module content */
+  .sheet-body { padding: 18px 16px; }
+  .sheet-body .claim { font-size: 19px; }
+  .sheet-strip { padding: 10px 16px; gap: 8px 12px; }
+  .kv { grid-template-columns: minmax(96px, 38%) minmax(0, 1fr) !important; gap: 8px 12px; }
+  .kv dd { margin-bottom: 0; }
+  .meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  /* workflow builder nodes */
+  .flow { padding: 18px 10px; }
+  .flow-node { flex-wrap: wrap; gap: 8px 10px; padding: 12px; }
+  .flow-node .grip { display: none; }
+  .flow-node .body { flex: 1 1 calc(100% - 90px); }
+  .flow-node > .sen, .flow-node > .ico { margin-left: 70px; }
+  /* asset assembly */
+  .canvas { min-height: 0; padding: 12px; }
+  .sheet .drop-hint { min-height: 140px; }
+  .drop-hint b { font-size: 13.5px; }
+  /* keep the demo guide button clear of sticky form footers */
+  body:has(.wiz-foot) .guide-fab { bottom: calc(156px + env(safe-area-inset-bottom, 0px)); }
+  /* modals become bottom sheets */
+  .scrim { align-items: end; padding: 0; }
+  .modal { width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; }
+  .modal-foot { position: sticky; bottom: 0; background: var(--surface); }
+  .modal-foot .btn { flex: 1; min-height: 44px; }
+  .pop { width: min(340px, calc(100vw - 24px)); }
+}
+
 </style>
 <div id="app"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -1928,7 +1980,7 @@ function viewReview() {
   `<div class="stack" style="margin-bottom:16px">${authorityBanner(m)}</div>
   <div class="grid cols-main"><div class="stack">
     <section class="panel"><div class="panel-head"><h3>Module content</h3><span class="tag">${esc(m.type)}</span></div><div class="panel-body stack" style="gap:18px"><p class="claim">${esc(l.body)}</p>
-      <div class="fgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[['Product', product(m.product).name], ['Indication', m.indication], ['Audience', m.audience], ['Market', marketsTxt(m.markets)], ['Channel', m.channels.join(', ')], ['Version', 'v' + l.v + (live(m) && live(m) !== l ? ' (replaces v' + live(m).v + ')' : '')]].map(([k, v]) => `<div><div class="section-title" style="font-size:10.5px">${k}</div><div style="font-weight:700;margin-top:2px">${esc(v)}</div></div>`).join('')}</div></div></section>
+      <div class="fgrid meta-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[['Product', product(m.product).name], ['Indication', m.indication], ['Audience', m.audience], ['Market', marketsTxt(m.markets)], ['Channel', m.channels.join(', ')], ['Version', 'v' + l.v + (live(m) && live(m) !== l ? ' (replaces v' + live(m).v + ')' : '')]].map(([k, v]) => `<div><div class="section-title" style="font-size:10.5px">${k}</div><div style="font-weight:700;margin-top:2px">${esc(v)}</div></div>`).join('')}</div></div></section>
     <section class="panel"><div class="panel-head"><h3>References & evidence</h3><span class="chip plain">${l.refs.length}</span></div><div class="panel-body">${refsList(l.refs)}</div></section>
     ${live(m) && live(m) !== l ? `<section class="panel"><div class="panel-head"><h3>What changed from v${live(m).v}</h3></div><div class="panel-body stack"><div class="comment junior"><div class="who"><span class="tag">v${live(m).v} · approved</span></div><p style="text-decoration:line-through;color:var(--ink-3)">${esc(live(m).body)}</p></div><div class="comment"><div class="who"><span class="tag">v${l.v} · in review</span></div><p>${esc(l.body)}</p></div></div></section>` : ''}
     ${mine ? `<section class="panel"><div class="panel-head"><h3>Add a comment</h3></div><div class="panel-body stack"><textarea class="textarea" id="rv-comment" placeholder="Comments are visible to the next reviewer and to the content owner." style="min-height:90px">${esc(UI.f.rvc || '')}</textarea><div class="row"><button class="btn" data-act="comment" data-kind="Module" data-id="${m.id}">${icon('send', 'sm')}Add comment</button></div></div></section>` : ''}
@@ -2621,7 +2673,7 @@ const ACT = {
   'toggle-mkt': el => { const m = S.markets.find(x => x.id === el.dataset.id); m.active = !m.active; save(); render(); toast(m.name + (m.active ? ' activated' : ' deactivated')); },
 
   /* workflow builder */
-  'wf-sel': el => { UI.wfSel = +el.dataset.i; render(); },
+  'wf-sel': el => { UI.wfSel = +el.dataset.i; render(); if (window.innerWidth < 1180) { const c = document.querySelector('.builder > .stack'); c && c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } },
   'wf-set': el => { const s = UI.wfDraft.steps[UI.wfSel]; s[el.dataset.k] = el.dataset.v; if (el.dataset.k === 'req' && el.dataset.v === 'approve') s.seniority = 'Senior'; render(); },
   'wf-add': el => { const i = +el.dataset.i; const ref = UI.wfDraft.steps[i - 1] || UI.wfDraft.steps[i]; UI.wfDraft.steps.splice(i, 0, { id: uid('s'), fn: ref ? ref.fn : 'Medical', seniority: 'Junior', req: 'review' }); UI.wfSel = i; render(); toast('Step added — configure it on the right'); },
   'wf-del': () => { if (UI.wfDraft.steps.length <= 1) return; UI.wfDraft.steps.splice(UI.wfSel, 1); UI.wfSel = Math.max(0, UI.wfSel - 1); render(); },
