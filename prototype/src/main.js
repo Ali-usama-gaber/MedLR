@@ -32,10 +32,28 @@ function render() {
   }
   html += UI.modal ? viewModal() : '';
   app.innerHTML = html;
+  paginateTables();
   app.querySelectorAll('table.tbl').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (hs[i]) td.setAttribute('data-label', hs[i]); })); });
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch (e) {} } }
 }
 
+const PAGE_SIZE = 10;
+function paginateTables() {
+  UI.pg = UI.pg || {}; const base = UI.route.name + ':' + JSON.stringify(UI.route.p || {});
+  app.querySelectorAll('table.tbl').forEach((t, ti) => {
+    const body = t.tBodies[0]; if (!body) return; const rows = [...body.rows]; const k = base + '#' + ti;
+    const st = UI.pg[k] || (UI.pg[k] = { p: 0, n: rows.length }); if (st.n !== rows.length) { st.p = 0; st.n = rows.length; }
+    if (rows.length <= PAGE_SIZE) return;
+    const pages = Math.ceil(rows.length / PAGE_SIZE); st.p = Math.max(0, Math.min(st.p, pages - 1));
+    rows.forEach((r, i) => { if (i < st.p * PAGE_SIZE || i >= (st.p + 1) * PAGE_SIZE) r.hidden = true; });
+    const from = st.p * PAGE_SIZE + 1, to = Math.min(rows.length, (st.p + 1) * PAGE_SIZE), K = encodeURIComponent(k);
+    const b = (pg, label, extra = '') => `<button type="button" data-act="pg" data-k="${K}" data-ti="${ti}" data-p="${pg}" ${extra}>${label}</button>`;
+    let nums = ''; for (let i = 0; i < pages; i++) { if (pages > 7 && i > 0 && i < pages - 1 && Math.abs(i - st.p) > 1) { if (!nums.endsWith('…</span>')) nums += '<span class="gap">…</span>'; continue; } nums += b(i, i + 1, i === st.p ? 'class="on" aria-current="page"' : `aria-label="Page ${i + 1}"`); }
+    const el = document.createElement('div'); el.className = 'pager';
+    el.innerHTML = `<span class="info">Showing <b>${from}–${to}</b> of <b>${rows.length}</b></span><nav class="pg" aria-label="Pagination">${b(st.p - 1, icon('back', 'sm') + '<span>Previous</span>', st.p === 0 ? 'disabled class="nav"' : 'class="nav"')}${nums}${b(st.p + 1, '<span>Next</span>' + icon('chevron', 'sm'), st.p === pages - 1 ? 'disabled class="nav"' : 'class="nav"')}</nav>`;
+    t.after(el);
+  });
+}
 function toast(text) {
   const box = document.getElementById('toasts'); const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status');
   t.innerHTML = icon('check', 'sm') + '<span>' + esc(text) + '</span>'; box.appendChild(t); while (box.children.length > 2) box.firstChild.remove(); setTimeout(() => t.remove(), 3200);
@@ -54,6 +72,12 @@ function wfVisual(wf) {
   return `<div class="row" style="gap:8px;align-items:stretch">${groups.map((g, i) => `<div style="flex:1;min-width:140px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2)"><b style="font-size:13px">${esc(g.fn)} review</b><div class="stack" style="gap:6px;margin-top:8px">${g.steps.map(s => `<div class="row nowrap" style="gap:6px;font-size:12.5px">${sen(s.seniority)}${s.req === 'approve' ? 'Final approval' : 'Review'}</div>`).join('')}</div></div>${i < groups.length - 1 ? `<span style="align-self:center;color:var(--ink-3)">${icon('arrow', 'sm')}</span>` : ''}`).join('')}</div>`;
 }
 function viewModal() {
+  if (UI.modal && UI.modal.type === 'wf-view') {
+    const w = wfById(UI.modal.id); const team = fn => S.teams.find(t => t.fn === fn);
+    return modalShell('workflow', '', esc(w.name), esc(w.desc), `${flowPreview(w.steps, w.system ? 'Asset submitted' : 'Submitted', w.system ? 'Asset ready' : 'Approved')}
+      <div class="wf" style="margin-top:6px">${w.steps.map((s, i) => { const who = assigneeFor(s); return `<div class="wf-step"><div class="wf-dot">${i + 1}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${esc((team(s.fn) || {}).name || s.fn)} · ${who.length ? esc(who.map(x => x.name).join(', ')) : 'No active reviewer'}</div></div></div>`; }).join('')}</div>`,
+      `${btn('Close', 'modal-close')}${isAdmin(me()) ? `<button class="btn primary" data-act="wf-open" data-id="${w.id}">${icon('edit', 'sm')}Open in builder</button>` : ''}`, true);
+  }
   const M = UI.modal; const u = me();
   if (M.type === 'submit') {
     const m = modById(M.id); const l = latest(m); const junior = u.type === 'Content Owner' && u.seniority === 'Junior';
@@ -228,6 +252,9 @@ const ACT = {
   'market-new': () => { UI.modal = { type: 'simple', kind: 'market', title: 'Add market', fields: [['name', 'Country', 'text', 'e.g. Kuwait'], ['code', 'Code', 'text', 'e.g. KW'], ['auth', 'Health authority', 'text', 'e.g. MOH Kuwait']] }; render(); },
   'material-new': () => { UI.modal = { type: 'simple', kind: 'material', title: 'Add material type', fields: [['name', 'Material type', 'text', 'e.g. Congress poster'], ['channel', 'Channel', 'select', S.channels], ['wf', 'Workflow', 'select', S.workflows.filter(w => !w.hidden).map(w => [w.id, w.name])]] }; render(); },
   'wf-new': () => go('workflow-new'),
+  'wf-view': el => { UI.modal = { type: 'wf-view', id: el.dataset.id }; render(); },
+  'wf-open': el => { UI.modal = null; go('workflow', { id: el.dataset.id }); },
+  pg: el => { const st = UI.pg[decodeURIComponent(el.dataset.k)]; if (!st) return; st.p = +el.dataset.p; render(); const t = document.querySelectorAll('table.tbl')[+el.dataset.ti]; if (t && t.getBoundingClientRect().top < 70) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
   'nwf-use': el => { UI.nwf.use = el.dataset.v; render(); },
   'nwf-tpl': el => { const v = el.dataset.v, mk = (fn, seniority, req) => ({ id: uid('s'), fn, seniority, req }); UI.nwf.steps = v === 'std' ? ['Medical', 'Legal', 'Regulatory'].flatMap(fn => [mk(fn, 'Junior', 'review'), mk(fn, 'Senior', 'approve')]) : v === 'senior' ? ['Medical', 'Legal', 'Regulatory'].map(fn => mk(fn, 'Senior', 'approve')) : []; render(); },
   'nwf-add': el => { UI.nwf.steps.push({ id: uid('s'), fn: el.dataset.v, seniority: 'Senior', req: 'approve' }); render(); toast(el.dataset.v + ' step added'); },

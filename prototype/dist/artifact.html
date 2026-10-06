@@ -785,6 +785,25 @@ body.drag-mod .sheet[data-drop], body.drag-blk .sheet[data-drop] { outline-color
 .login-card { position: relative; z-index: 1; }
 @media (max-width: 1024px) { .login-form { min-height: 0; align-content: start; } }
 
+/* ---------- Pagination ---------- */
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-top: 1px solid var(--line); background: linear-gradient(180deg, #fbfcfb, #f7f9f8); }
+.pager .info { font-size: 12.5px; color: var(--ink-3); }
+.pager .info b { color: var(--ink); }
+.pg { display: flex; align-items: center; gap: 4px; }
+.pg button { min-width: 34px; height: 34px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; font-size: 13px; color: var(--ink-2); box-shadow: 0 1px 2px rgba(16, 24, 20, .04); transition: transform .15s, box-shadow .15s, border-color .15s; }
+.pg button:hover:not(:disabled):not(.on) { border-color: var(--accent); color: var(--ink); transform: translateY(-1px); box-shadow: 0 6px 14px -8px rgba(16, 24, 20, .3); }
+.pg button.on { background: var(--grad-accent); border-color: transparent; color: #fff; box-shadow: var(--shadow-accent); }
+.pg button:disabled { opacity: .45; cursor: not-allowed; }
+.pg .gap { padding: 0 4px; color: var(--ink-3); }
+@media (max-width: 760px) { .pager { justify-content: center; } .pg .nav span { display: none; } }
+
+/* workflows table */
+.fn-strip { display: flex; align-items: center; gap: 0; }
+.fn-strip .fn-badge { width: 26px; height: 26px; border-radius: 8px; }
+.fn-strip .fn-badge + .fn-badge { margin-left: 4px; }
+.fn-strip .fn-badge.final { box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(23, 113, 61, .45); }
+.modal.wide .flowx { margin: 0 -2px; }
+
 </style>
 <div id="app"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -1799,9 +1818,18 @@ function viewMaterials() { return simpleTable('Material Types', 'Asset types, th
 /* ===== Workflows ===== */
 function viewWorkflows() {
   const list = S.workflows.filter(w => !w.hidden);
+  const inflight = w => S.modules.filter(m => m.review && m.review.wf === w.id).length + S.assets.filter(a => a.review && a.review.wf === w.id).length;
   return pageHead('Workflows', 'Review routes. Each step names a function, a seniority level and whether it is a review or the final approval.', btn('New workflow', 'wf-new', 'primary', '', 'plus')) +
-  `<div class="stack">${list.map(w => { const inflight = S.modules.filter(m => m.review && m.review.wf === w.id).length + S.assets.filter(a => a.review && a.review.wf === w.id).length;
-    return `<button class="panel" style="text-align:left;padding:18px 20px;display:grid;gap:12px;border:1px solid var(--line);width:100%" ${goAttr('workflow', w.id)}><div class="row"><b style="font-size:15px">${esc(w.name)}</b>${w.system ? '<span class="tag">Assets</span>' : ''}<span class="chip plain">${w.steps.length} steps</span>${inflight ? `<span class="chip info">${inflight} in flight</span>` : ''}<span style="margin-left:auto">${icon('chevron')}</span></div><span class="muted" style="font-size:13px">${esc(w.desc)}</span><div class="wf-inline">${w.steps.map((s, i) => `<span class="wf-pill">${fnBadge(s.fn)}${esc(s.fn)} ${sen(s.seniority)} <span class="muted" style="font-weight:600">${s.req === 'approve' ? 'approval' : 'review'}</span></span>${i < w.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></button>`; }).join('')}</div>`;
+  `<section class="panel table-wrap"><table class="tbl"><thead><tr><th>Workflow</th><th>Applies to</th><th>Review flow</th><th>Steps</th><th>In flight</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody>
+  ${list.map(w => { const n = inflight(w); return `<tr class="click" ${goAttr('workflow', w.id)} tabindex="0">
+    <td><div class="row nowrap" style="gap:12px"><span class="type-ico">${icon('workflow', 'sm')}</span><div style="min-width:0"><div class="title">${esc(w.name)}</div><div class="muted" style="font-size:12px;max-width:42ch">${esc(w.desc)}</div></div></div></td>
+    <td>${w.system ? '<span class="tag">Assets</span>' : '<span class="tag">Modules</span>'}</td>
+    <td><div class="fn-strip">${w.steps.map(s => fnBadge(s.fn, s.req === 'approve' ? 'final' : '')).join('')}</div></td>
+    <td><b>${w.steps.length}</b> <span class="muted" style="font-size:12px">· ${w.steps.filter(s => s.req === 'approve').length} approval${w.steps.filter(s => s.req === 'approve').length === 1 ? '' : 's'}</span></td>
+    <td>${n ? `<span class="chip info">${n} in flight</span>` : '<span class="muted">—</span>'}</td>
+    <td>${w.active === false ? chip('Inactive') : '<span class="chip ok">Active</span>'}</td>
+    <td style="text-align:right"><div class="row nowrap" style="justify-content:flex-end;gap:6px"><button class="btn icon sm" data-act="wf-view" data-id="${w.id}" aria-label="View review flow for ${esc(w.name)}" title="View review flow">${icon('eye', 'sm')}</button><button class="btn icon sm" ${goAttr('workflow', w.id)} aria-label="Edit ${esc(w.name)}" title="Edit in builder">${icon('edit', 'sm')}</button></div></td>
+  </tr>`; }).join('')}</tbody></table></section>`;
 }
 function viewWorkflow() {
   const w = wfById(UI.route.p.id); if (!w) return viewMissing('Workflow');
@@ -1953,10 +1981,28 @@ function render() {
   }
   html += UI.modal ? viewModal() : '';
   app.innerHTML = html;
+  paginateTables();
   app.querySelectorAll('table.tbl').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (hs[i]) td.setAttribute('data-label', hs[i]); })); });
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch (e) {} } }
 }
 
+const PAGE_SIZE = 10;
+function paginateTables() {
+  UI.pg = UI.pg || {}; const base = UI.route.name + ':' + JSON.stringify(UI.route.p || {});
+  app.querySelectorAll('table.tbl').forEach((t, ti) => {
+    const body = t.tBodies[0]; if (!body) return; const rows = [...body.rows]; const k = base + '#' + ti;
+    const st = UI.pg[k] || (UI.pg[k] = { p: 0, n: rows.length }); if (st.n !== rows.length) { st.p = 0; st.n = rows.length; }
+    if (rows.length <= PAGE_SIZE) return;
+    const pages = Math.ceil(rows.length / PAGE_SIZE); st.p = Math.max(0, Math.min(st.p, pages - 1));
+    rows.forEach((r, i) => { if (i < st.p * PAGE_SIZE || i >= (st.p + 1) * PAGE_SIZE) r.hidden = true; });
+    const from = st.p * PAGE_SIZE + 1, to = Math.min(rows.length, (st.p + 1) * PAGE_SIZE), K = encodeURIComponent(k);
+    const b = (pg, label, extra = '') => `<button type="button" data-act="pg" data-k="${K}" data-ti="${ti}" data-p="${pg}" ${extra}>${label}</button>`;
+    let nums = ''; for (let i = 0; i < pages; i++) { if (pages > 7 && i > 0 && i < pages - 1 && Math.abs(i - st.p) > 1) { if (!nums.endsWith('…</span>')) nums += '<span class="gap">…</span>'; continue; } nums += b(i, i + 1, i === st.p ? 'class="on" aria-current="page"' : `aria-label="Page ${i + 1}"`); }
+    const el = document.createElement('div'); el.className = 'pager';
+    el.innerHTML = `<span class="info">Showing <b>${from}–${to}</b> of <b>${rows.length}</b></span><nav class="pg" aria-label="Pagination">${b(st.p - 1, icon('back', 'sm') + '<span>Previous</span>', st.p === 0 ? 'disabled class="nav"' : 'class="nav"')}${nums}${b(st.p + 1, '<span>Next</span>' + icon('chevron', 'sm'), st.p === pages - 1 ? 'disabled class="nav"' : 'class="nav"')}</nav>`;
+    t.after(el);
+  });
+}
 function toast(text) {
   const box = document.getElementById('toasts'); const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status');
   t.innerHTML = icon('check', 'sm') + '<span>' + esc(text) + '</span>'; box.appendChild(t); while (box.children.length > 2) box.firstChild.remove(); setTimeout(() => t.remove(), 3200);
@@ -1975,6 +2021,12 @@ function wfVisual(wf) {
   return `<div class="row" style="gap:8px;align-items:stretch">${groups.map((g, i) => `<div style="flex:1;min-width:140px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2)"><b style="font-size:13px">${esc(g.fn)} review</b><div class="stack" style="gap:6px;margin-top:8px">${g.steps.map(s => `<div class="row nowrap" style="gap:6px;font-size:12.5px">${sen(s.seniority)}${s.req === 'approve' ? 'Final approval' : 'Review'}</div>`).join('')}</div></div>${i < groups.length - 1 ? `<span style="align-self:center;color:var(--ink-3)">${icon('arrow', 'sm')}</span>` : ''}`).join('')}</div>`;
 }
 function viewModal() {
+  if (UI.modal && UI.modal.type === 'wf-view') {
+    const w = wfById(UI.modal.id); const team = fn => S.teams.find(t => t.fn === fn);
+    return modalShell('workflow', '', esc(w.name), esc(w.desc), `${flowPreview(w.steps, w.system ? 'Asset submitted' : 'Submitted', w.system ? 'Asset ready' : 'Approved')}
+      <div class="wf" style="margin-top:6px">${w.steps.map((s, i) => { const who = assigneeFor(s); return `<div class="wf-step"><div class="wf-dot">${i + 1}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${esc((team(s.fn) || {}).name || s.fn)} · ${who.length ? esc(who.map(x => x.name).join(', ')) : 'No active reviewer'}</div></div></div>`; }).join('')}</div>`,
+      `${btn('Close', 'modal-close')}${isAdmin(me()) ? `<button class="btn primary" data-act="wf-open" data-id="${w.id}">${icon('edit', 'sm')}Open in builder</button>` : ''}`, true);
+  }
   const M = UI.modal; const u = me();
   if (M.type === 'submit') {
     const m = modById(M.id); const l = latest(m); const junior = u.type === 'Content Owner' && u.seniority === 'Junior';
@@ -2149,6 +2201,9 @@ const ACT = {
   'market-new': () => { UI.modal = { type: 'simple', kind: 'market', title: 'Add market', fields: [['name', 'Country', 'text', 'e.g. Kuwait'], ['code', 'Code', 'text', 'e.g. KW'], ['auth', 'Health authority', 'text', 'e.g. MOH Kuwait']] }; render(); },
   'material-new': () => { UI.modal = { type: 'simple', kind: 'material', title: 'Add material type', fields: [['name', 'Material type', 'text', 'e.g. Congress poster'], ['channel', 'Channel', 'select', S.channels], ['wf', 'Workflow', 'select', S.workflows.filter(w => !w.hidden).map(w => [w.id, w.name])]] }; render(); },
   'wf-new': () => go('workflow-new'),
+  'wf-view': el => { UI.modal = { type: 'wf-view', id: el.dataset.id }; render(); },
+  'wf-open': el => { UI.modal = null; go('workflow', { id: el.dataset.id }); },
+  pg: el => { const st = UI.pg[decodeURIComponent(el.dataset.k)]; if (!st) return; st.p = +el.dataset.p; render(); const t = document.querySelectorAll('table.tbl')[+el.dataset.ti]; if (t && t.getBoundingClientRect().top < 70) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
   'nwf-use': el => { UI.nwf.use = el.dataset.v; render(); },
   'nwf-tpl': el => { const v = el.dataset.v, mk = (fn, seniority, req) => ({ id: uid('s'), fn, seniority, req }); UI.nwf.steps = v === 'std' ? ['Medical', 'Legal', 'Regulatory'].flatMap(fn => [mk(fn, 'Junior', 'review'), mk(fn, 'Senior', 'approve')]) : v === 'senior' ? ['Medical', 'Legal', 'Regulatory'].map(fn => mk(fn, 'Senior', 'approve')) : []; render(); },
   'nwf-add': el => { UI.nwf.steps.push({ id: uid('s'), fn: el.dataset.v, seniority: 'Senior', req: 'approve' }); render(); toast(el.dataset.v + ' step added'); },

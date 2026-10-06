@@ -602,9 +602,18 @@ function viewMaterials() { return simpleTable('Material Types', 'Asset types, th
 /* ===== Workflows ===== */
 function viewWorkflows() {
   const list = S.workflows.filter(w => !w.hidden);
+  const inflight = w => S.modules.filter(m => m.review && m.review.wf === w.id).length + S.assets.filter(a => a.review && a.review.wf === w.id).length;
   return pageHead('Workflows', 'Review routes. Each step names a function, a seniority level and whether it is a review or the final approval.', btn('New workflow', 'wf-new', 'primary', '', 'plus')) +
-  `<div class="stack">${list.map(w => { const inflight = S.modules.filter(m => m.review && m.review.wf === w.id).length + S.assets.filter(a => a.review && a.review.wf === w.id).length;
-    return `<button class="panel" style="text-align:left;padding:18px 20px;display:grid;gap:12px;border:1px solid var(--line);width:100%" ${goAttr('workflow', w.id)}><div class="row"><b style="font-size:15px">${esc(w.name)}</b>${w.system ? '<span class="tag">Assets</span>' : ''}<span class="chip plain">${w.steps.length} steps</span>${inflight ? `<span class="chip info">${inflight} in flight</span>` : ''}<span style="margin-left:auto">${icon('chevron')}</span></div><span class="muted" style="font-size:13px">${esc(w.desc)}</span><div class="wf-inline">${w.steps.map((s, i) => `<span class="wf-pill">${fnBadge(s.fn)}${esc(s.fn)} ${sen(s.seniority)} <span class="muted" style="font-weight:600">${s.req === 'approve' ? 'approval' : 'review'}</span></span>${i < w.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></button>`; }).join('')}</div>`;
+  `<section class="panel table-wrap"><table class="tbl"><thead><tr><th>Workflow</th><th>Applies to</th><th>Review flow</th><th>Steps</th><th>In flight</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody>
+  ${list.map(w => { const n = inflight(w); return `<tr class="click" ${goAttr('workflow', w.id)} tabindex="0">
+    <td><div class="row nowrap" style="gap:12px"><span class="type-ico">${icon('workflow', 'sm')}</span><div style="min-width:0"><div class="title">${esc(w.name)}</div><div class="muted" style="font-size:12px;max-width:42ch">${esc(w.desc)}</div></div></div></td>
+    <td>${w.system ? '<span class="tag">Assets</span>' : '<span class="tag">Modules</span>'}</td>
+    <td><div class="fn-strip">${w.steps.map(s => fnBadge(s.fn, s.req === 'approve' ? 'final' : '')).join('')}</div></td>
+    <td><b>${w.steps.length}</b> <span class="muted" style="font-size:12px">· ${w.steps.filter(s => s.req === 'approve').length} approval${w.steps.filter(s => s.req === 'approve').length === 1 ? '' : 's'}</span></td>
+    <td>${n ? `<span class="chip info">${n} in flight</span>` : '<span class="muted">—</span>'}</td>
+    <td>${w.active === false ? chip('Inactive') : '<span class="chip ok">Active</span>'}</td>
+    <td style="text-align:right"><div class="row nowrap" style="justify-content:flex-end;gap:6px"><button class="btn icon sm" data-act="wf-view" data-id="${w.id}" aria-label="View review flow for ${esc(w.name)}" title="View review flow">${icon('eye', 'sm')}</button><button class="btn icon sm" ${goAttr('workflow', w.id)} aria-label="Edit ${esc(w.name)}" title="Edit in builder">${icon('edit', 'sm')}</button></div></td>
+  </tr>`; }).join('')}</tbody></table></section>`;
 }
 function viewWorkflow() {
   const w = wfById(UI.route.p.id); if (!w) return viewMissing('Workflow');
