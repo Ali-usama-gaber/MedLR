@@ -671,6 +671,125 @@ body.drag-mod .sheet[data-drop], body.drag-blk .sheet[data-drop] { outline-color
 }
 .sheet .drop-hint { min-height: 220px; justify-content: center; }
 
+/* ---------- Step-by-step forms ---------- */
+.wiz { margin-bottom: 20px; padding: 14px 16px 0; background: linear-gradient(180deg, #fff, #fbfcfb); border: 1px solid rgba(16, 24, 20, .07); border-radius: var(--r-lg); box-shadow: var(--shadow-1); overflow: hidden; }
+.wiz ol { list-style: none; margin: 0; padding: 0 0 12px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.wiz ol::-webkit-scrollbar { display: none; }
+.wiz li { flex: 1 1 0; min-width: max-content; display: flex; align-items: center; }
+.wiz li:not(:last-child)::after { content: ""; flex: 1; min-width: 16px; height: 2px; margin: 0 6px; border-radius: 2px; background: var(--line); }
+.wiz li.done:not(:last-child)::after { background: var(--accent); }
+.wiz button { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px 6px 6px; border: 0; border-radius: 12px; background: none; color: var(--ink-3); font-weight: 700; font-size: 13px; white-space: nowrap; transition: background .15s, color .15s; }
+.wiz button:not(:disabled):hover { background: var(--surface-2); color: var(--ink); }
+.wiz button:disabled { cursor: default; opacity: .7; }
+.wiz .n { width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--ink-2); }
+.wiz .n .ico { width: 14px; height: 14px; }
+.wiz li.done button { color: var(--ink-2); }
+.wiz li.done .n { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.wiz li.cur button { color: var(--ink); }
+.wiz li.cur .n { background: var(--grad-accent); border-color: transparent; color: #fff; box-shadow: var(--shadow-accent); }
+.wiz-meter { height: 3px; margin: 0 -16px; background: var(--surface-3); }
+.wiz-meter span { display: block; height: 100%; background: var(--grad-accent); border-radius: 0 3px 3px 0; transition: width .35s ease; }
+.wiz-head { display: flex; flex-direction: column; gap: 4px; padding: 2px 2px 4px; }
+.wiz-anim .wiz-head, .wiz-anim section.panel:not([hidden]) { animation: fadeUp .3s ease both; }
+.panel-head .grow { flex: 1; }
+.wiz-head h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; outline: none; }
+.wiz-foot { position: sticky; bottom: 12px; z-index: 5; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 16px; background: rgba(255, 255, 255, .86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(16, 24, 20, .07); box-shadow: 0 16px 40px -18px rgba(16, 24, 20, .35); }
+.wiz-foot .grow { flex: 1; }
+.wiz-foot .btn { height: 42px; padding: 0 18px; }
+.wiz-foot .btn.primary { min-width: 130px; }
+.panel.sum .panel-head { padding-top: 12px; padding-bottom: 12px; }
+.panel.sum dd { white-space: pre-line; }
+[hidden] { display: none !important; }
+@media (max-width: 760px) {
+  .wiz { padding: 10px 10px 0; }
+  .wiz li:not(.cur) .l { display: none; }
+  .wiz-meter { margin: 0 -10px; }
+  .wiz-head h2 { font-size: 20px; }
+  .wiz-foot { bottom: 80px; }
+  .panel.sum .kv { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* ---------- Review-flow icons ---------- */
+.fn-badge { width: 22px; height: 22px; flex: none; border-radius: 7px; display: inline-grid; place-items: center; background: linear-gradient(145deg, #f3f6f4, #e4eae6); color: var(--ink-2); box-shadow: 0 1px 0 #fff inset, 0 1px 2px rgba(16, 24, 20, .08); }
+.fn-badge .ico { width: 13px; height: 13px; }
+.fn-badge.sm { width: 20px; height: 20px; border-radius: 6px; margin-right: 6px; vertical-align: -5px; }
+.fn-badge.lg { width: 36px; height: 36px; border-radius: 11px; }
+.fn-badge.lg .ico { width: 18px; height: 18px; }
+.fn-medical { color: #17713d; }
+.fn-legal { color: #35598f; }
+.fn-regulatory { color: #7a5a14; }
+.wf-pill { padding: 3px 9px 3px 3px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); }
+.wf-pill.done { background: var(--accent-soft); border-color: transparent; }
+.wf-pill.done .fn-badge { background: var(--grad-accent); color: #fff; box-shadow: none; }
+.wf-pill.current { border-color: var(--ink-3); box-shadow: 0 0 0 3px var(--surface-3); }
+.wf-step .t { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.wf-step .t .fn-badge.sm { margin-right: 2px; }
+
+/* flow diagram (horizontal) */
+.flowx { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; padding: 6px 2px 10px; }
+.fx-node, .fx-term { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 14px 14px 12px; min-width: 120px; border-radius: 16px; background: linear-gradient(180deg, #fff, #f9fbfa); border: 1px solid rgba(16, 24, 20, .08); box-shadow: 0 1px 2px rgba(16, 24, 20, .04), 0 12px 24px -14px rgba(16, 24, 20, .3); text-align: center; }
+.fx-node b { font-size: 13px; }
+.fx-node > span:not(.fn-badge):not(.sen) { font-size: 11.5px; color: var(--ink-3); font-weight: 600; }
+.fx-node.final { border-color: rgba(23, 113, 61, .3); box-shadow: 0 0 0 3px rgba(23, 113, 61, .08), 0 12px 24px -14px rgba(23, 113, 61, .45); }
+.fx-term { min-width: 96px; flex-direction: row; gap: 8px; border-radius: 99px; padding: 10px 14px; align-self: center; font-weight: 700; font-size: 12.5px; color: var(--ink-2); }
+.fx-term.ok { color: var(--accent-ink); background: var(--accent-soft); border-color: transparent; }
+.fx-arrow { flex: none; align-self: center; color: var(--ink-3); }
+
+/* new workflow step editor */
+.nwf-list { display: flex; flex-direction: column; align-items: stretch; }
+.nwf-link { display: block; width: 2px; height: 14px; margin-left: 31px; background: var(--line-strong); }
+.nwf-step { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; border: 1px solid rgba(16, 24, 20, .08); background: linear-gradient(180deg, #fff, #fbfcfb); box-shadow: 0 1px 2px rgba(16, 24, 20, .04), 0 10px 22px -14px rgba(16, 24, 20, .28); }
+.nwf-step .idx { width: 24px; height: 24px; flex: none; border-radius: 7px; display: grid; place-items: center; background: var(--surface-2); font-weight: 800; font-size: 11.5px; color: var(--ink-2); }
+.nwf-fields { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.nwf-fields .select { width: auto; min-width: 210px; flex: 1 1 210px; height: 38px; }
+.nwf-tools { display: flex; gap: 4px; }
+.nwf-add { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+.nwf-add .btn { gap: 8px; padding-left: 6px; }
+@media (max-width: 760px) {
+  .nwf-step { flex-wrap: wrap; }
+  .nwf-fields { flex: 1 1 100%; order: 3; }
+  .nwf-tools { margin-left: auto; }
+  .nwf-fields .select { min-width: 0; flex-basis: 100%; }
+}
+
+/* ---------- Login: centred form + motion ---------- */
+.login-form { min-height: 100vh; align-content: center; justify-items: center; }
+.login-card { justify-items: stretch; }
+.login-title { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+.login-mark { width: 52px; height: 52px; margin-bottom: 6px; border-radius: 16px; display: grid; place-items: center; background: var(--grad-accent); color: #fff; box-shadow: var(--shadow-accent); animation: popIn .6s .15s cubic-bezier(.2, .9, .3, 1.4) both, glow 3.2s 1s ease-in-out infinite; }
+.login-mark .ico { width: 24px; height: 24px; }
+.login-div, .login-card > p.muted { text-align: center; justify-content: center; }
+.login-card > * { animation: fadeUp .5s ease both; }
+.login-card > *:nth-child(1) { animation-delay: .05s; } .login-card > *:nth-child(2) { animation-delay: .12s; } .login-card > *:nth-child(3) { animation-delay: .19s; }
+.login-card > *:nth-child(4) { animation-delay: .26s; } .login-card > *:nth-child(5) { animation-delay: .33s; } .login-card > *:nth-child(6) { animation-delay: .4s; } .login-card > *:nth-child(7) { animation-delay: .47s; }
+.login-card .btn.primary { position: relative; overflow: hidden; }
+.login-card .btn.primary::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); transform: skewX(-18deg); animation: shine 3.6s 1.4s ease-in-out infinite; }
+.demo-accts button { animation: fadeUp .4s ease both; }
+.demo-accts button:nth-child(1) { animation-delay: .5s; } .demo-accts button:nth-child(2) { animation-delay: .57s; } .demo-accts button:nth-child(3) { animation-delay: .64s; } .demo-accts button:nth-child(4) { animation-delay: .71s; } .demo-accts button:nth-child(5) { animation-delay: .78s; }
+/* brand side motion */
+.login-brand .blob { position: absolute; z-index: 0; border-radius: 50%; filter: blur(10px); pointer-events: none; }
+.login-brand .b1 { width: 380px; height: 380px; left: -120px; top: 30%; background: radial-gradient(closest-side, rgba(23, 113, 61, .13), transparent); animation: drift 14s ease-in-out infinite alternate; }
+.login-brand .b2 { width: 300px; height: 300px; right: -60px; top: -80px; background: radial-gradient(closest-side, rgba(53, 89, 143, .10), transparent); animation: drift 18s ease-in-out infinite alternate-reverse; }
+.login-brand h1 em { background: linear-gradient(90deg, #17713d, #2aa564, #17713d); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sheen 6s linear infinite; }
+.lp-card { animation: float 6s 1.4s ease-in-out infinite; }
+.lp-float { animation: fadeUp .5s 1.7s ease both, float 5s 2.2s ease-in-out infinite reverse; }
+.lp-steps { position: relative; }
+.lp-rail { position: absolute; left: 14px; top: 22px; bottom: 22px; width: 2px; background: var(--accent); transform-origin: top; transform: scaleY(0); animation: rail 1.4s .4s ease forwards; border-radius: 2px; opacity: .5; }
+.lp-dot { position: relative; z-index: 1; }
+.lp-step .lp-dot { animation: popIn .45s cubic-bezier(.2, .9, .3, 1.4) both; animation-delay: inherit; }
+.lp-approved { animation: popIn .5s 1.75s cubic-bezier(.2, .9, .3, 1.4) both; }
+@keyframes popIn { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(60px, -40px) scale(1.15); } }
+@keyframes sheen { to { background-position: -200% 0; } }
+@keyframes shine { 0% { left: -60%; } 30%, 100% { left: 130%; } }
+@keyframes rail { to { transform: scaleY(1); } }
+@keyframes glow { 0%, 100% { box-shadow: var(--shadow-accent); } 50% { box-shadow: 0 1px 0 rgba(255, 255, 255, .22) inset, 0 10px 30px -4px rgba(23, 113, 61, .6), 0 0 0 6px rgba(23, 113, 61, .08); } }
+.login-form { position: relative; overflow: hidden; }
+.login-form::before { content: ""; position: absolute; width: 520px; height: 520px; left: 50%; top: 50%; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(closest-side, rgba(23, 113, 61, .05), transparent); pointer-events: none; }
+.login-card { position: relative; z-index: 1; }
+@media (max-width: 1024px) { .login-form { min-height: 0; align-content: start; } }
+
 </style>
 </head>
 <body>
@@ -1049,6 +1168,9 @@ const IC = {
   chevron: '<path d="m9 18 6-6-6-6"/>',
   down: '<path d="m6 9 6 6 6-6"/>',
   up: '<path d="m18 15-6-6-6 6"/>',
+  stethoscope: '<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/>',
+  scale: '<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+  filecheck: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/>',
   grip: '<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
   shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
   shieldcheck: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
@@ -1075,6 +1197,8 @@ const IC = {
   flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>'
 };
 const icon = (n, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n] || ''}</svg>`;
+const FN_ICON = { Medical: 'stethoscope', Legal: 'scale', Regulatory: 'filecheck' };
+function fnBadge(fn, cls = '') { return `<span class="fn-badge fn-${String(fn).toLowerCase()} ${cls}" title="${fn}">${icon(FN_ICON[fn] || 'shieldcheck', 'sm')}</span>`; }
 const TYPE_ICON = { 'Clinical Claim': 'quote', 'Safety Statement': 'alert', 'Headline': 'type', 'Supporting Evidence': 'evidence', 'CTA': 'pointer', 'Reference': 'book', 'new': 'edit' };
 const typeIco = t => `<span class="type-ico" aria-hidden="true">${icon(TYPE_ICON[t] || 'file', 'sm')}</span>`;
 
@@ -1099,7 +1223,7 @@ const NAV = [
   ['GOVERNANCE'], ['lifecycle', 'Lifecycle', 'clock'], ['audit', 'Audit Trail', 'history'], ['reports', 'Reports', 'chart'],
   ['ADMINISTRATION', 'admin'], ['users', 'Users', 'users', null, 'admin'], ['teams', 'Teams', 'team', null, 'admin'], ['roles', 'Roles', 'key', null, 'admin'], ['products', 'Products', 'pill', null, 'admin'], ['markets', 'Countries & Markets', 'globe', null, 'admin'], ['materials', 'Material Types', 'file', null, 'admin'], ['workflows', 'Workflows', 'workflow', null, 'admin']
 ];
-const NAV_OF = { module: 'modules', 'module-new': 'modules', 'module-edit': 'modules', review: 'tasks', 'asset-review': 'tasks', assemble: 'assets', asset: 'assets', user: 'users', 'user-new': 'users', 'user-edit': 'users', workflow: 'workflows' };
+const NAV_OF = { module: 'modules', 'module-new': 'modules', 'module-edit': 'modules', review: 'tasks', 'asset-review': 'tasks', assemble: 'assets', asset: 'assets', user: 'users', 'user-new': 'users', 'user-edit': 'users', workflow: 'workflows', 'workflow-new': 'workflows' };
 
 function viewShell(inner) {
   const u = me(); const active = NAV_OF[UI.route.name] || UI.route.name; const nTasks = tasksFor(u).length;
@@ -1161,14 +1285,14 @@ function viewLogin() {
   const err = UI.f.loginErr;
   const steps = [['Medical', 'Junior', 'Ahmed Ali'], ['Medical', 'Senior', 'Sara Ahmed'], ['Legal', 'Senior', 'Rania Haddad'], ['Regulatory', 'Senior', 'Layla Nasser']];
   return `<div class="login">
-  <section class="login-brand">
+  <section class="login-brand"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
     <img class="login-logo" src="${LOGO}" alt="SAJA">
     <div class="login-hero"><span class="eyebrow">SAJA MedLR · Modular content &amp; MLR review</span><h1>Create once.<br><em>Approve once.</em><br>Reuse safely.</h1>
     <p class="lede">Medical, Legal and Regulatory review built into every module — so approved content can be reused with confidence across markets and channels.</p></div>
     <div class="login-preview" aria-hidden="true">
       <div class="lp-card">
-        <div class="lp-head"><span class="lp-ico">${icon('quote', 'sm')}</span><div class="lp-title"><b>Clinical Claim A — Hospitalisation reduction</b><span class="mono">MOD-A-014 · v2</span></div><span class="chip ok">Approved</span></div>
-        <div class="lp-steps">${steps.map((x, i) => `<div class="lp-step" style="animation-delay:${0.25 + i * 0.18}s"><span class="lp-dot">${icon('check', 'sm')}</span><span class="lp-fn">${x[0]}</span>${sen(x[1])}<span class="lp-who">${x[2]}</span></div>`).join('')}</div>
+        <div class="lp-head"><span class="lp-ico">${icon('quote', 'sm')}</span><div class="lp-title"><b>Clinical Claim A — Hospitalisation reduction</b><span class="mono">MOD-A-014 · v2</span></div><span class="chip ok lp-approved">Approved</span></div>
+        <div class="lp-steps"><span class="lp-rail" aria-hidden="true"></span>${steps.map((x, i) => `<div class="lp-step" style="animation-delay:${0.35 + i * 0.32}s"><span class="lp-dot">${icon('check', 'sm')}</span><span class="lp-fn">${x[0]}</span>${sen(x[1])}<span class="lp-who">${x[2]}</span></div>`).join('')}</div>
       </div>
       <div class="lp-float"><span class="lp-ico">${icon('layers', 'sm')}</span><span><b>Reused in 4 assets</b><span>Saudi Arabia · UAE</span></span></div>
     </div>
@@ -1176,7 +1300,7 @@ function viewLogin() {
   </section>
   <section class="login-form">
     ${UI.route.name === 'forgot' ? viewForgot() : `<form class="login-card" data-form="login" novalidate>
-      <div class="stack" style="gap:6px"><h2>Sign in</h2><p class="ink2">Welcome back. Use your SAJA work email.</p></div>
+      <div class="login-title"><span class="login-mark">${icon('shieldcheck')}</span><h2>Sign in</h2><p class="ink2">Welcome back. Use your SAJA work email.</p></div>
       ${err ? `<div class="banner bad" role="alert">${icon('alert')}<div class="txt"><b>${esc(err)}</b></div></div>` : ''}
       <div class="field"><label for="login-email">Work email</label><input class="input" id="login-email" name="email" type="email" autocomplete="username" value="${esc(F('loginEmail', 'omar.khalil@saja-demo.com'))}" required></div>
       <div class="field"><div class="row between"><label for="login-pass">Password</label><button type="button" class="btn ghost sm" ${goAttr('forgot')}>Forgot password?</button></div><input class="input" id="login-pass" name="password" type="password" autocomplete="current-password" value="demo-password" required></div>
@@ -1250,13 +1374,32 @@ function viewModules() {
 }
 
 function blankDraft() { return { type: '', title: '', body: '', product: '', indication: '', audience: '', markets: [], channels: [], refs: [], reviewDate: toISO(Date.now() + 300 * DAY), expiry: toISO(Date.now() + 365 * DAY), errors: {}, tried: false, newRefTitle: '', newRefSource: '' }; }
+
+/* ===== Step-by-step forms ===== */
+const MSTEPS = [['Module type', ['type'], 'What kind of content is this?'], ['Content', ['title', 'body'], 'Name the module and write the exact text reviewers will approve.'], ['Product & markets', ['product', 'indication', 'audience', 'markets', 'channels'], 'Where and for whom this module can be used.'], ['References & dates', ['refs', 'expiry'], 'Evidence, periodic review and expiry.'], ['Review & save', [], 'Check everything before saving the draft.']];
+const USTEPS = [['Personal details', ['name', 'email'], 'Who is this person?'], ['Type & seniority', ['type'], 'What they review and how much authority they hold.'], ['Team & status', ['team'], 'Which team they belong to.'], ['Review & create', [], 'Check the details before sending the invitation.']];
+function wizErrors(D, steps, all) { const E = {}; Object.keys(all).forEach(k => { const si = steps.findIndex(s => s[1].includes(k)); if (D.tried || (D.triedSteps || []).includes(si)) E[k] = all[k]; }); return E; }
+function wizBar(form, steps, D) {
+  const cur = D.step || 0, max = D.maxStep || 0;
+  return `<nav class="wiz" aria-label="Form steps"><ol>${steps.map((s, i) => `<li class="${i < cur ? 'done' : ''} ${i === cur ? 'cur' : ''}"><button type="button" data-act="wiz-go" data-form="${form}" data-i="${i}" ${i > max ? 'disabled' : ''} ${i === cur ? 'aria-current="step"' : ''}><span class="n">${i < cur ? icon('check', 'sm') : i + 1}</span><span class="l">${s[0]}</span></button></li>`).join('')}</ol>
+  <div class="wiz-meter"><span style="width:${Math.round(cur / (steps.length - 1) * 100)}%"></span></div></nav>`;
+}
+function wizHead(steps, D) { const s = steps[D.step || 0]; return `<div class="wiz-head"><span class="eyebrow">Step ${(D.step || 0) + 1} of ${steps.length}</span><h2>${s[0]}</h2><p class="ink2">${s[2]}</p></div>`; }
+function wizFoot(form, steps, D, cancelAttr, finalLabel) {
+  const cur = D.step || 0, last = cur === steps.length - 1;
+  return `<div class="wiz-foot">${cur === 0 ? `<button class="btn" type="button" ${cancelAttr}>Cancel</button>` : `<button class="btn" type="button" data-act="wiz-back" data-form="${form}">${icon('back', 'sm')}Back</button>`}<span class="grow"></span>${!last && (D.maxStep || 0) === steps.length - 1 ? `<button class="btn" type="button" data-act="wiz-save" data-form="${form}">${icon('check', 'sm')}${finalLabel}</button>` : ''}<button class="btn primary" type="submit">${last ? icon('check', 'sm') + finalLabel : 'Next' + icon('chevron', 'sm')}</button></div>`;
+}
+function sumRow(label, val) { return `<dt>${label}</dt><dd>${val || '<span class="muted">—</span>'}</dd>`; }
+function sumGroup(form, i, title, rows) { return `<section class="panel sum"><div class="panel-head"><h3>${title}</h3><span class="grow"></span><button type="button" class="btn ghost sm" data-act="wiz-go" data-form="${form}" data-i="${i}">${icon('edit', 'sm')}Edit</button></div><div class="panel-body"><dl class="kv" style="grid-template-columns:130px 1fr">${rows}</dl></div></section>`; }
+
 function viewModuleForm() {
   const editId = UI.route.p.id; const m = editId ? modById(editId) : null;
   if (!UI.draft || UI.draft._for !== (editId || 'new')) {
     if (m) { const l = latest(m); UI.draft = { _for: editId, type: m.type, title: m.title, body: l.body, product: m.product, indication: m.indication, audience: m.audience, markets: [...m.markets], channels: [...m.channels], refs: [...l.refs], reviewDate: toISO(m.reviewDate || Date.now()), expiry: toISO(m.expiry || Date.now()), errors: {}, newRefTitle: '', newRefSource: '' }; }
     else { UI.draft = { _for: 'new', ...blankDraft() }; }
+    UI.draft.step = m ? 1 : 0; UI.draft.maxStep = m ? MSTEPS.length - 1 : 0; UI.draft.triedSteps = [];
   }
-  const D = UI.draft; const E = D.tried ? validateDraft(D) : {};
+  const D = UI.draft; const E = wizErrors(D, MSTEPS, validateDraft(D)); const st = D.step || 0; const hid = i => i === st ? '' : ' hidden';
   const types = [['Clinical Claim', 'A single efficacy or outcome claim with a reference'], ['Safety Statement', 'Fair-balance or safety information'], ['Headline', 'Short promotional headline'], ['Supporting Evidence', 'Data that supports a claim'], ['CTA', 'Call to action'], ['Reference', 'Citation block']];
   const p = S.products.find(x => x.id === D.product);
   const isNewVer = m && latest(m).v > 1 && live(m) && latest(m).status === 'Draft';
@@ -1264,40 +1407,44 @@ function viewModuleForm() {
   const title = m ? (isNewVer ? 'Edit version ' + latest(m).v : 'Edit module') : 'Create module';
   return pageHead(title, m ? `<span class="mono">${m.id}</span> · ${esc(m.title)}` : 'One idea per module. It is reviewed once and reused in every asset where it is eligible.', '', m ? [['Modules', 'modules'], [m.id, 'module', m.id], [title]] : [['Modules', 'modules'], ['Create module']]) +
   (isNewVer ? `<div class="banner info" style="margin-bottom:16px">${icon('layers')}<div class="txt"><b>You are editing version ${latest(m).v}</b><p>Version ${live(m).v} stays approved and live in the library until version ${latest(m).v} is approved.</p></div></div>` : '') +
-  `<form class="grid cols-main" data-form="module" novalidate>
-  <div class="stack">
-    <section class="panel"><div class="panel-head"><span class="chip plain">1</span><h3>Module type</h3></div><div class="panel-body"><div class="type-cards" role="radiogroup" aria-label="Module type">${types.map(t => `<button type="button" class="type-card ${D.type === t[0] ? 'on' : ''}" data-act="d-type" data-v="${t[0]}" role="radio" aria-checked="${D.type === t[0]}">${typeIco(t[0])}<span><b>${t[0]}</b><span>${t[1]}</span></span></button>`).join('')}</div>${err('type')}</div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">2</span><h3>Content</h3></div><div class="panel-body form">
+  wizBar('module', MSTEPS, D) +
+  `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="module" novalidate>
+  <div class="stack">${wizHead(MSTEPS, D)}
+    <section class="panel"${hid(0)}><div class="panel-head"><h3>Module type</h3></div><div class="panel-body"><div class="type-cards" role="radiogroup" aria-label="Module type">${types.map(t => `<button type="button" class="type-card ${D.type === t[0] ? 'on' : ''}" data-act="d-type" data-v="${t[0]}" role="radio" aria-checked="${D.type === t[0]}">${typeIco(t[0])}<span><b>${t[0]}</b><span>${t[1]}</span></span></button>`).join('')}</div>${err('type')}</div></section>
+    <section class="panel"${hid(1)}><div class="panel-head"><h3>Content</h3></div><div class="panel-body form">
       <div class="field"><label for="d-title">Module name</label><input class="input ${E.title ? 'invalid' : ''}" id="d-title" data-d="title" value="${esc(D.title)}" placeholder="e.g. Clinical Claim — Hospitalisation reduction">${err('title')}</div>
       <div class="field"><label for="d-body">Module content</label><textarea class="textarea ${E.body ? 'invalid' : ''}" id="d-body" data-d="body" placeholder="Write one self-contained statement. Use a superscript number to cite a reference.">${esc(D.body)}</textarea><span class="hint">This exact text is what reviewers approve and what assets reuse.</span>${err('body')}</div>
     </div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">3</span><h3>Product, indication & audience</h3></div><div class="panel-body fgrid">
+    <section class="panel"${hid(2)}><div class="panel-head"><h3>Product, indication & audience</h3></div><div class="panel-body fgrid">
       <div class="field"><label for="d-product">Product</label><select class="select ${E.product ? 'invalid' : ''}" id="d-product" data-d="product" data-rerender="1">${opt('', D.product, 'Select product')}${S.products.filter(x => x.status === 'Active').map(x => opt(x.id, D.product, x.name + ' — ' + x.area)).join('')}</select>${err('product')}</div>
       <div class="field"><label for="d-ind">Indication</label><select class="select ${E.indication ? 'invalid' : ''}" id="d-ind" data-d="indication" ${p ? '' : 'disabled'}>${opt('', D.indication, p ? 'Select indication' : 'Select a product first')}${p ? p.indications.map(i => opt(i, D.indication)).join('') : ''}</select>${err('indication')}</div>
       <div class="field" style="grid-column:1/-1"><label for="d-aud">Audience</label><select class="select ${E.audience ? 'invalid' : ''}" id="d-aud" data-d="audience">${opt('', D.audience, 'Select audience')}${S.audiences.map(a => opt(a, D.audience)).join('')}</select>${err('audience')}</div>
     </div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">4</span><h3>Markets & channels</h3></div><div class="panel-body form">
+    <section class="panel"${hid(2)}><div class="panel-head"><h3>Markets & channels</h3></div><div class="panel-body form">
       <div class="field"><span class="label">Markets</span><div class="choices">${S.markets.filter(x => x.active).map(x => `<button type="button" class="choice ${D.markets.includes(x.id) ? 'on' : ''}" data-act="d-toggle" data-k="markets" data-v="${x.id}" aria-pressed="${D.markets.includes(x.id)}"><span class="box">${D.markets.includes(x.id) ? icon('check', 'sm') : ''}</span>${esc(x.name)}</button>`).join('')}</div>${err('markets')}</div>
       <div class="field"><span class="label">Channels</span><div class="choices">${S.channels.map(c => `<button type="button" class="choice ${D.channels.includes(c) ? 'on' : ''}" data-act="d-toggle" data-k="channels" data-v="${c}" aria-pressed="${D.channels.includes(c)}"><span class="box">${D.channels.includes(c) ? icon('check', 'sm') : ''}</span>${esc(c)}</button>`).join('')}</div>${err('channels')}</div>
     </div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">5</span><h3>References</h3></div><div class="panel-body form">
+    <section class="panel"${hid(3)}><div class="panel-head"><h3>References</h3></div><div class="panel-body form">
       ${D.refs.length ? `<div class="stack" style="gap:8px">${D.refs.map((r, i) => { const R = refById(r); return `<div class="ref"><span class="n">${i + 1}</span><div style="flex:1"><b>${esc(R.title)}</b><br><span class="muted">${esc(R.source)}</span></div><button type="button" class="btn icon sm" data-act="d-unref" data-v="${r}" aria-label="Remove reference">${icon('x', 'sm')}</button></div>`; }).join('')}</div>` : `<p class="muted">No references yet.${D.type === 'Clinical Claim' || D.type === 'Supporting Evidence' ? ' A reference is required for this module type.' : ''}</p>`}
       ${err('refs')}
       <div class="fgrid"><div class="field"><label for="d-addref">Add from reference library</label><select class="select" id="d-addref" data-act-change="d-addref">${opt('', '', 'Select a reference')}${S.references.filter(r => !D.refs.includes(r.id) && (!D.product || r.id.includes('-' + D.product.slice(-1) + '-'))).map(r => opt(r.id, '', r.title)).join('')}</select></div>
       <div class="field"><label for="d-newref">Or add a new reference</label><div class="row nowrap"><input class="input" id="d-newref" data-d="newRefTitle" value="${esc(D.newRefTitle)}" placeholder="Title and source"><button type="button" class="btn" data-act="d-newref">Add</button></div></div></div>
     </div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">6</span><h3>Review & expiry</h3></div><div class="panel-body fgrid">
+    <section class="panel"${hid(3)}><div class="panel-head"><h3>Review & expiry</h3></div><div class="panel-body fgrid">
       <div class="field"><label for="d-rev">Periodic review date</label><input class="input" type="date" id="d-rev" data-d="reviewDate" value="${esc(D.reviewDate)}"><span class="hint">You will be reminded to re-check the evidence on this date.</span></div>
       <div class="field"><label for="d-exp">Expiry date</label><input class="input ${E.expiry ? 'invalid' : ''}" type="date" id="d-exp" data-d="expiry" value="${esc(D.expiry)}"><span class="hint">After this date the module cannot be used in new assets.</span>${err('expiry')}</div>
     </div></section>
+    ${st === MSTEPS.length - 1 ? `${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} field${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b><p>Use Edit to go back to that step.</p></div></div>` : ''}
+    ${sumGroup('module', 0, 'Module type', sumRow('Type', esc(D.type)))}
+    ${sumGroup('module', 1, 'Content', sumRow('Name', esc(D.title)) + sumRow('Text', esc(D.body)))}
+    ${sumGroup('module', 2, 'Product & markets', sumRow('Product', p ? esc(p.name) : '') + sumRow('Indication', esc(D.indication)) + sumRow('Audience', esc(D.audience)) + sumRow('Markets', esc(marketsTxt(D.markets))) + sumRow('Channels', esc(D.channels.join(', '))))}
+    ${sumGroup('module', 3, 'References & dates', sumRow('References', D.refs.map(r => esc(refById(r).title)).join('<br>')) + sumRow('Review date', esc(D.reviewDate)) + sumRow('Expiry', esc(D.expiry)))}
+    <p class="muted" style="font-size:12px">Saving keeps the module as a draft. You submit it for MLR review from the module page.</p>` : ''}
+    ${wizFoot('module', MSTEPS, D, m ? goAttr('module', m.id) : goAttr('modules'), m ? (isNewVer ? 'Save version ' + latest(m).v : 'Save changes') : 'Save draft')}
   </div>
   <aside class="stack" style="position:sticky;top:84px">
     <section class="panel"><div class="panel-head"><h3>Preview</h3>${D.type ? `<span class="tag">${esc(D.type)}</span>` : ''}</div><div class="panel-body stack">${D.body ? `<p class="${D.type === 'Headline' ? 'claim' : ''}" style="${D.type === 'Headline' ? 'font-size:22px;font-weight:800' : 'font-size:15px;line-height:1.6'}">${esc(D.body)}</p>` : '<p class="muted">Your content appears here as reviewers will see it.</p>'}
       <dl class="kv" style="grid-template-columns:96px 1fr;font-size:12.5px"><dt>Product</dt><dd>${p ? esc(p.name) : '—'}</dd><dt>Indication</dt><dd>${esc(D.indication || '—')}</dd><dt>Audience</dt><dd>${esc(D.audience || '—')}</dd><dt>Markets</dt><dd>${D.markets.length ? esc(marketsTxt(D.markets)) : '—'}</dd><dt>Channels</dt><dd>${D.channels.length ? esc(D.channels.join(', ')) : '—'}</dd><dt>References</dt><dd>${D.refs.length}</dd></dl></div></section>
-    <section class="panel"><div class="panel-body stack">${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} field${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b></div></div>` : ''}
-      <button class="btn primary" type="submit" style="height:44px">${icon('check', 'sm')}${m ? (isNewVer ? 'Save version ' + latest(m).v : 'Save changes') : 'Save draft'}</button>
-      <button class="btn" type="button" ${m ? goAttr('module', m.id) : goAttr('modules')}>Cancel</button>
-      <p class="muted" style="font-size:12px">Saving keeps the module as a draft. You submit it for MLR review from the module page.</p></div></section>
   </aside></form>`;
 }
 function validateDraft(D) {
@@ -1357,9 +1504,9 @@ function wfProgress(obj, isMod) {
   const hist = obj.review ? obj.review.comments : (isMod ? (latest(obj).history || latest(obj).lastReview || []) : (obj.history || obj.lastReview || []));
   const approved = isMod ? latest(obj).status === 'Approved' : obj.status === 'Approved';
   return `<div class="wf">${wf.steps.map((s, i) => { const done = approved || (cur > i); const now = cur === i; const by = [...hist].reverse().find(c => c.step === i && /Send|Final|Complete/.test(c.decision));
-    return `<div class="wf-step ${done ? 'done' : ''} ${now ? 'current' : ''}"><div class="wf-dot">${done ? icon('check', 'sm') : i + 1}</div><div><div class="t">${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${done && by ? esc(user(by.by).name) + ' · ' + fmtDT(by.at) : now ? 'In progress — ' + assigneeFor(s).map(x => esc(x.name)).join(', ') : done ? 'Completed' : 'Pending'}</div></div></div>`; }).join('')}</div>`;
+    return `<div class="wf-step ${done ? 'done' : ''} ${now ? 'current' : ''}"><div class="wf-dot">${done ? icon('check', 'sm') : i + 1}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${done && by ? esc(user(by.by).name) + ' · ' + fmtDT(by.at) : now ? 'In progress — ' + assigneeFor(s).map(x => esc(x.name)).join(', ') : done ? 'Completed' : 'Pending'}</div></div></div>`; }).join('')}</div>`;
 }
-function wfInline(wf, cur, approved) { return `<div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill ${approved || cur > i ? 'done' : cur === i ? 'current' : ''}"><span class="d"></span>${esc(s.fn)} ${s.seniority === 'Senior' ? 'S' : 'J'}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div>`; }
+function wfInline(wf, cur, approved) { return `<div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill ${approved || cur > i ? 'done' : cur === i ? 'current' : ''}">${fnBadge(s.fn)}${esc(s.fn)} ${s.seniority === 'Senior' ? 'S' : 'J'}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div>`; }
 function commentsList(list, highlightFn) {
   if (!list || !list.length) return '<p class="muted">No review comments yet.</p>';
   return `<div class="stack" style="gap:10px">${list.map(c => { const x = user(c.by); return `<div class="comment ${c.seniority === 'Junior' ? 'junior' : ''}"><div class="who">${avatar(x, 'sm')}<b>${esc(x.name)}</b>${sen(c.seniority || x.seniority)}<span class="muted" style="font-size:12px">${esc((c.fn || FUNCTION_OF[x.type] || '') + ' · ' + fmtDT(c.at))}</span></div>${c.decision ? `<div style="margin-bottom:4px">${chip(c.decision === 'Comment' ? 'Comment' : c.decision, '')}</div>` : ''}${c.text ? `<p style="font-size:13.5px">${esc(c.text)}</p>` : ''}</div>`; }).join('')}</div>`;
@@ -1507,7 +1654,7 @@ function viewAssemble() {
        ${['Approved', 'Market eligible', 'Channel eligible', 'Not expired'].map((lbl, k) => { const fails = V.mods.filter(x => !eligibility(x.m, a).checks[k][1]); return `<div class="check-row">${fails.length ? `<span class="no">${icon('x', 'sm')}</span>${esc(lbl)} — ${fails.length} module${fails.length > 1 ? 's' : ''} fail` : `<span class="ok">${icon('check', 'sm')}</span>${esc(lbl)}`}</div>`; }).join('')}
      </div>
      ${V.nNew ? `<div class="banner warn">${icon('alert')}<div class="txt"><b>New content detected</b><p>${V.nNew} block${V.nNew > 1 ? 's are' : ' is'} not based on an approved module and require${V.nNew > 1 ? '' : 's'} additional MLR review.</p></div></div>` : ''}
-     <div class="stack" style="gap:6px"><span class="section-title">Review route</span><b>${esc(wf.name)}</b><div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill"><span class="d"></span>${esc(s.fn)} ${sen(s.seniority)}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></div>
+     <div class="stack" style="gap:6px"><span class="section-title">Review route</span><b>${esc(wf.name)}</b><div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill">${fnBadge(s.fn)}${esc(s.fn)} ${sen(s.seniority)}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></div>
    </div></section></div>`;
 }
 function viewAsset() {
@@ -1605,27 +1752,33 @@ function viewUser() {
 function viewUserForm() {
   const editId = UI.route.p.id; const x = editId ? S.users.find(u => u.id === editId) : null;
   if (!UI.udraft || UI.udraft._for !== (editId || 'new')) UI.udraft = x ? { _for: editId, name: x.name, email: x.email, type: x.type, seniority: x.seniority || 'Junior', team: x.team, status: x.status } : { _for: 'new', name: '', email: '', type: '', seniority: 'Junior', team: '', status: 'Active' };
-  const D = UI.udraft; const E = D.tried ? validateUser(D, editId) : {}; const err = k => E[k] ? `<span class="err">${E[k]}</span>` : '';
+  if (UI.udraft.step == null) { UI.udraft.step = 0; UI.udraft.maxStep = x ? USTEPS.length - 1 : 0; UI.udraft.triedSteps = []; }
+  const D = UI.udraft; const E = wizErrors(D, USTEPS, validateUser(D, editId)); const err = k => E[k] ? `<span class="err">${E[k]}</span>` : ''; const st = D.step; const hid = i => i === st ? '' : ' hidden';
   const isAdm = D.type === 'Administrator'; const a = D.type ? authority(D.type, isAdm ? null : D.seniority) : null;
   const fnOf = { 'Content Owner': 'Content', 'Medical Reviewer': 'Medical', 'Legal Reviewer': 'Legal', 'Regulatory Reviewer': 'Regulatory', 'Marketing User': 'Marketing', 'Administrator': 'Administration' };
   const teams = S.teams.filter(t => !D.type || t.fn === fnOf[D.type]);
   const title = x ? 'Edit user' : 'Create user';
   return pageHead(title, 'User type and seniority define what this person can review and approve.', '', x ? [['Users', 'users'], [x.name, 'user', x.id], ['Edit']] : [['Users', 'users'], ['Create user']]) +
-  `<form class="grid cols-main" data-form="user" novalidate><div class="stack">
-  <section class="panel"><div class="panel-head"><span class="chip plain">1</span><h3>Personal information</h3></div><div class="panel-body fgrid">
+  wizBar('user', USTEPS, D) + `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="user" novalidate><div class="stack">${wizHead(USTEPS, D)}
+  <section class="panel"${hid(0)}><div class="panel-head"><h3>Personal information</h3></div><div class="panel-body fgrid">
     <div class="field"><label for="u-name">Full name</label><input class="input ${E.name ? 'invalid' : ''}" id="u-name" data-u="name" value="${esc(D.name)}" placeholder="e.g. Ahmed Youssef">${err('name')}</div>
     <div class="field"><label for="u-email">Email</label><input class="input ${E.email ? 'invalid' : ''}" id="u-email" type="email" data-u="email" value="${esc(D.email)}" placeholder="name@saja-demo.com">${err('email')}</div>
     <div class="field" style="grid-column:1/-1"><span class="hint">${icon('mail', 'sm')} The person receives an invitation email and sets their own password on first sign-in.</span></div>
   </div></section>
-  <section class="panel"><div class="panel-head"><span class="chip plain">2</span><h3>User type</h3></div><div class="panel-body"><div class="type-cards" role="radiogroup" aria-label="User type">${USER_TYPES.map(t => `<button type="button" class="type-card ${D.type === t ? 'on' : ''}" data-act="u-type" data-v="${t}" role="radio" aria-checked="${D.type === t}"><span class="type-ico">${icon({ 'Content Owner': 'file', 'Medical Reviewer': 'shieldcheck', 'Legal Reviewer': 'book', 'Regulatory Reviewer': 'globe', 'Marketing User': 'layers', 'Administrator': 'key' }[t], 'sm')}</span><span><b>${t}</b><span>${t === 'Administrator' ? 'System configuration' : FUNCTION_OF[t] ? FUNCTION_OF[t] + ' review' : t === 'Content Owner' ? 'Creates modules' : 'Builds assets'}</span></span></button>`).join('')}</div>${err('type')}</div></section>
-  ${isAdm ? `<section class="panel"><div class="panel-body"><div class="banner">${icon('key')}<div class="txt"><b>Administrators have no seniority</b><p>They configure the system and do not take part in content review.</p></div></div></div></section>` : `<section class="panel"><div class="panel-head"><span class="chip plain">3</span><h3>Seniority</h3></div><div class="panel-body stack"><div class="seg" role="radiogroup" aria-label="Seniority">${['Junior', 'Senior'].map(s => `<button type="button" class="${D.seniority === s ? 'on' : ''}" data-act="u-sen" data-v="${s}" role="radio" aria-checked="${D.seniority === s}">${s}</button>`).join('')}</div><p class="muted" style="font-size:12.5px">${D.type ? (D.seniority === 'Senior' ? 'Senior users hold final approval authority for their function.' : 'Junior users perform the initial review and send items to a Senior.') : 'Choose a user type first.'}</p></div></section>`}
-  <section class="panel"><div class="panel-head"><span class="chip plain">${isAdm ? 3 : 4}</span><h3>Team, role & status</h3></div><div class="panel-body fgrid">
+  <section class="panel"${hid(1)}><div class="panel-head"><h3>User type</h3></div><div class="panel-body"><div class="type-cards" role="radiogroup" aria-label="User type">${USER_TYPES.map(t => `<button type="button" class="type-card ${D.type === t ? 'on' : ''}" data-act="u-type" data-v="${t}" role="radio" aria-checked="${D.type === t}"><span class="type-ico">${icon({ 'Content Owner': 'file', 'Medical Reviewer': 'shieldcheck', 'Legal Reviewer': 'book', 'Regulatory Reviewer': 'globe', 'Marketing User': 'layers', 'Administrator': 'key' }[t], 'sm')}</span><span><b>${t}</b><span>${t === 'Administrator' ? 'System configuration' : FUNCTION_OF[t] ? FUNCTION_OF[t] + ' review' : t === 'Content Owner' ? 'Creates modules' : 'Builds assets'}</span></span></button>`).join('')}</div>${err('type')}</div></section>
+  ${isAdm ? `<section class="panel"${hid(1)}><div class="panel-body"><div class="banner">${icon('key')}<div class="txt"><b>Administrators have no seniority</b><p>They configure the system and do not take part in content review.</p></div></div></div></section>` : `<section class="panel"${hid(1)}><div class="panel-head"><h3>Seniority</h3></div><div class="panel-body stack"><div class="seg" role="radiogroup" aria-label="Seniority">${['Junior', 'Senior'].map(s => `<button type="button" class="${D.seniority === s ? 'on' : ''}" data-act="u-sen" data-v="${s}" role="radio" aria-checked="${D.seniority === s}">${s}</button>`).join('')}</div><p class="muted" style="font-size:12.5px">${D.type ? (D.seniority === 'Senior' ? 'Senior users hold final approval authority for their function.' : 'Junior users perform the initial review and send items to a Senior.') : 'Choose a user type first.'}</p></div></section>`}
+  <section class="panel"${hid(2)}><div class="panel-head"><h3>Team, role & status</h3></div><div class="panel-body fgrid">
     <div class="field"><label for="u-team">Team</label><select class="select ${E.team ? 'invalid' : ''}" id="u-team" data-u="team">${opt('', D.team, 'Select team')}${teams.map(t => opt(t.id, D.team, t.name)).join('')}</select>${err('team')}</div>
     <div class="field"><span class="label">Role</span><div class="input" style="display:flex;align-items:center;background:var(--surface-2)">${D.type ? esc(isAdm ? 'Administrator' : D.seniority + ' ' + D.type) : '<span class="muted">Set by user type and seniority</span>'}</div></div>
     <div class="field"><span class="label">Status</span><div class="seg">${['Active', 'Inactive'].map(s => `<button type="button" class="${D.status === s ? 'on' : ''}" data-act="u-status" data-v="${s}">${s}</button>`).join('')}</div></div>
-  </div></section></div>
+  </div></section>
+  ${st === USTEPS.length - 1 ? `${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} field${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b><p>Use Edit to go back to that step.</p></div></div>` : ''}
+  ${sumGroup('user', 0, 'Personal details', sumRow('Name', esc(D.name)) + sumRow('Email', esc(D.email)))}
+  ${sumGroup('user', 1, 'Type & seniority', sumRow('User type', esc(D.type)) + sumRow('Seniority', isAdm ? 'Not applicable' : D.type ? sen(D.seniority) : ''))}
+  ${sumGroup('user', 2, 'Team & status', sumRow('Team', D.team ? esc((S.teams.find(t => t.id === D.team) || {}).name) : '') + sumRow('Status', esc(D.status)))}` : ''}
+  ${wizFoot('user', USTEPS, D, x ? goAttr('user', x.id) : goAttr('users'), x ? 'Save changes' : 'Create user & send invite')}</div>
   <aside class="stack" style="position:sticky;top:84px"><section class="panel"><div class="panel-head"><h3>Authority preview</h3></div><div class="panel-body stack">${a ? `<div class="row"><b>${esc(D.type)}</b>${isAdm ? '' : sen(D.seniority)}</div><div class="banner ${a.final ? 'ok' : ''}" style="${a.final ? '' : 'background:var(--surface-2)'}">${icon(a.final ? 'key' : 'eye')}<div class="txt"><b>${esc(a.short)}</b><p>${esc(a.long)}</p></div></div><div class="stack" style="gap:6px">${responsibilities(D.type, isAdm ? null : D.seniority).map(([t, on]) => `<div class="check-row"><span class="${on ? 'ok' : 'no'}">${icon(on ? 'check' : 'x', 'sm')}</span><span class="${on ? '' : 'muted'}">${esc(t)}</span></div>`).join('')}</div>` : '<p class="muted">Choose a user type to see what this person will be able to do.</p>'}</div></section>
-  <section class="panel"><div class="panel-body stack"><button class="btn primary" type="submit" style="height:44px">${icon('check', 'sm')}${x ? 'Save changes' : 'Create user & send invite'}</button><button class="btn" type="button" ${x ? goAttr('user', x.id) : goAttr('users')}>Cancel</button></div></section></aside></form>`;
+</aside></form>`;
 }
 function validateUser(D, editId) {
   const e = {};
@@ -1655,7 +1808,7 @@ function viewWorkflows() {
   const list = S.workflows.filter(w => !w.hidden);
   return pageHead('Workflows', 'Review routes. Each step names a function, a seniority level and whether it is a review or the final approval.', btn('New workflow', 'wf-new', 'primary', '', 'plus')) +
   `<div class="stack">${list.map(w => { const inflight = S.modules.filter(m => m.review && m.review.wf === w.id).length + S.assets.filter(a => a.review && a.review.wf === w.id).length;
-    return `<button class="panel" style="text-align:left;padding:18px 20px;display:grid;gap:12px;border:1px solid var(--line);width:100%" ${goAttr('workflow', w.id)}><div class="row"><b style="font-size:15px">${esc(w.name)}</b>${w.system ? '<span class="tag">Assets</span>' : ''}<span class="chip plain">${w.steps.length} steps</span>${inflight ? `<span class="chip info">${inflight} in flight</span>` : ''}<span style="margin-left:auto">${icon('chevron')}</span></div><span class="muted" style="font-size:13px">${esc(w.desc)}</span><div class="wf-inline">${w.steps.map((s, i) => `<span class="wf-pill"><span class="d"></span>${esc(s.fn)} ${sen(s.seniority)} <span class="muted" style="font-weight:600">${s.req === 'approve' ? 'approval' : 'review'}</span></span>${i < w.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></button>`; }).join('')}</div>`;
+    return `<button class="panel" style="text-align:left;padding:18px 20px;display:grid;gap:12px;border:1px solid var(--line);width:100%" ${goAttr('workflow', w.id)}><div class="row"><b style="font-size:15px">${esc(w.name)}</b>${w.system ? '<span class="tag">Assets</span>' : ''}<span class="chip plain">${w.steps.length} steps</span>${inflight ? `<span class="chip info">${inflight} in flight</span>` : ''}<span style="margin-left:auto">${icon('chevron')}</span></div><span class="muted" style="font-size:13px">${esc(w.desc)}</span><div class="wf-inline">${w.steps.map((s, i) => `<span class="wf-pill">${fnBadge(s.fn)}${esc(s.fn)} ${sen(s.seniority)} <span class="muted" style="font-weight:600">${s.req === 'approve' ? 'approval' : 'review'}</span></span>${i < w.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></button>`; }).join('')}</div>`;
 }
 function viewWorkflow() {
   const w = wfById(UI.route.p.id); if (!w) return viewMissing('Workflow');
@@ -1663,7 +1816,7 @@ function viewWorkflow() {
   const D = UI.wfDraft; const selI = UI.wfSel; const s = D.steps[selI];
   const issues = wfIssues(D); const dirty = JSON.stringify(D) !== JSON.stringify(w);
   const teamFor = fn => S.teams.find(t => t.fn === fn);
-  const node = (st, i) => `<button class="flow-node ${i === selI ? 'sel' : ''}" data-act="wf-sel" data-i="${i}" draggable="true" data-drag="step" title="Drag to reorder"><span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span><span class="idx">${i + 1}</span><span class="body"><b>${esc(st.fn)} · ${st.req === 'approve' ? 'Final approval' : 'Review'}</b><span class="muted" style="font-size:12px">${esc((teamFor(st.fn) || {}).name || '')} · ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</span></span>${sen(st.seniority)}${st.req === 'approve' ? icon('key', 'sm') : ''}</button>`;
+  const node = (st, i) => `<button class="flow-node ${i === selI ? 'sel' : ''}" data-act="wf-sel" data-i="${i}" draggable="true" data-drag="step" title="Drag to reorder"><span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span><span class="idx">${i + 1}</span>${fnBadge(st.fn, 'lg')}<span class="body"><b>${esc(st.fn)} · ${st.req === 'approve' ? 'Final approval' : 'Review'}</b><span class="muted" style="font-size:12px">${esc((teamFor(st.fn) || {}).name || '')} · ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</span></span>${sen(st.seniority)}${st.req === 'approve' ? icon('key', 'sm') : ''}</button>`;
   const addBtn = i => `<button class="flow-add" data-act="wf-add" data-i="${i}" aria-label="Add step here" title="Add step">${icon('plus', 'sm')}</button>`;
   return pageHead(esc(D.name), esc(D.desc), `${dirty ? btn('Discard changes', 'wf-discard', 'ghost') : ''}${btn('Save workflow', 'wf-save', 'primary', issues.some(x => x[0] === 'bad') ? 'disabled' : '', 'check')}`, [['Workflows', 'workflows'], [D.name]]) +
   `${dirty ? `<div class="banner info" style="margin-bottom:14px">${icon('edit')}<div class="txt"><b>Unsaved changes</b><p>Saving applies to new submissions. Items already in review keep the route they started with.</p></div></div>` : ''}
@@ -1682,6 +1835,59 @@ function viewWorkflow() {
    <div class="check-row"><span class="ok">${icon('check', 'sm')}</span>${D.steps.length} steps · ${D.steps.filter(x => x.req === 'approve').length} final approvals</div></div></section>
   </div></div>`;
 }
+
+/* ===== New workflow (step form) ===== */
+const WSTEPS = [['Details', ['name'], 'Name the review route and say when it is used.'], ['Review flow', ['steps'], 'Add the review steps in order. Each step is a team, a seniority level and a decision type.'], ['Review & create', [], 'Check the route before creating it.']];
+const WF_USES = [['Promotional modules', 'file', 'Claims, headlines and safety statements'], ['Medical education', 'stethoscope', 'Non-promotional scientific content'], ['Low-risk updates', 'filecheck', 'Minor edits and re-approvals']];
+function validateWf(D) {
+  const e = {};
+  if (!D.name.trim()) e.name = 'Give the workflow a name.';
+  else if (S.workflows.some(w => w.name.toLowerCase() === D.name.trim().toLowerCase())) e.name = 'A workflow with this name already exists.';
+  if (!D.steps.length) e.steps = 'Add at least one review step.';
+  else { const bad = wfIssues(D).filter(x => x[0] === 'bad'); if (bad.length) e.steps = bad.map(x => x[1]).join(' '); }
+  return e;
+}
+function flowPreview(steps, start, end) {
+  return `<div class="flowx">${start ? `<div class="fx-term">${icon('send', 'sm')}<span>${start}</span></div><span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}${steps.map((s, i) => `<div class="fx-node ${s.req === 'approve' ? 'final' : ''}">${fnBadge(s.fn, 'lg')}<b>${esc(s.fn)}</b><span>${s.req === 'approve' ? 'Final approval' : 'Review'}</span>${sen(s.seniority)}</div>${i < steps.length - 1 || end ? `<span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}`).join('')}${end ? `<div class="fx-term ok">${icon('check', 'sm')}<span>${end}</span></div>` : ''}</div>`;
+}
+function viewWorkflowNew() {
+  if (!UI.nwf) UI.nwf = { step: 0, maxStep: 0, triedSteps: [], name: '', desc: '', use: 'Promotional modules', steps: [] };
+  const D = UI.nwf; const E = wizErrors(D, WSTEPS, validateWf(D)); const st = D.step; const hid = i => i === st ? '' : ' hidden';
+  const err = k => E[k] ? `<span class="err">${esc(E[k])}</span>` : '';
+  const issues = D.steps.length ? wfIssues(D) : [];
+  const row = (s, i) => `<div class="nwf-step">
+    <span class="idx">${i + 1}</span>${fnBadge(s.fn, 'lg')}
+    <div class="nwf-fields">
+      <select class="select" data-nwf="fn" data-i="${i}" aria-label="Team for step ${i + 1}">${['Medical', 'Legal', 'Regulatory'].map(fn => opt(fn, s.fn, fn + ' — ' + REVIEWER_OF[fn])).join('')}</select>
+      <div class="seg" aria-label="Seniority">${['Junior', 'Senior'].map(x => `<button type="button" class="${s.seniority === x ? 'on' : ''}" data-act="nwf-set" data-i="${i}" data-k="seniority" data-v="${x}">${x}</button>`).join('')}</div>
+      <div class="seg" aria-label="Decision">${[['review', 'Review'], ['approve', 'Final approval']].map(x => `<button type="button" class="${s.req === x[0] ? 'on' : ''}" data-act="nwf-set" data-i="${i}" data-k="req" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>
+    </div>
+    <div class="nwf-tools"><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === D.steps.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button type="button" class="btn icon sm danger" data-act="nwf-del" data-i="${i}" aria-label="Remove step">${icon('trash', 'sm')}</button></div>
+  </div>`;
+  return pageHead('New workflow', 'Build a review route step by step. Seniority and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) +
+  wizBar('workflow', WSTEPS, D) +
+  `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="workflow" novalidate><div class="stack">${wizHead(WSTEPS, D)}
+  <section class="panel"${hid(0)}><div class="panel-head"><h3>Workflow details</h3></div><div class="panel-body form">
+    <div class="field"><label for="w-name">Workflow name</label><input class="input ${E.name ? 'invalid' : ''}" id="w-name" data-w="name" value="${esc(D.name)}" placeholder="e.g. Medical education — Senior only">${err('name')}</div>
+    <div class="field"><label for="w-desc">When is it used? <span class="muted" style="font-weight:500">(optional)</span></label><textarea class="textarea" id="w-desc" data-w="desc" placeholder="e.g. Non-promotional scientific content for congresses">${esc(D.desc)}</textarea></div>
+    <div class="field"><span class="label">Content type</span><div class="type-cards" role="radiogroup" aria-label="Content type">${WF_USES.map(u => `<button type="button" class="type-card ${D.use === u[0] ? 'on' : ''}" data-act="nwf-use" data-v="${u[0]}" role="radio" aria-checked="${D.use === u[0]}"><span class="type-ico">${icon(u[1])}</span><span><b>${u[0]}</b><span>${u[2]}</span></span></button>`).join('')}</div></div>
+  </div></section>
+  <section class="panel"${hid(1)}><div class="panel-head"><h3>Review flow</h3><span class="chip plain">${D.steps.length} step${D.steps.length === 1 ? '' : 's'}</span></div><div class="panel-body stack">
+    <div class="row"><span class="label" style="margin:0">Start from</span>${[['std', 'Standard — Junior then Senior'], ['senior', 'Senior only'], ['blank', 'Blank']].map(t => `<button type="button" class="btn sm" data-act="nwf-tpl" data-v="${t[0]}">${t[1]}</button>`).join('')}</div>
+    ${D.steps.length ? `<div class="nwf-list">${D.steps.map(row).join('<span class="nwf-link"></span>')}</div>` : `<div class="empty" style="padding:26px"><p>No steps yet. Pick a template above or add a step below.</p></div>`}
+    <div class="nwf-add">${['Medical', 'Legal', 'Regulatory'].map(fn => `<button type="button" class="btn" data-act="nwf-add" data-v="${fn}">${fnBadge(fn)}Add ${fn}</button>`).join('')}</div>
+    ${err('steps')}
+  </div></section>
+  ${st === WSTEPS.length - 1 ? `${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} item${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b><p>Use Edit to go back to that step.</p></div></div>` : ''}
+  ${sumGroup('workflow', 0, 'Details', sumRow('Name', esc(D.name)) + sumRow('Used for', esc(D.use)) + sumRow('Description', esc(D.desc)))}
+  <section class="panel sum"><div class="panel-head"><h3>Review flow</h3><span class="grow"></span><button type="button" class="btn ghost sm" data-act="wiz-go" data-form="workflow" data-i="1">${icon('edit', 'sm')}Edit</button></div><div class="panel-body">${flowPreview(D.steps, 'Submitted', 'Approved')}</div></section>` : ''}
+  ${wizFoot('workflow', WSTEPS, D, goAttr('workflows'), 'Create workflow')}</div>
+  <aside class="stack" style="position:sticky;top:84px">
+    <section class="panel"><div class="panel-head"><h3>Review flow preview</h3></div><div class="panel-body">${D.steps.length ? `<div class="wf">${D.steps.map((s, i) => `<div class="wf-step"><div class="wf-dot">${i + 1}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${esc(s.seniority)} ${esc(REVIEWER_OF[s.fn])}</div></div></div>`).join('')}</div>` : '<p class="muted">Steps appear here as you add them.</p>'}</div></section>
+    <section class="panel"><div class="panel-head"><h3>Checks</h3></div><div class="panel-body stack" style="gap:8px">${!D.steps.length ? `<div class="check-row"><span class="no">${icon('x', 'sm')}</span>Add at least one step</div>` : issues.length ? issues.map(([t, msg]) => `<div class="check-row"><span class="${t === 'bad' ? 'no' : 'ok'}" style="${t === 'warn' ? 'color:var(--warn)' : ''}">${icon(t === 'bad' ? 'x' : 'alert', 'sm')}</span>${esc(msg)}</div>`).join('') : `<div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Route is valid</div>`}</div></section>
+  </aside></form>`;
+}
+
 function wfIssues(D) {
   const out = [];
   if (!D.steps.length) out.push(['bad', 'Add at least one step.']);
@@ -1721,8 +1927,8 @@ function viewGuide() {
 }
 
 /* ---------- Controller: routing, modals, actions ---------- */
-const ROUTES = { home: viewHome, tasks: viewTasks, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, workflows: viewWorkflows, workflow: viewWorkflow };
-const ADMIN_ROUTES = ['users', 'user', 'user-new', 'user-edit', 'teams', 'roles', 'products', 'markets', 'materials', 'workflows', 'workflow'];
+const ROUTES = { home: viewHome, tasks: viewTasks, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
+const ADMIN_ROUTES = ['users', 'user', 'user-new', 'user-edit', 'teams', 'roles', 'products', 'markets', 'materials', 'workflows', 'workflow', 'workflow-new'];
 const app = document.getElementById('app');
 
 function go(name, p = {}, replace) {
@@ -1731,6 +1937,7 @@ function go(name, p = {}, replace) {
   if ((name === 'module-edit' || name === 'module-new') && UI.route.name !== name) UI.draft = null;
   if ((name === 'user-new' || name === 'user-edit')) UI.udraft = null;
   if (name !== 'workflow') UI.wfDraft = null;
+  if (name === 'workflow-new' && UI.route.name !== 'workflow-new') UI.nwf = null;
   if (name === 'library') { const dm = S.demo.moduleId && modById(S.demo.moduleId); if (dm && live(dm)) S.demo.sawLibraryAfter = true; }
   if (name === 'lifecycle') S.demo.sawLifecycle = true;
   UI.route = { name, p }; UI.pop = null; UI.navOpen = false; UI.search = ''; UI.f.rvc = '';
@@ -1867,6 +2074,9 @@ const ACT = {
   'clear-filters': el => { el.dataset.keys.split(',').forEach(k => { UI.f[k] = k === 'lstat' ? 'usable' : ''; }); render(); },
 
   /* module form */
+  'wiz-go': el => { const D = wizDraft(el.dataset.form); const i = +el.dataset.i; if (i <= (D.maxStep || 0)) wizShow(D, i); },
+  'wiz-save': el => { const f = el.dataset.form; wizDraft(f).step = wizSteps(f).length - 1; (f === 'user' ? saveUserForm : f === 'workflow' ? saveWorkflowForm : saveModuleForm)(); },
+  'wiz-back': el => { const D = wizDraft(el.dataset.form); wizShow(D, Math.max(0, (D.step || 0) - 1)); },
   'd-type': el => { UI.draft.type = el.dataset.v; render(); },
   'd-toggle': el => { const arr = UI.draft[el.dataset.k]; const i = arr.indexOf(el.dataset.v); i >= 0 ? arr.splice(i, 1) : arr.push(el.dataset.v); render(); },
   'd-unref': el => { UI.draft.refs = UI.draft.refs.filter(r => r !== el.dataset.v); render(); },
@@ -1945,7 +2155,13 @@ const ACT = {
   'product-new': () => { UI.modal = { type: 'simple', kind: 'product', title: 'Add product', fields: [['name', 'Product name', 'text', 'e.g. Product C'], ['area', 'Therapy area', 'text', 'e.g. Diabetes'], ['ind', 'Indications (comma separated)', 'text', 'e.g. Type 2 diabetes']] }; render(); },
   'market-new': () => { UI.modal = { type: 'simple', kind: 'market', title: 'Add market', fields: [['name', 'Country', 'text', 'e.g. Kuwait'], ['code', 'Code', 'text', 'e.g. KW'], ['auth', 'Health authority', 'text', 'e.g. MOH Kuwait']] }; render(); },
   'material-new': () => { UI.modal = { type: 'simple', kind: 'material', title: 'Add material type', fields: [['name', 'Material type', 'text', 'e.g. Congress poster'], ['channel', 'Channel', 'select', S.channels], ['wf', 'Workflow', 'select', S.workflows.filter(w => !w.hidden).map(w => [w.id, w.name])]] }; render(); },
-  'wf-new': () => { UI.modal = { type: 'simple', kind: 'workflow', title: 'New workflow', ico: 'workflow', cta: 'Create', fields: [['name', 'Workflow name', 'text', 'e.g. Medical education — Senior only'], ['desc', 'When is it used?', 'text', 'e.g. Non-promotional medical education']] }; render(); },
+  'wf-new': () => go('workflow-new'),
+  'nwf-use': el => { UI.nwf.use = el.dataset.v; render(); },
+  'nwf-tpl': el => { const v = el.dataset.v, mk = (fn, seniority, req) => ({ id: uid('s'), fn, seniority, req }); UI.nwf.steps = v === 'std' ? ['Medical', 'Legal', 'Regulatory'].flatMap(fn => [mk(fn, 'Junior', 'review'), mk(fn, 'Senior', 'approve')]) : v === 'senior' ? ['Medical', 'Legal', 'Regulatory'].map(fn => mk(fn, 'Senior', 'approve')) : []; render(); },
+  'nwf-add': el => { UI.nwf.steps.push({ id: uid('s'), fn: el.dataset.v, seniority: 'Senior', req: 'approve' }); render(); toast(el.dataset.v + ' step added'); },
+  'nwf-set': el => { const s = UI.nwf.steps[+el.dataset.i]; s[el.dataset.k] = el.dataset.v; if (el.dataset.k === 'req' && el.dataset.v === 'approve') s.seniority = 'Senior'; if (el.dataset.k === 'seniority' && el.dataset.v === 'Junior') s.req = 'review'; render(); },
+  'nwf-move': el => { const st = UI.nwf.steps, i = +el.dataset.i, j = i + +el.dataset.dir; if (j < 0 || j >= st.length) return; [st[i], st[j]] = [st[j], st[i]]; render(); },
+  'nwf-del': el => { UI.nwf.steps.splice(+el.dataset.i, 1); render(); },
   'simple-confirm': () => {
     const M = UI.modal; const v = k => { const e = document.getElementById('sf-' + k); return e ? e.value.trim() : ''; };
     const req = M.fields.filter(f => f[2] !== 'select').map(f => f[0]); const miss = req.find(k => !v(k)); if (miss) { M.err = miss; render(); return; }
@@ -2007,6 +2223,7 @@ document.addEventListener('input', ev => {
   if (t.dataset.filter && t.tagName === 'INPUT') { UI.f[t.dataset.filter] = t.value; render(); return; }
   if (t.dataset.d && t.tagName !== 'SELECT') { UI.draft[t.dataset.d] = t.value; if (t.dataset.d === 'body' || t.dataset.d === 'title') renderSoon(); return; }
   if (t.dataset.u && t.tagName !== 'SELECT') { UI.udraft[t.dataset.u] = t.value; return; }
+  if (t.dataset.w) { UI.nwf[t.dataset.w] = t.value; return; }
   if (t.dataset.an && t.tagName !== 'SELECT') { UI.modal.d[t.dataset.an] = t.value; return; }
   if (t.dataset.assetProp && t.tagName === 'INPUT') { const a = assetById(t.dataset.id); a[t.dataset.assetProp] = t.value; save(); return; }
 });
@@ -2022,6 +2239,8 @@ document.addEventListener('change', ev => {
   if (t.dataset.u) { UI.udraft[t.dataset.u] = t.value; render(); return; }
   if (t.dataset.an) { const D = UI.modal.d; D[t.dataset.an] = t.value; if (t.dataset.an === 'type') { const mt = S.materialTypes.find(x => x.name === t.value); D.channel = mt.channel; D.name = t.value + ' — ' + (D.name.split('—')[1] || '').trim(); } if (t.dataset.an === 'product') D.audience = t.value === 'P-B' ? 'HCP – Pulmonologists' : 'HCP – Cardiologists'; render(); return; }
   if (t.dataset.assetProp) { const a = assetById(t.dataset.id); a[t.dataset.assetProp] = t.value; save(); render(); return; }
+  if (t.dataset.w) return;
+  if (t.dataset.nwf) { UI.nwf.steps[+t.dataset.i][t.dataset.nwf] = t.value; render(); return; }
   if (t.dataset.wf) { UI.wfDraft.steps[UI.wfSel][t.dataset.wf] = t.value; render(); return; }
 });
 document.addEventListener('submit', ev => {
@@ -2036,11 +2255,27 @@ document.addEventListener('submit', ev => {
   if (f === 'forgot') { const e = ev.target.email.value.trim(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { UI.f.forgotErr = 'Enter a valid email address.'; render(); return; } UI.f.forgotErr = null; UI.f.resetSent = e; render(); }
   if (f === 'module') saveModuleForm();
   if (f === 'user') saveUserForm();
+  if (f === 'workflow') saveWorkflowForm();
 });
 
+function wizDraft(form) { return form === 'user' ? UI.udraft : form === 'workflow' ? UI.nwf : UI.draft; }
+function wizSteps(form) { return form === 'user' ? USTEPS : form === 'workflow' ? WSTEPS : MSTEPS; }
+function wizErrs(form) { return form === 'user' ? validateUser(UI.udraft, UI.route.p.id) : form === 'workflow' ? validateWf(UI.nwf) : validateDraft(UI.draft); }
+function wizShow(D, i) { D.anim = true; D.step = i; D.maxStep = Math.max(D.maxStep || 0, i); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); const h = document.querySelector('.wiz-head h2'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
+// Returns true when the form is on its last step and fully valid (caller saves); otherwise moves the wizard.
+function wizAdvance(form) {
+  const D = wizDraft(form), steps = wizSteps(form), last = steps.length - 1, cur = D.step || 0, all = wizErrs(form);
+  if (cur < last) {
+    const bad = steps[cur][1].filter(k => all[k]);
+    if (bad.length) { D.triedSteps = [...new Set([...(D.triedSteps || []), cur])]; render(); const first = document.querySelector('.invalid, .err'); first && first.scrollIntoView({ block: 'center', behavior: 'smooth' }); return false; }
+    wizShow(D, cur + 1); return false;
+  }
+  if (Object.keys(all).length) { D.tried = true; const firstBad = steps.findIndex(s => s[1].some(k => all[k])); wizShow(D, firstBad < 0 ? last : firstBad); return false; }
+  return true;
+}
 function saveModuleForm() {
-  const D = UI.draft; D.tried = true; const E = validateDraft(D);
-  if (Object.keys(E).length) { render(); const first = document.querySelector('.invalid, .err'); first && first.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+  if (!wizAdvance('module')) return;
+  const D = UI.draft;
   const p = UI.route.p; const base = { title: D.title.trim(), type: D.type, product: D.product, indication: D.indication, audience: D.audience, markets: [...D.markets], channels: [...D.channels], reviewDate: fromISO(D.reviewDate), expiry: fromISO(D.expiry), updatedAt: Date.now() };
   if (p.id && p.newVersion) {
     const m = modById(p.id); Object.assign(m, base); const nv = Math.max(...m.versions.map(v => v.v)) + 1; m.versions.push({ v: nv, body: D.body.trim(), refs: [...D.refs], status: 'Draft' }); m.cur = nv;
@@ -2051,8 +2286,14 @@ function saveModuleForm() {
   const m = { id, ...base, owner: S.personaId, versions: [{ v: 1, body: D.body.trim(), refs: [...D.refs], status: 'Draft' }], cur: 1, createdAt: Date.now(), review: null, changes: null };
   S.modules.push(m); S.demo.moduleId = id; log('Created module (draft)', 'Module', id, 1); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
 }
+function saveWorkflowForm() {
+  if (!wizAdvance('workflow')) return;
+  const D = UI.nwf; const w = { id: uid('WF'), name: D.name.trim(), desc: D.desc.trim() || D.use, active: true, steps: D.steps.map(s => ({ ...s })) };
+  S.workflows.push(w); log('Created workflow', 'Workflow', w.id, 1); save(); UI.nwf = null; go('workflow', { id: w.id }); toast('Workflow created · ' + w.steps.length + ' steps');
+}
 function saveUserForm() {
-  const D = UI.udraft; const editId = UI.route.p.id; D.tried = true; if (Object.keys(validateUser(D, editId)).length) { render(); return; }
+  if (!wizAdvance('user')) return;
+  const D = UI.udraft; const editId = UI.route.p.id;
   const data = { name: D.name.trim(), email: D.email.trim(), type: D.type, seniority: D.type === 'Administrator' ? null : D.seniority, team: D.team, status: D.status };
   if (editId) { const x = S.users.find(u => u.id === editId); Object.assign(x, data); log('Updated user', 'User', x.id, 1, roleLabel(x)); save(); UI.udraft = null; go('user', { id: x.id }); toast('User updated'); return; }
   const x = { id: uid('u'), ...data }; S.users.push(x); log('Created user', 'User', x.id, 1, roleLabel(x)); save(); UI.udraft = null; go('user', { id: x.id }); toast('Invitation sent to ' + x.email);

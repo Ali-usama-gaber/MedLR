@@ -19,7 +19,7 @@ const NAV = [
   ['GOVERNANCE'], ['lifecycle', 'Lifecycle', 'clock'], ['audit', 'Audit Trail', 'history'], ['reports', 'Reports', 'chart'],
   ['ADMINISTRATION', 'admin'], ['users', 'Users', 'users', null, 'admin'], ['teams', 'Teams', 'team', null, 'admin'], ['roles', 'Roles', 'key', null, 'admin'], ['products', 'Products', 'pill', null, 'admin'], ['markets', 'Countries & Markets', 'globe', null, 'admin'], ['materials', 'Material Types', 'file', null, 'admin'], ['workflows', 'Workflows', 'workflow', null, 'admin']
 ];
-const NAV_OF = { module: 'modules', 'module-new': 'modules', 'module-edit': 'modules', review: 'tasks', 'asset-review': 'tasks', assemble: 'assets', asset: 'assets', user: 'users', 'user-new': 'users', 'user-edit': 'users', workflow: 'workflows' };
+const NAV_OF = { module: 'modules', 'module-new': 'modules', 'module-edit': 'modules', review: 'tasks', 'asset-review': 'tasks', assemble: 'assets', asset: 'assets', user: 'users', 'user-new': 'users', 'user-edit': 'users', workflow: 'workflows', 'workflow-new': 'workflows' };
 
 function viewShell(inner) {
   const u = me(); const active = NAV_OF[UI.route.name] || UI.route.name; const nTasks = tasksFor(u).length;
@@ -81,14 +81,14 @@ function viewLogin() {
   const err = UI.f.loginErr;
   const steps = [['Medical', 'Junior', 'Ahmed Ali'], ['Medical', 'Senior', 'Sara Ahmed'], ['Legal', 'Senior', 'Rania Haddad'], ['Regulatory', 'Senior', 'Layla Nasser']];
   return `<div class="login">
-  <section class="login-brand">
+  <section class="login-brand"><span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
     <img class="login-logo" src="${LOGO}" alt="SAJA">
     <div class="login-hero"><span class="eyebrow">SAJA MedLR · Modular content &amp; MLR review</span><h1>Create once.<br><em>Approve once.</em><br>Reuse safely.</h1>
     <p class="lede">Medical, Legal and Regulatory review built into every module — so approved content can be reused with confidence across markets and channels.</p></div>
     <div class="login-preview" aria-hidden="true">
       <div class="lp-card">
-        <div class="lp-head"><span class="lp-ico">${icon('quote', 'sm')}</span><div class="lp-title"><b>Clinical Claim A — Hospitalisation reduction</b><span class="mono">MOD-A-014 · v2</span></div><span class="chip ok">Approved</span></div>
-        <div class="lp-steps">${steps.map((x, i) => `<div class="lp-step" style="animation-delay:${0.25 + i * 0.18}s"><span class="lp-dot">${icon('check', 'sm')}</span><span class="lp-fn">${x[0]}</span>${sen(x[1])}<span class="lp-who">${x[2]}</span></div>`).join('')}</div>
+        <div class="lp-head"><span class="lp-ico">${icon('quote', 'sm')}</span><div class="lp-title"><b>Clinical Claim A — Hospitalisation reduction</b><span class="mono">MOD-A-014 · v2</span></div><span class="chip ok lp-approved">Approved</span></div>
+        <div class="lp-steps"><span class="lp-rail" aria-hidden="true"></span>${steps.map((x, i) => `<div class="lp-step" style="animation-delay:${0.35 + i * 0.32}s"><span class="lp-dot">${icon('check', 'sm')}</span><span class="lp-fn">${x[0]}</span>${sen(x[1])}<span class="lp-who">${x[2]}</span></div>`).join('')}</div>
       </div>
       <div class="lp-float"><span class="lp-ico">${icon('layers', 'sm')}</span><span><b>Reused in 4 assets</b><span>Saudi Arabia · UAE</span></span></div>
     </div>
@@ -96,7 +96,7 @@ function viewLogin() {
   </section>
   <section class="login-form">
     ${UI.route.name === 'forgot' ? viewForgot() : `<form class="login-card" data-form="login" novalidate>
-      <div class="stack" style="gap:6px"><h2>Sign in</h2><p class="ink2">Welcome back. Use your SAJA work email.</p></div>
+      <div class="login-title"><span class="login-mark">${icon('shieldcheck')}</span><h2>Sign in</h2><p class="ink2">Welcome back. Use your SAJA work email.</p></div>
       ${err ? `<div class="banner bad" role="alert">${icon('alert')}<div class="txt"><b>${esc(err)}</b></div></div>` : ''}
       <div class="field"><label for="login-email">Work email</label><input class="input" id="login-email" name="email" type="email" autocomplete="username" value="${esc(F('loginEmail', 'omar.khalil@saja-demo.com'))}" required></div>
       <div class="field"><div class="row between"><label for="login-pass">Password</label><button type="button" class="btn ghost sm" ${goAttr('forgot')}>Forgot password?</button></div><input class="input" id="login-pass" name="password" type="password" autocomplete="current-password" value="demo-password" required></div>
@@ -170,13 +170,32 @@ function viewModules() {
 }
 
 function blankDraft() { return { type: '', title: '', body: '', product: '', indication: '', audience: '', markets: [], channels: [], refs: [], reviewDate: toISO(Date.now() + 300 * DAY), expiry: toISO(Date.now() + 365 * DAY), errors: {}, tried: false, newRefTitle: '', newRefSource: '' }; }
+
+/* ===== Step-by-step forms ===== */
+const MSTEPS = [['Module type', ['type'], 'What kind of content is this?'], ['Content', ['title', 'body'], 'Name the module and write the exact text reviewers will approve.'], ['Product & markets', ['product', 'indication', 'audience', 'markets', 'channels'], 'Where and for whom this module can be used.'], ['References & dates', ['refs', 'expiry'], 'Evidence, periodic review and expiry.'], ['Review & save', [], 'Check everything before saving the draft.']];
+const USTEPS = [['Personal details', ['name', 'email'], 'Who is this person?'], ['Type & seniority', ['type'], 'What they review and how much authority they hold.'], ['Team & status', ['team'], 'Which team they belong to.'], ['Review & create', [], 'Check the details before sending the invitation.']];
+function wizErrors(D, steps, all) { const E = {}; Object.keys(all).forEach(k => { const si = steps.findIndex(s => s[1].includes(k)); if (D.tried || (D.triedSteps || []).includes(si)) E[k] = all[k]; }); return E; }
+function wizBar(form, steps, D) {
+  const cur = D.step || 0, max = D.maxStep || 0;
+  return `<nav class="wiz" aria-label="Form steps"><ol>${steps.map((s, i) => `<li class="${i < cur ? 'done' : ''} ${i === cur ? 'cur' : ''}"><button type="button" data-act="wiz-go" data-form="${form}" data-i="${i}" ${i > max ? 'disabled' : ''} ${i === cur ? 'aria-current="step"' : ''}><span class="n">${i < cur ? icon('check', 'sm') : i + 1}</span><span class="l">${s[0]}</span></button></li>`).join('')}</ol>
+  <div class="wiz-meter"><span style="width:${Math.round(cur / (steps.length - 1) * 100)}%"></span></div></nav>`;
+}
+function wizHead(steps, D) { const s = steps[D.step || 0]; return `<div class="wiz-head"><span class="eyebrow">Step ${(D.step || 0) + 1} of ${steps.length}</span><h2>${s[0]}</h2><p class="ink2">${s[2]}</p></div>`; }
+function wizFoot(form, steps, D, cancelAttr, finalLabel) {
+  const cur = D.step || 0, last = cur === steps.length - 1;
+  return `<div class="wiz-foot">${cur === 0 ? `<button class="btn" type="button" ${cancelAttr}>Cancel</button>` : `<button class="btn" type="button" data-act="wiz-back" data-form="${form}">${icon('back', 'sm')}Back</button>`}<span class="grow"></span>${!last && (D.maxStep || 0) === steps.length - 1 ? `<button class="btn" type="button" data-act="wiz-save" data-form="${form}">${icon('check', 'sm')}${finalLabel}</button>` : ''}<button class="btn primary" type="submit">${last ? icon('check', 'sm') + finalLabel : 'Next' + icon('chevron', 'sm')}</button></div>`;
+}
+function sumRow(label, val) { return `<dt>${label}</dt><dd>${val || '<span class="muted">—</span>'}</dd>`; }
+function sumGroup(form, i, title, rows) { return `<section class="panel sum"><div class="panel-head"><h3>${title}</h3><span class="grow"></span><button type="button" class="btn ghost sm" data-act="wiz-go" data-form="${form}" data-i="${i}">${icon('edit', 'sm')}Edit</button></div><div class="panel-body"><dl class="kv" style="grid-template-columns:130px 1fr">${rows}</dl></div></section>`; }
+
 function viewModuleForm() {
   const editId = UI.route.p.id; const m = editId ? modById(editId) : null;
   if (!UI.draft || UI.draft._for !== (editId || 'new')) {
     if (m) { const l = latest(m); UI.draft = { _for: editId, type: m.type, title: m.title, body: l.body, product: m.product, indication: m.indication, audience: m.audience, markets: [...m.markets], channels: [...m.channels], refs: [...l.refs], reviewDate: toISO(m.reviewDate || Date.now()), expiry: toISO(m.expiry || Date.now()), errors: {}, newRefTitle: '', newRefSource: '' }; }
     else { UI.draft = { _for: 'new', ...blankDraft() }; }
+    UI.draft.step = m ? 1 : 0; UI.draft.maxStep = m ? MSTEPS.length - 1 : 0; UI.draft.triedSteps = [];
   }
-  const D = UI.draft; const E = D.tried ? validateDraft(D) : {};
+  const D = UI.draft; const E = wizErrors(D, MSTEPS, validateDraft(D)); const st = D.step || 0; const hid = i => i === st ? '' : ' hidden';
   const types = [['Clinical Claim', 'A single efficacy or outcome claim with a reference'], ['Safety Statement', 'Fair-balance or safety information'], ['Headline', 'Short promotional headline'], ['Supporting Evidence', 'Data that supports a claim'], ['CTA', 'Call to action'], ['Reference', 'Citation block']];
   const p = S.products.find(x => x.id === D.product);
   const isNewVer = m && latest(m).v > 1 && live(m) && latest(m).status === 'Draft';
@@ -184,40 +203,44 @@ function viewModuleForm() {
   const title = m ? (isNewVer ? 'Edit version ' + latest(m).v : 'Edit module') : 'Create module';
   return pageHead(title, m ? `<span class="mono">${m.id}</span> · ${esc(m.title)}` : 'One idea per module. It is reviewed once and reused in every asset where it is eligible.', '', m ? [['Modules', 'modules'], [m.id, 'module', m.id], [title]] : [['Modules', 'modules'], ['Create module']]) +
   (isNewVer ? `<div class="banner info" style="margin-bottom:16px">${icon('layers')}<div class="txt"><b>You are editing version ${latest(m).v}</b><p>Version ${live(m).v} stays approved and live in the library until version ${latest(m).v} is approved.</p></div></div>` : '') +
-  `<form class="grid cols-main" data-form="module" novalidate>
-  <div class="stack">
-    <section class="panel"><div class="panel-head"><span class="chip plain">1</span><h3>Module type</h3></div><div class="panel-body"><div class="type-cards" role="radiogroup" aria-label="Module type">${types.map(t => `<button type="button" class="type-card ${D.type === t[0] ? 'on' : ''}" data-act="d-type" data-v="${t[0]}" role="radio" aria-checked="${D.type === t[0]}">${typeIco(t[0])}<span><b>${t[0]}</b><span>${t[1]}</span></span></button>`).join('')}</div>${err('type')}</div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">2</span><h3>Content</h3></div><div class="panel-body form">
+  wizBar('module', MSTEPS, D) +
+  `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="module" novalidate>
+  <div class="stack">${wizHead(MSTEPS, D)}
+    <section class="panel"${hid(0)}><div class="panel-head"><h3>Module type</h3></div><div class="panel-body"><div class="type-cards" role="radiogroup" aria-label="Module type">${types.map(t => `<button type="button" class="type-card ${D.type === t[0] ? 'on' : ''}" data-act="d-type" data-v="${t[0]}" role="radio" aria-checked="${D.type === t[0]}">${typeIco(t[0])}<span><b>${t[0]}</b><span>${t[1]}</span></span></button>`).join('')}</div>${err('type')}</div></section>
+    <section class="panel"${hid(1)}><div class="panel-head"><h3>Content</h3></div><div class="panel-body form">
       <div class="field"><label for="d-title">Module name</label><input class="input ${E.title ? 'invalid' : ''}" id="d-title" data-d="title" value="${esc(D.title)}" placeholder="e.g. Clinical Claim — Hospitalisation reduction">${err('title')}</div>
       <div class="field"><label for="d-body">Module content</label><textarea class="textarea ${E.body ? 'invalid' : ''}" id="d-body" data-d="body" placeholder="Write one self-contained statement. Use a superscript number to cite a reference.">${esc(D.body)}</textarea><span class="hint">This exact text is what reviewers approve and what assets reuse.</span>${err('body')}</div>
     </div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">3</span><h3>Product, indication & audience</h3></div><div class="panel-body fgrid">
+    <section class="panel"${hid(2)}><div class="panel-head"><h3>Product, indication & audience</h3></div><div class="panel-body fgrid">
       <div class="field"><label for="d-product">Product</label><select class="select ${E.product ? 'invalid' : ''}" id="d-product" data-d="product" data-rerender="1">${opt('', D.product, 'Select product')}${S.products.filter(x => x.status === 'Active').map(x => opt(x.id, D.product, x.name + ' — ' + x.area)).join('')}</select>${err('product')}</div>
       <div class="field"><label for="d-ind">Indication</label><select class="select ${E.indication ? 'invalid' : ''}" id="d-ind" data-d="indication" ${p ? '' : 'disabled'}>${opt('', D.indication, p ? 'Select indication' : 'Select a product first')}${p ? p.indications.map(i => opt(i, D.indication)).join('') : ''}</select>${err('indication')}</div>
       <div class="field" style="grid-column:1/-1"><label for="d-aud">Audience</label><select class="select ${E.audience ? 'invalid' : ''}" id="d-aud" data-d="audience">${opt('', D.audience, 'Select audience')}${S.audiences.map(a => opt(a, D.audience)).join('')}</select>${err('audience')}</div>
     </div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">4</span><h3>Markets & channels</h3></div><div class="panel-body form">
+    <section class="panel"${hid(2)}><div class="panel-head"><h3>Markets & channels</h3></div><div class="panel-body form">
       <div class="field"><span class="label">Markets</span><div class="choices">${S.markets.filter(x => x.active).map(x => `<button type="button" class="choice ${D.markets.includes(x.id) ? 'on' : ''}" data-act="d-toggle" data-k="markets" data-v="${x.id}" aria-pressed="${D.markets.includes(x.id)}"><span class="box">${D.markets.includes(x.id) ? icon('check', 'sm') : ''}</span>${esc(x.name)}</button>`).join('')}</div>${err('markets')}</div>
       <div class="field"><span class="label">Channels</span><div class="choices">${S.channels.map(c => `<button type="button" class="choice ${D.channels.includes(c) ? 'on' : ''}" data-act="d-toggle" data-k="channels" data-v="${c}" aria-pressed="${D.channels.includes(c)}"><span class="box">${D.channels.includes(c) ? icon('check', 'sm') : ''}</span>${esc(c)}</button>`).join('')}</div>${err('channels')}</div>
     </div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">5</span><h3>References</h3></div><div class="panel-body form">
+    <section class="panel"${hid(3)}><div class="panel-head"><h3>References</h3></div><div class="panel-body form">
       ${D.refs.length ? `<div class="stack" style="gap:8px">${D.refs.map((r, i) => { const R = refById(r); return `<div class="ref"><span class="n">${i + 1}</span><div style="flex:1"><b>${esc(R.title)}</b><br><span class="muted">${esc(R.source)}</span></div><button type="button" class="btn icon sm" data-act="d-unref" data-v="${r}" aria-label="Remove reference">${icon('x', 'sm')}</button></div>`; }).join('')}</div>` : `<p class="muted">No references yet.${D.type === 'Clinical Claim' || D.type === 'Supporting Evidence' ? ' A reference is required for this module type.' : ''}</p>`}
       ${err('refs')}
       <div class="fgrid"><div class="field"><label for="d-addref">Add from reference library</label><select class="select" id="d-addref" data-act-change="d-addref">${opt('', '', 'Select a reference')}${S.references.filter(r => !D.refs.includes(r.id) && (!D.product || r.id.includes('-' + D.product.slice(-1) + '-'))).map(r => opt(r.id, '', r.title)).join('')}</select></div>
       <div class="field"><label for="d-newref">Or add a new reference</label><div class="row nowrap"><input class="input" id="d-newref" data-d="newRefTitle" value="${esc(D.newRefTitle)}" placeholder="Title and source"><button type="button" class="btn" data-act="d-newref">Add</button></div></div></div>
     </div></section>
-    <section class="panel"><div class="panel-head"><span class="chip plain">6</span><h3>Review & expiry</h3></div><div class="panel-body fgrid">
+    <section class="panel"${hid(3)}><div class="panel-head"><h3>Review & expiry</h3></div><div class="panel-body fgrid">
       <div class="field"><label for="d-rev">Periodic review date</label><input class="input" type="date" id="d-rev" data-d="reviewDate" value="${esc(D.reviewDate)}"><span class="hint">You will be reminded to re-check the evidence on this date.</span></div>
       <div class="field"><label for="d-exp">Expiry date</label><input class="input ${E.expiry ? 'invalid' : ''}" type="date" id="d-exp" data-d="expiry" value="${esc(D.expiry)}"><span class="hint">After this date the module cannot be used in new assets.</span>${err('expiry')}</div>
     </div></section>
+    ${st === MSTEPS.length - 1 ? `${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} field${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b><p>Use Edit to go back to that step.</p></div></div>` : ''}
+    ${sumGroup('module', 0, 'Module type', sumRow('Type', esc(D.type)))}
+    ${sumGroup('module', 1, 'Content', sumRow('Name', esc(D.title)) + sumRow('Text', esc(D.body)))}
+    ${sumGroup('module', 2, 'Product & markets', sumRow('Product', p ? esc(p.name) : '') + sumRow('Indication', esc(D.indication)) + sumRow('Audience', esc(D.audience)) + sumRow('Markets', esc(marketsTxt(D.markets))) + sumRow('Channels', esc(D.channels.join(', '))))}
+    ${sumGroup('module', 3, 'References & dates', sumRow('References', D.refs.map(r => esc(refById(r).title)).join('<br>')) + sumRow('Review date', esc(D.reviewDate)) + sumRow('Expiry', esc(D.expiry)))}
+    <p class="muted" style="font-size:12px">Saving keeps the module as a draft. You submit it for MLR review from the module page.</p>` : ''}
+    ${wizFoot('module', MSTEPS, D, m ? goAttr('module', m.id) : goAttr('modules'), m ? (isNewVer ? 'Save version ' + latest(m).v : 'Save changes') : 'Save draft')}
   </div>
   <aside class="stack" style="position:sticky;top:84px">
     <section class="panel"><div class="panel-head"><h3>Preview</h3>${D.type ? `<span class="tag">${esc(D.type)}</span>` : ''}</div><div class="panel-body stack">${D.body ? `<p class="${D.type === 'Headline' ? 'claim' : ''}" style="${D.type === 'Headline' ? 'font-size:22px;font-weight:800' : 'font-size:15px;line-height:1.6'}">${esc(D.body)}</p>` : '<p class="muted">Your content appears here as reviewers will see it.</p>'}
       <dl class="kv" style="grid-template-columns:96px 1fr;font-size:12.5px"><dt>Product</dt><dd>${p ? esc(p.name) : '—'}</dd><dt>Indication</dt><dd>${esc(D.indication || '—')}</dd><dt>Audience</dt><dd>${esc(D.audience || '—')}</dd><dt>Markets</dt><dd>${D.markets.length ? esc(marketsTxt(D.markets)) : '—'}</dd><dt>Channels</dt><dd>${D.channels.length ? esc(D.channels.join(', ')) : '—'}</dd><dt>References</dt><dd>${D.refs.length}</dd></dl></div></section>
-    <section class="panel"><div class="panel-body stack">${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} field${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b></div></div>` : ''}
-      <button class="btn primary" type="submit" style="height:44px">${icon('check', 'sm')}${m ? (isNewVer ? 'Save version ' + latest(m).v : 'Save changes') : 'Save draft'}</button>
-      <button class="btn" type="button" ${m ? goAttr('module', m.id) : goAttr('modules')}>Cancel</button>
-      <p class="muted" style="font-size:12px">Saving keeps the module as a draft. You submit it for MLR review from the module page.</p></div></section>
   </aside></form>`;
 }
 function validateDraft(D) {
@@ -277,9 +300,9 @@ function wfProgress(obj, isMod) {
   const hist = obj.review ? obj.review.comments : (isMod ? (latest(obj).history || latest(obj).lastReview || []) : (obj.history || obj.lastReview || []));
   const approved = isMod ? latest(obj).status === 'Approved' : obj.status === 'Approved';
   return `<div class="wf">${wf.steps.map((s, i) => { const done = approved || (cur > i); const now = cur === i; const by = [...hist].reverse().find(c => c.step === i && /Send|Final|Complete/.test(c.decision));
-    return `<div class="wf-step ${done ? 'done' : ''} ${now ? 'current' : ''}"><div class="wf-dot">${done ? icon('check', 'sm') : i + 1}</div><div><div class="t">${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${done && by ? esc(user(by.by).name) + ' · ' + fmtDT(by.at) : now ? 'In progress — ' + assigneeFor(s).map(x => esc(x.name)).join(', ') : done ? 'Completed' : 'Pending'}</div></div></div>`; }).join('')}</div>`;
+    return `<div class="wf-step ${done ? 'done' : ''} ${now ? 'current' : ''}"><div class="wf-dot">${done ? icon('check', 'sm') : i + 1}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${done && by ? esc(user(by.by).name) + ' · ' + fmtDT(by.at) : now ? 'In progress — ' + assigneeFor(s).map(x => esc(x.name)).join(', ') : done ? 'Completed' : 'Pending'}</div></div></div>`; }).join('')}</div>`;
 }
-function wfInline(wf, cur, approved) { return `<div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill ${approved || cur > i ? 'done' : cur === i ? 'current' : ''}"><span class="d"></span>${esc(s.fn)} ${s.seniority === 'Senior' ? 'S' : 'J'}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div>`; }
+function wfInline(wf, cur, approved) { return `<div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill ${approved || cur > i ? 'done' : cur === i ? 'current' : ''}">${fnBadge(s.fn)}${esc(s.fn)} ${s.seniority === 'Senior' ? 'S' : 'J'}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div>`; }
 function commentsList(list, highlightFn) {
   if (!list || !list.length) return '<p class="muted">No review comments yet.</p>';
   return `<div class="stack" style="gap:10px">${list.map(c => { const x = user(c.by); return `<div class="comment ${c.seniority === 'Junior' ? 'junior' : ''}"><div class="who">${avatar(x, 'sm')}<b>${esc(x.name)}</b>${sen(c.seniority || x.seniority)}<span class="muted" style="font-size:12px">${esc((c.fn || FUNCTION_OF[x.type] || '') + ' · ' + fmtDT(c.at))}</span></div>${c.decision ? `<div style="margin-bottom:4px">${chip(c.decision === 'Comment' ? 'Comment' : c.decision, '')}</div>` : ''}${c.text ? `<p style="font-size:13.5px">${esc(c.text)}</p>` : ''}</div>`; }).join('')}</div>`;
@@ -427,7 +450,7 @@ function viewAssemble() {
        ${['Approved', 'Market eligible', 'Channel eligible', 'Not expired'].map((lbl, k) => { const fails = V.mods.filter(x => !eligibility(x.m, a).checks[k][1]); return `<div class="check-row">${fails.length ? `<span class="no">${icon('x', 'sm')}</span>${esc(lbl)} — ${fails.length} module${fails.length > 1 ? 's' : ''} fail` : `<span class="ok">${icon('check', 'sm')}</span>${esc(lbl)}`}</div>`; }).join('')}
      </div>
      ${V.nNew ? `<div class="banner warn">${icon('alert')}<div class="txt"><b>New content detected</b><p>${V.nNew} block${V.nNew > 1 ? 's are' : ' is'} not based on an approved module and require${V.nNew > 1 ? '' : 's'} additional MLR review.</p></div></div>` : ''}
-     <div class="stack" style="gap:6px"><span class="section-title">Review route</span><b>${esc(wf.name)}</b><div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill"><span class="d"></span>${esc(s.fn)} ${sen(s.seniority)}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></div>
+     <div class="stack" style="gap:6px"><span class="section-title">Review route</span><b>${esc(wf.name)}</b><div class="wf-inline">${wf.steps.map((s, i) => `<span class="wf-pill">${fnBadge(s.fn)}${esc(s.fn)} ${sen(s.seniority)}</span>${i < wf.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></div>
    </div></section></div>`;
 }
 function viewAsset() {
@@ -525,27 +548,33 @@ function viewUser() {
 function viewUserForm() {
   const editId = UI.route.p.id; const x = editId ? S.users.find(u => u.id === editId) : null;
   if (!UI.udraft || UI.udraft._for !== (editId || 'new')) UI.udraft = x ? { _for: editId, name: x.name, email: x.email, type: x.type, seniority: x.seniority || 'Junior', team: x.team, status: x.status } : { _for: 'new', name: '', email: '', type: '', seniority: 'Junior', team: '', status: 'Active' };
-  const D = UI.udraft; const E = D.tried ? validateUser(D, editId) : {}; const err = k => E[k] ? `<span class="err">${E[k]}</span>` : '';
+  if (UI.udraft.step == null) { UI.udraft.step = 0; UI.udraft.maxStep = x ? USTEPS.length - 1 : 0; UI.udraft.triedSteps = []; }
+  const D = UI.udraft; const E = wizErrors(D, USTEPS, validateUser(D, editId)); const err = k => E[k] ? `<span class="err">${E[k]}</span>` : ''; const st = D.step; const hid = i => i === st ? '' : ' hidden';
   const isAdm = D.type === 'Administrator'; const a = D.type ? authority(D.type, isAdm ? null : D.seniority) : null;
   const fnOf = { 'Content Owner': 'Content', 'Medical Reviewer': 'Medical', 'Legal Reviewer': 'Legal', 'Regulatory Reviewer': 'Regulatory', 'Marketing User': 'Marketing', 'Administrator': 'Administration' };
   const teams = S.teams.filter(t => !D.type || t.fn === fnOf[D.type]);
   const title = x ? 'Edit user' : 'Create user';
   return pageHead(title, 'User type and seniority define what this person can review and approve.', '', x ? [['Users', 'users'], [x.name, 'user', x.id], ['Edit']] : [['Users', 'users'], ['Create user']]) +
-  `<form class="grid cols-main" data-form="user" novalidate><div class="stack">
-  <section class="panel"><div class="panel-head"><span class="chip plain">1</span><h3>Personal information</h3></div><div class="panel-body fgrid">
+  wizBar('user', USTEPS, D) + `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="user" novalidate><div class="stack">${wizHead(USTEPS, D)}
+  <section class="panel"${hid(0)}><div class="panel-head"><h3>Personal information</h3></div><div class="panel-body fgrid">
     <div class="field"><label for="u-name">Full name</label><input class="input ${E.name ? 'invalid' : ''}" id="u-name" data-u="name" value="${esc(D.name)}" placeholder="e.g. Ahmed Youssef">${err('name')}</div>
     <div class="field"><label for="u-email">Email</label><input class="input ${E.email ? 'invalid' : ''}" id="u-email" type="email" data-u="email" value="${esc(D.email)}" placeholder="name@saja-demo.com">${err('email')}</div>
     <div class="field" style="grid-column:1/-1"><span class="hint">${icon('mail', 'sm')} The person receives an invitation email and sets their own password on first sign-in.</span></div>
   </div></section>
-  <section class="panel"><div class="panel-head"><span class="chip plain">2</span><h3>User type</h3></div><div class="panel-body"><div class="type-cards" role="radiogroup" aria-label="User type">${USER_TYPES.map(t => `<button type="button" class="type-card ${D.type === t ? 'on' : ''}" data-act="u-type" data-v="${t}" role="radio" aria-checked="${D.type === t}"><span class="type-ico">${icon({ 'Content Owner': 'file', 'Medical Reviewer': 'shieldcheck', 'Legal Reviewer': 'book', 'Regulatory Reviewer': 'globe', 'Marketing User': 'layers', 'Administrator': 'key' }[t], 'sm')}</span><span><b>${t}</b><span>${t === 'Administrator' ? 'System configuration' : FUNCTION_OF[t] ? FUNCTION_OF[t] + ' review' : t === 'Content Owner' ? 'Creates modules' : 'Builds assets'}</span></span></button>`).join('')}</div>${err('type')}</div></section>
-  ${isAdm ? `<section class="panel"><div class="panel-body"><div class="banner">${icon('key')}<div class="txt"><b>Administrators have no seniority</b><p>They configure the system and do not take part in content review.</p></div></div></div></section>` : `<section class="panel"><div class="panel-head"><span class="chip plain">3</span><h3>Seniority</h3></div><div class="panel-body stack"><div class="seg" role="radiogroup" aria-label="Seniority">${['Junior', 'Senior'].map(s => `<button type="button" class="${D.seniority === s ? 'on' : ''}" data-act="u-sen" data-v="${s}" role="radio" aria-checked="${D.seniority === s}">${s}</button>`).join('')}</div><p class="muted" style="font-size:12.5px">${D.type ? (D.seniority === 'Senior' ? 'Senior users hold final approval authority for their function.' : 'Junior users perform the initial review and send items to a Senior.') : 'Choose a user type first.'}</p></div></section>`}
-  <section class="panel"><div class="panel-head"><span class="chip plain">${isAdm ? 3 : 4}</span><h3>Team, role & status</h3></div><div class="panel-body fgrid">
+  <section class="panel"${hid(1)}><div class="panel-head"><h3>User type</h3></div><div class="panel-body"><div class="type-cards" role="radiogroup" aria-label="User type">${USER_TYPES.map(t => `<button type="button" class="type-card ${D.type === t ? 'on' : ''}" data-act="u-type" data-v="${t}" role="radio" aria-checked="${D.type === t}"><span class="type-ico">${icon({ 'Content Owner': 'file', 'Medical Reviewer': 'shieldcheck', 'Legal Reviewer': 'book', 'Regulatory Reviewer': 'globe', 'Marketing User': 'layers', 'Administrator': 'key' }[t], 'sm')}</span><span><b>${t}</b><span>${t === 'Administrator' ? 'System configuration' : FUNCTION_OF[t] ? FUNCTION_OF[t] + ' review' : t === 'Content Owner' ? 'Creates modules' : 'Builds assets'}</span></span></button>`).join('')}</div>${err('type')}</div></section>
+  ${isAdm ? `<section class="panel"${hid(1)}><div class="panel-body"><div class="banner">${icon('key')}<div class="txt"><b>Administrators have no seniority</b><p>They configure the system and do not take part in content review.</p></div></div></div></section>` : `<section class="panel"${hid(1)}><div class="panel-head"><h3>Seniority</h3></div><div class="panel-body stack"><div class="seg" role="radiogroup" aria-label="Seniority">${['Junior', 'Senior'].map(s => `<button type="button" class="${D.seniority === s ? 'on' : ''}" data-act="u-sen" data-v="${s}" role="radio" aria-checked="${D.seniority === s}">${s}</button>`).join('')}</div><p class="muted" style="font-size:12.5px">${D.type ? (D.seniority === 'Senior' ? 'Senior users hold final approval authority for their function.' : 'Junior users perform the initial review and send items to a Senior.') : 'Choose a user type first.'}</p></div></section>`}
+  <section class="panel"${hid(2)}><div class="panel-head"><h3>Team, role & status</h3></div><div class="panel-body fgrid">
     <div class="field"><label for="u-team">Team</label><select class="select ${E.team ? 'invalid' : ''}" id="u-team" data-u="team">${opt('', D.team, 'Select team')}${teams.map(t => opt(t.id, D.team, t.name)).join('')}</select>${err('team')}</div>
     <div class="field"><span class="label">Role</span><div class="input" style="display:flex;align-items:center;background:var(--surface-2)">${D.type ? esc(isAdm ? 'Administrator' : D.seniority + ' ' + D.type) : '<span class="muted">Set by user type and seniority</span>'}</div></div>
     <div class="field"><span class="label">Status</span><div class="seg">${['Active', 'Inactive'].map(s => `<button type="button" class="${D.status === s ? 'on' : ''}" data-act="u-status" data-v="${s}">${s}</button>`).join('')}</div></div>
-  </div></section></div>
+  </div></section>
+  ${st === USTEPS.length - 1 ? `${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} field${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b><p>Use Edit to go back to that step.</p></div></div>` : ''}
+  ${sumGroup('user', 0, 'Personal details', sumRow('Name', esc(D.name)) + sumRow('Email', esc(D.email)))}
+  ${sumGroup('user', 1, 'Type & seniority', sumRow('User type', esc(D.type)) + sumRow('Seniority', isAdm ? 'Not applicable' : D.type ? sen(D.seniority) : ''))}
+  ${sumGroup('user', 2, 'Team & status', sumRow('Team', D.team ? esc((S.teams.find(t => t.id === D.team) || {}).name) : '') + sumRow('Status', esc(D.status)))}` : ''}
+  ${wizFoot('user', USTEPS, D, x ? goAttr('user', x.id) : goAttr('users'), x ? 'Save changes' : 'Create user & send invite')}</div>
   <aside class="stack" style="position:sticky;top:84px"><section class="panel"><div class="panel-head"><h3>Authority preview</h3></div><div class="panel-body stack">${a ? `<div class="row"><b>${esc(D.type)}</b>${isAdm ? '' : sen(D.seniority)}</div><div class="banner ${a.final ? 'ok' : ''}" style="${a.final ? '' : 'background:var(--surface-2)'}">${icon(a.final ? 'key' : 'eye')}<div class="txt"><b>${esc(a.short)}</b><p>${esc(a.long)}</p></div></div><div class="stack" style="gap:6px">${responsibilities(D.type, isAdm ? null : D.seniority).map(([t, on]) => `<div class="check-row"><span class="${on ? 'ok' : 'no'}">${icon(on ? 'check' : 'x', 'sm')}</span><span class="${on ? '' : 'muted'}">${esc(t)}</span></div>`).join('')}</div>` : '<p class="muted">Choose a user type to see what this person will be able to do.</p>'}</div></section>
-  <section class="panel"><div class="panel-body stack"><button class="btn primary" type="submit" style="height:44px">${icon('check', 'sm')}${x ? 'Save changes' : 'Create user & send invite'}</button><button class="btn" type="button" ${x ? goAttr('user', x.id) : goAttr('users')}>Cancel</button></div></section></aside></form>`;
+</aside></form>`;
 }
 function validateUser(D, editId) {
   const e = {};
@@ -575,7 +604,7 @@ function viewWorkflows() {
   const list = S.workflows.filter(w => !w.hidden);
   return pageHead('Workflows', 'Review routes. Each step names a function, a seniority level and whether it is a review or the final approval.', btn('New workflow', 'wf-new', 'primary', '', 'plus')) +
   `<div class="stack">${list.map(w => { const inflight = S.modules.filter(m => m.review && m.review.wf === w.id).length + S.assets.filter(a => a.review && a.review.wf === w.id).length;
-    return `<button class="panel" style="text-align:left;padding:18px 20px;display:grid;gap:12px;border:1px solid var(--line);width:100%" ${goAttr('workflow', w.id)}><div class="row"><b style="font-size:15px">${esc(w.name)}</b>${w.system ? '<span class="tag">Assets</span>' : ''}<span class="chip plain">${w.steps.length} steps</span>${inflight ? `<span class="chip info">${inflight} in flight</span>` : ''}<span style="margin-left:auto">${icon('chevron')}</span></div><span class="muted" style="font-size:13px">${esc(w.desc)}</span><div class="wf-inline">${w.steps.map((s, i) => `<span class="wf-pill"><span class="d"></span>${esc(s.fn)} ${sen(s.seniority)} <span class="muted" style="font-weight:600">${s.req === 'approve' ? 'approval' : 'review'}</span></span>${i < w.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></button>`; }).join('')}</div>`;
+    return `<button class="panel" style="text-align:left;padding:18px 20px;display:grid;gap:12px;border:1px solid var(--line);width:100%" ${goAttr('workflow', w.id)}><div class="row"><b style="font-size:15px">${esc(w.name)}</b>${w.system ? '<span class="tag">Assets</span>' : ''}<span class="chip plain">${w.steps.length} steps</span>${inflight ? `<span class="chip info">${inflight} in flight</span>` : ''}<span style="margin-left:auto">${icon('chevron')}</span></div><span class="muted" style="font-size:13px">${esc(w.desc)}</span><div class="wf-inline">${w.steps.map((s, i) => `<span class="wf-pill">${fnBadge(s.fn)}${esc(s.fn)} ${sen(s.seniority)} <span class="muted" style="font-weight:600">${s.req === 'approve' ? 'approval' : 'review'}</span></span>${i < w.steps.length - 1 ? '<span class="wf-sep"></span>' : ''}`).join('')}</div></button>`; }).join('')}</div>`;
 }
 function viewWorkflow() {
   const w = wfById(UI.route.p.id); if (!w) return viewMissing('Workflow');
@@ -583,7 +612,7 @@ function viewWorkflow() {
   const D = UI.wfDraft; const selI = UI.wfSel; const s = D.steps[selI];
   const issues = wfIssues(D); const dirty = JSON.stringify(D) !== JSON.stringify(w);
   const teamFor = fn => S.teams.find(t => t.fn === fn);
-  const node = (st, i) => `<button class="flow-node ${i === selI ? 'sel' : ''}" data-act="wf-sel" data-i="${i}" draggable="true" data-drag="step" title="Drag to reorder"><span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span><span class="idx">${i + 1}</span><span class="body"><b>${esc(st.fn)} · ${st.req === 'approve' ? 'Final approval' : 'Review'}</b><span class="muted" style="font-size:12px">${esc((teamFor(st.fn) || {}).name || '')} · ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</span></span>${sen(st.seniority)}${st.req === 'approve' ? icon('key', 'sm') : ''}</button>`;
+  const node = (st, i) => `<button class="flow-node ${i === selI ? 'sel' : ''}" data-act="wf-sel" data-i="${i}" draggable="true" data-drag="step" title="Drag to reorder"><span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span><span class="idx">${i + 1}</span>${fnBadge(st.fn, 'lg')}<span class="body"><b>${esc(st.fn)} · ${st.req === 'approve' ? 'Final approval' : 'Review'}</b><span class="muted" style="font-size:12px">${esc((teamFor(st.fn) || {}).name || '')} · ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</span></span>${sen(st.seniority)}${st.req === 'approve' ? icon('key', 'sm') : ''}</button>`;
   const addBtn = i => `<button class="flow-add" data-act="wf-add" data-i="${i}" aria-label="Add step here" title="Add step">${icon('plus', 'sm')}</button>`;
   return pageHead(esc(D.name), esc(D.desc), `${dirty ? btn('Discard changes', 'wf-discard', 'ghost') : ''}${btn('Save workflow', 'wf-save', 'primary', issues.some(x => x[0] === 'bad') ? 'disabled' : '', 'check')}`, [['Workflows', 'workflows'], [D.name]]) +
   `${dirty ? `<div class="banner info" style="margin-bottom:14px">${icon('edit')}<div class="txt"><b>Unsaved changes</b><p>Saving applies to new submissions. Items already in review keep the route they started with.</p></div></div>` : ''}
@@ -602,6 +631,59 @@ function viewWorkflow() {
    <div class="check-row"><span class="ok">${icon('check', 'sm')}</span>${D.steps.length} steps · ${D.steps.filter(x => x.req === 'approve').length} final approvals</div></div></section>
   </div></div>`;
 }
+
+/* ===== New workflow (step form) ===== */
+const WSTEPS = [['Details', ['name'], 'Name the review route and say when it is used.'], ['Review flow', ['steps'], 'Add the review steps in order. Each step is a team, a seniority level and a decision type.'], ['Review & create', [], 'Check the route before creating it.']];
+const WF_USES = [['Promotional modules', 'file', 'Claims, headlines and safety statements'], ['Medical education', 'stethoscope', 'Non-promotional scientific content'], ['Low-risk updates', 'filecheck', 'Minor edits and re-approvals']];
+function validateWf(D) {
+  const e = {};
+  if (!D.name.trim()) e.name = 'Give the workflow a name.';
+  else if (S.workflows.some(w => w.name.toLowerCase() === D.name.trim().toLowerCase())) e.name = 'A workflow with this name already exists.';
+  if (!D.steps.length) e.steps = 'Add at least one review step.';
+  else { const bad = wfIssues(D).filter(x => x[0] === 'bad'); if (bad.length) e.steps = bad.map(x => x[1]).join(' '); }
+  return e;
+}
+function flowPreview(steps, start, end) {
+  return `<div class="flowx">${start ? `<div class="fx-term">${icon('send', 'sm')}<span>${start}</span></div><span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}${steps.map((s, i) => `<div class="fx-node ${s.req === 'approve' ? 'final' : ''}">${fnBadge(s.fn, 'lg')}<b>${esc(s.fn)}</b><span>${s.req === 'approve' ? 'Final approval' : 'Review'}</span>${sen(s.seniority)}</div>${i < steps.length - 1 || end ? `<span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}`).join('')}${end ? `<div class="fx-term ok">${icon('check', 'sm')}<span>${end}</span></div>` : ''}</div>`;
+}
+function viewWorkflowNew() {
+  if (!UI.nwf) UI.nwf = { step: 0, maxStep: 0, triedSteps: [], name: '', desc: '', use: 'Promotional modules', steps: [] };
+  const D = UI.nwf; const E = wizErrors(D, WSTEPS, validateWf(D)); const st = D.step; const hid = i => i === st ? '' : ' hidden';
+  const err = k => E[k] ? `<span class="err">${esc(E[k])}</span>` : '';
+  const issues = D.steps.length ? wfIssues(D) : [];
+  const row = (s, i) => `<div class="nwf-step">
+    <span class="idx">${i + 1}</span>${fnBadge(s.fn, 'lg')}
+    <div class="nwf-fields">
+      <select class="select" data-nwf="fn" data-i="${i}" aria-label="Team for step ${i + 1}">${['Medical', 'Legal', 'Regulatory'].map(fn => opt(fn, s.fn, fn + ' — ' + REVIEWER_OF[fn])).join('')}</select>
+      <div class="seg" aria-label="Seniority">${['Junior', 'Senior'].map(x => `<button type="button" class="${s.seniority === x ? 'on' : ''}" data-act="nwf-set" data-i="${i}" data-k="seniority" data-v="${x}">${x}</button>`).join('')}</div>
+      <div class="seg" aria-label="Decision">${[['review', 'Review'], ['approve', 'Final approval']].map(x => `<button type="button" class="${s.req === x[0] ? 'on' : ''}" data-act="nwf-set" data-i="${i}" data-k="req" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>
+    </div>
+    <div class="nwf-tools"><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === D.steps.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button type="button" class="btn icon sm danger" data-act="nwf-del" data-i="${i}" aria-label="Remove step">${icon('trash', 'sm')}</button></div>
+  </div>`;
+  return pageHead('New workflow', 'Build a review route step by step. Seniority and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) +
+  wizBar('workflow', WSTEPS, D) +
+  `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="workflow" novalidate><div class="stack">${wizHead(WSTEPS, D)}
+  <section class="panel"${hid(0)}><div class="panel-head"><h3>Workflow details</h3></div><div class="panel-body form">
+    <div class="field"><label for="w-name">Workflow name</label><input class="input ${E.name ? 'invalid' : ''}" id="w-name" data-w="name" value="${esc(D.name)}" placeholder="e.g. Medical education — Senior only">${err('name')}</div>
+    <div class="field"><label for="w-desc">When is it used? <span class="muted" style="font-weight:500">(optional)</span></label><textarea class="textarea" id="w-desc" data-w="desc" placeholder="e.g. Non-promotional scientific content for congresses">${esc(D.desc)}</textarea></div>
+    <div class="field"><span class="label">Content type</span><div class="type-cards" role="radiogroup" aria-label="Content type">${WF_USES.map(u => `<button type="button" class="type-card ${D.use === u[0] ? 'on' : ''}" data-act="nwf-use" data-v="${u[0]}" role="radio" aria-checked="${D.use === u[0]}"><span class="type-ico">${icon(u[1])}</span><span><b>${u[0]}</b><span>${u[2]}</span></span></button>`).join('')}</div></div>
+  </div></section>
+  <section class="panel"${hid(1)}><div class="panel-head"><h3>Review flow</h3><span class="chip plain">${D.steps.length} step${D.steps.length === 1 ? '' : 's'}</span></div><div class="panel-body stack">
+    <div class="row"><span class="label" style="margin:0">Start from</span>${[['std', 'Standard — Junior then Senior'], ['senior', 'Senior only'], ['blank', 'Blank']].map(t => `<button type="button" class="btn sm" data-act="nwf-tpl" data-v="${t[0]}">${t[1]}</button>`).join('')}</div>
+    ${D.steps.length ? `<div class="nwf-list">${D.steps.map(row).join('<span class="nwf-link"></span>')}</div>` : `<div class="empty" style="padding:26px"><p>No steps yet. Pick a template above or add a step below.</p></div>`}
+    <div class="nwf-add">${['Medical', 'Legal', 'Regulatory'].map(fn => `<button type="button" class="btn" data-act="nwf-add" data-v="${fn}">${fnBadge(fn)}Add ${fn}</button>`).join('')}</div>
+    ${err('steps')}
+  </div></section>
+  ${st === WSTEPS.length - 1 ? `${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} item${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b><p>Use Edit to go back to that step.</p></div></div>` : ''}
+  ${sumGroup('workflow', 0, 'Details', sumRow('Name', esc(D.name)) + sumRow('Used for', esc(D.use)) + sumRow('Description', esc(D.desc)))}
+  <section class="panel sum"><div class="panel-head"><h3>Review flow</h3><span class="grow"></span><button type="button" class="btn ghost sm" data-act="wiz-go" data-form="workflow" data-i="1">${icon('edit', 'sm')}Edit</button></div><div class="panel-body">${flowPreview(D.steps, 'Submitted', 'Approved')}</div></section>` : ''}
+  ${wizFoot('workflow', WSTEPS, D, goAttr('workflows'), 'Create workflow')}</div>
+  <aside class="stack" style="position:sticky;top:84px">
+    <section class="panel"><div class="panel-head"><h3>Review flow preview</h3></div><div class="panel-body">${D.steps.length ? `<div class="wf">${D.steps.map((s, i) => `<div class="wf-step"><div class="wf-dot">${i + 1}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Final approval' : 'Review'} ${sen(s.seniority)}</div><div class="s">${esc(s.seniority)} ${esc(REVIEWER_OF[s.fn])}</div></div></div>`).join('')}</div>` : '<p class="muted">Steps appear here as you add them.</p>'}</div></section>
+    <section class="panel"><div class="panel-head"><h3>Checks</h3></div><div class="panel-body stack" style="gap:8px">${!D.steps.length ? `<div class="check-row"><span class="no">${icon('x', 'sm')}</span>Add at least one step</div>` : issues.length ? issues.map(([t, msg]) => `<div class="check-row"><span class="${t === 'bad' ? 'no' : 'ok'}" style="${t === 'warn' ? 'color:var(--warn)' : ''}">${icon(t === 'bad' ? 'x' : 'alert', 'sm')}</span>${esc(msg)}</div>`).join('') : `<div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Route is valid</div>`}</div></section>
+  </aside></form>`;
+}
+
 function wfIssues(D) {
   const out = [];
   if (!D.steps.length) out.push(['bad', 'Add at least one step.']);

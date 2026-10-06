@@ -1,6 +1,6 @@
 /* ---------- Controller: routing, modals, actions ---------- */
-const ROUTES = { home: viewHome, tasks: viewTasks, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, workflows: viewWorkflows, workflow: viewWorkflow };
-const ADMIN_ROUTES = ['users', 'user', 'user-new', 'user-edit', 'teams', 'roles', 'products', 'markets', 'materials', 'workflows', 'workflow'];
+const ROUTES = { home: viewHome, tasks: viewTasks, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
+const ADMIN_ROUTES = ['users', 'user', 'user-new', 'user-edit', 'teams', 'roles', 'products', 'markets', 'materials', 'workflows', 'workflow', 'workflow-new'];
 const app = document.getElementById('app');
 
 function go(name, p = {}, replace) {
@@ -9,6 +9,7 @@ function go(name, p = {}, replace) {
   if ((name === 'module-edit' || name === 'module-new') && UI.route.name !== name) UI.draft = null;
   if ((name === 'user-new' || name === 'user-edit')) UI.udraft = null;
   if (name !== 'workflow') UI.wfDraft = null;
+  if (name === 'workflow-new' && UI.route.name !== 'workflow-new') UI.nwf = null;
   if (name === 'library') { const dm = S.demo.moduleId && modById(S.demo.moduleId); if (dm && live(dm)) S.demo.sawLibraryAfter = true; }
   if (name === 'lifecycle') S.demo.sawLifecycle = true;
   UI.route = { name, p }; UI.pop = null; UI.navOpen = false; UI.search = ''; UI.f.rvc = '';
@@ -145,6 +146,9 @@ const ACT = {
   'clear-filters': el => { el.dataset.keys.split(',').forEach(k => { UI.f[k] = k === 'lstat' ? 'usable' : ''; }); render(); },
 
   /* module form */
+  'wiz-go': el => { const D = wizDraft(el.dataset.form); const i = +el.dataset.i; if (i <= (D.maxStep || 0)) wizShow(D, i); },
+  'wiz-save': el => { const f = el.dataset.form; wizDraft(f).step = wizSteps(f).length - 1; (f === 'user' ? saveUserForm : f === 'workflow' ? saveWorkflowForm : saveModuleForm)(); },
+  'wiz-back': el => { const D = wizDraft(el.dataset.form); wizShow(D, Math.max(0, (D.step || 0) - 1)); },
   'd-type': el => { UI.draft.type = el.dataset.v; render(); },
   'd-toggle': el => { const arr = UI.draft[el.dataset.k]; const i = arr.indexOf(el.dataset.v); i >= 0 ? arr.splice(i, 1) : arr.push(el.dataset.v); render(); },
   'd-unref': el => { UI.draft.refs = UI.draft.refs.filter(r => r !== el.dataset.v); render(); },
@@ -223,7 +227,13 @@ const ACT = {
   'product-new': () => { UI.modal = { type: 'simple', kind: 'product', title: 'Add product', fields: [['name', 'Product name', 'text', 'e.g. Product C'], ['area', 'Therapy area', 'text', 'e.g. Diabetes'], ['ind', 'Indications (comma separated)', 'text', 'e.g. Type 2 diabetes']] }; render(); },
   'market-new': () => { UI.modal = { type: 'simple', kind: 'market', title: 'Add market', fields: [['name', 'Country', 'text', 'e.g. Kuwait'], ['code', 'Code', 'text', 'e.g. KW'], ['auth', 'Health authority', 'text', 'e.g. MOH Kuwait']] }; render(); },
   'material-new': () => { UI.modal = { type: 'simple', kind: 'material', title: 'Add material type', fields: [['name', 'Material type', 'text', 'e.g. Congress poster'], ['channel', 'Channel', 'select', S.channels], ['wf', 'Workflow', 'select', S.workflows.filter(w => !w.hidden).map(w => [w.id, w.name])]] }; render(); },
-  'wf-new': () => { UI.modal = { type: 'simple', kind: 'workflow', title: 'New workflow', ico: 'workflow', cta: 'Create', fields: [['name', 'Workflow name', 'text', 'e.g. Medical education — Senior only'], ['desc', 'When is it used?', 'text', 'e.g. Non-promotional medical education']] }; render(); },
+  'wf-new': () => go('workflow-new'),
+  'nwf-use': el => { UI.nwf.use = el.dataset.v; render(); },
+  'nwf-tpl': el => { const v = el.dataset.v, mk = (fn, seniority, req) => ({ id: uid('s'), fn, seniority, req }); UI.nwf.steps = v === 'std' ? ['Medical', 'Legal', 'Regulatory'].flatMap(fn => [mk(fn, 'Junior', 'review'), mk(fn, 'Senior', 'approve')]) : v === 'senior' ? ['Medical', 'Legal', 'Regulatory'].map(fn => mk(fn, 'Senior', 'approve')) : []; render(); },
+  'nwf-add': el => { UI.nwf.steps.push({ id: uid('s'), fn: el.dataset.v, seniority: 'Senior', req: 'approve' }); render(); toast(el.dataset.v + ' step added'); },
+  'nwf-set': el => { const s = UI.nwf.steps[+el.dataset.i]; s[el.dataset.k] = el.dataset.v; if (el.dataset.k === 'req' && el.dataset.v === 'approve') s.seniority = 'Senior'; if (el.dataset.k === 'seniority' && el.dataset.v === 'Junior') s.req = 'review'; render(); },
+  'nwf-move': el => { const st = UI.nwf.steps, i = +el.dataset.i, j = i + +el.dataset.dir; if (j < 0 || j >= st.length) return; [st[i], st[j]] = [st[j], st[i]]; render(); },
+  'nwf-del': el => { UI.nwf.steps.splice(+el.dataset.i, 1); render(); },
   'simple-confirm': () => {
     const M = UI.modal; const v = k => { const e = document.getElementById('sf-' + k); return e ? e.value.trim() : ''; };
     const req = M.fields.filter(f => f[2] !== 'select').map(f => f[0]); const miss = req.find(k => !v(k)); if (miss) { M.err = miss; render(); return; }
@@ -285,6 +295,7 @@ document.addEventListener('input', ev => {
   if (t.dataset.filter && t.tagName === 'INPUT') { UI.f[t.dataset.filter] = t.value; render(); return; }
   if (t.dataset.d && t.tagName !== 'SELECT') { UI.draft[t.dataset.d] = t.value; if (t.dataset.d === 'body' || t.dataset.d === 'title') renderSoon(); return; }
   if (t.dataset.u && t.tagName !== 'SELECT') { UI.udraft[t.dataset.u] = t.value; return; }
+  if (t.dataset.w) { UI.nwf[t.dataset.w] = t.value; return; }
   if (t.dataset.an && t.tagName !== 'SELECT') { UI.modal.d[t.dataset.an] = t.value; return; }
   if (t.dataset.assetProp && t.tagName === 'INPUT') { const a = assetById(t.dataset.id); a[t.dataset.assetProp] = t.value; save(); return; }
 });
@@ -300,6 +311,8 @@ document.addEventListener('change', ev => {
   if (t.dataset.u) { UI.udraft[t.dataset.u] = t.value; render(); return; }
   if (t.dataset.an) { const D = UI.modal.d; D[t.dataset.an] = t.value; if (t.dataset.an === 'type') { const mt = S.materialTypes.find(x => x.name === t.value); D.channel = mt.channel; D.name = t.value + ' — ' + (D.name.split('—')[1] || '').trim(); } if (t.dataset.an === 'product') D.audience = t.value === 'P-B' ? 'HCP – Pulmonologists' : 'HCP – Cardiologists'; render(); return; }
   if (t.dataset.assetProp) { const a = assetById(t.dataset.id); a[t.dataset.assetProp] = t.value; save(); render(); return; }
+  if (t.dataset.w) return;
+  if (t.dataset.nwf) { UI.nwf.steps[+t.dataset.i][t.dataset.nwf] = t.value; render(); return; }
   if (t.dataset.wf) { UI.wfDraft.steps[UI.wfSel][t.dataset.wf] = t.value; render(); return; }
 });
 document.addEventListener('submit', ev => {
@@ -314,11 +327,27 @@ document.addEventListener('submit', ev => {
   if (f === 'forgot') { const e = ev.target.email.value.trim(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { UI.f.forgotErr = 'Enter a valid email address.'; render(); return; } UI.f.forgotErr = null; UI.f.resetSent = e; render(); }
   if (f === 'module') saveModuleForm();
   if (f === 'user') saveUserForm();
+  if (f === 'workflow') saveWorkflowForm();
 });
 
+function wizDraft(form) { return form === 'user' ? UI.udraft : form === 'workflow' ? UI.nwf : UI.draft; }
+function wizSteps(form) { return form === 'user' ? USTEPS : form === 'workflow' ? WSTEPS : MSTEPS; }
+function wizErrs(form) { return form === 'user' ? validateUser(UI.udraft, UI.route.p.id) : form === 'workflow' ? validateWf(UI.nwf) : validateDraft(UI.draft); }
+function wizShow(D, i) { D.anim = true; D.step = i; D.maxStep = Math.max(D.maxStep || 0, i); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); const h = document.querySelector('.wiz-head h2'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
+// Returns true when the form is on its last step and fully valid (caller saves); otherwise moves the wizard.
+function wizAdvance(form) {
+  const D = wizDraft(form), steps = wizSteps(form), last = steps.length - 1, cur = D.step || 0, all = wizErrs(form);
+  if (cur < last) {
+    const bad = steps[cur][1].filter(k => all[k]);
+    if (bad.length) { D.triedSteps = [...new Set([...(D.triedSteps || []), cur])]; render(); const first = document.querySelector('.invalid, .err'); first && first.scrollIntoView({ block: 'center', behavior: 'smooth' }); return false; }
+    wizShow(D, cur + 1); return false;
+  }
+  if (Object.keys(all).length) { D.tried = true; const firstBad = steps.findIndex(s => s[1].some(k => all[k])); wizShow(D, firstBad < 0 ? last : firstBad); return false; }
+  return true;
+}
 function saveModuleForm() {
-  const D = UI.draft; D.tried = true; const E = validateDraft(D);
-  if (Object.keys(E).length) { render(); const first = document.querySelector('.invalid, .err'); first && first.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+  if (!wizAdvance('module')) return;
+  const D = UI.draft;
   const p = UI.route.p; const base = { title: D.title.trim(), type: D.type, product: D.product, indication: D.indication, audience: D.audience, markets: [...D.markets], channels: [...D.channels], reviewDate: fromISO(D.reviewDate), expiry: fromISO(D.expiry), updatedAt: Date.now() };
   if (p.id && p.newVersion) {
     const m = modById(p.id); Object.assign(m, base); const nv = Math.max(...m.versions.map(v => v.v)) + 1; m.versions.push({ v: nv, body: D.body.trim(), refs: [...D.refs], status: 'Draft' }); m.cur = nv;
@@ -329,8 +358,14 @@ function saveModuleForm() {
   const m = { id, ...base, owner: S.personaId, versions: [{ v: 1, body: D.body.trim(), refs: [...D.refs], status: 'Draft' }], cur: 1, createdAt: Date.now(), review: null, changes: null };
   S.modules.push(m); S.demo.moduleId = id; log('Created module (draft)', 'Module', id, 1); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
 }
+function saveWorkflowForm() {
+  if (!wizAdvance('workflow')) return;
+  const D = UI.nwf; const w = { id: uid('WF'), name: D.name.trim(), desc: D.desc.trim() || D.use, active: true, steps: D.steps.map(s => ({ ...s })) };
+  S.workflows.push(w); log('Created workflow', 'Workflow', w.id, 1); save(); UI.nwf = null; go('workflow', { id: w.id }); toast('Workflow created · ' + w.steps.length + ' steps');
+}
 function saveUserForm() {
-  const D = UI.udraft; const editId = UI.route.p.id; D.tried = true; if (Object.keys(validateUser(D, editId)).length) { render(); return; }
+  if (!wizAdvance('user')) return;
+  const D = UI.udraft; const editId = UI.route.p.id;
   const data = { name: D.name.trim(), email: D.email.trim(), type: D.type, seniority: D.type === 'Administrator' ? null : D.seniority, team: D.team, status: D.status };
   if (editId) { const x = S.users.find(u => u.id === editId); Object.assign(x, data); log('Updated user', 'User', x.id, 1, roleLabel(x)); save(); UI.udraft = null; go('user', { id: x.id }); toast('User updated'); return; }
   const x = { id: uid('u'), ...data }; S.users.push(x); log('Created user', 'User', x.id, 1, roleLabel(x)); save(); UI.udraft = null; go('user', { id: x.id }); toast('Invitation sent to ' + x.email);
