@@ -26,9 +26,9 @@ function viewShell(inner) {
   const nav = NAV.map(n => {
     if (n.length <= 2) { if (n[1] === 'admin' && !isAdmin(u)) return ''; return `<div class="nav-label">${n[0]}</div>`; }
     if (n[4] === 'admin' && !isAdmin(u)) return '';
-    return `<button class="nav-item ${active === n[0] ? 'active' : ''}" ${goAttr(n[0])} ${active === n[0] ? 'aria-current="page"' : ''}>${icon(n[2])}<span>${n[1]}</span>${n[3] && nTasks ? `<span class="count">${nTasks}</span>` : ''}</button>`;
+    return `<button class="nav-item ${active === n[0] ? 'active' : ''}" title="${n[1]}" ${goAttr(n[0])} ${active === n[0] ? 'aria-current="page"' : ''}>${icon(n[2])}<span>${n[1]}</span>${n[3] && nTasks ? `<span class="count">${nTasks}</span>` : ''}</button>`;
   }).join('');
-  return `<div class="shell ${UI.navOpen ? 'nav-open' : ''}">
+  return `<div class="shell">
   <aside class="side" aria-label="Main navigation">
     <button class="brand" ${goAttr('home')} aria-label="SAJA MedLR home"><img src="${LOGO}" alt="SAJA"></button>
     ${nav}
@@ -44,12 +44,9 @@ function viewShell(inner) {
 
 function viewTopbar(u) {
   const notifs = notificationsFor(u); const unread = notifs.some(n => n.ts > (S.notifSeen || 0));
-  const createItems = [canCreateModule(u) ? ['Module', 'module-new', 'grid', 'Claim, safety statement, headline…'] : null, canCreateAsset(u) ? ['Asset', 'asset-new', 'layers', 'Assemble from approved modules'] : null, isAdmin(u) ? ['User', 'user-new', 'users', 'Add a person with type and seniority'] : null].filter(Boolean);
   return `<header class="topbar">
-    <button class="btn icon menu-btn" data-act="nav-toggle" aria-label="Open navigation">${icon('menu')}</button>
     <div class="search" id="gsearch">${icon('search', 'sm')}<input id="global-search" type="search" placeholder="Search modules, assets, people…" value="${esc(UI.search)}" aria-label="Search" autocomplete="off">${UI.search ? viewSearchPop() : ''}</div>
     <div class="grow"></div>
-    ${createItems.length ? `<div class="rel"><button class="btn primary" data-act="pop" data-pop="create">${icon('plus', 'sm')}<span class="hide-sm">Create</span></button>${UI.pop === 'create' ? `<div class="pop" role="menu">${createItems.map(c => `<button class="pop-item" role="menuitem" ${c[1] === 'asset-new' ? 'data-act="asset-new"' : goAttr(c[1])}><span class="type-ico">${icon(c[2], 'sm')}</span><span><b style="display:block;font-size:13.5px">${c[0]}</b><span class="muted" style="font-size:12px">${c[3]}</span></span></button>`).join('')}</div>` : ''}</div>` : ''}
     <div class="rel"><button class="btn icon" data-act="pop" data-pop="bell" aria-label="Notifications">${icon('bell')}${unread ? '<span class="bell-dot"></span>' : ''}</button>${UI.pop === 'bell' ? viewNotifPop(notifs) : ''}</div>
     <div class="rel"><button class="userbtn" data-act="pop" data-pop="user" aria-label="Switch demo user">${avatar(u)}<span class="meta"><b>${esc(u.name)}</b><span>${esc(roleLabel(u))}</span></span>${icon('down', 'sm')}</button>${UI.pop === 'user' ? viewUserPop(u) : ''}</div>
   </header>`;
@@ -82,22 +79,31 @@ function viewSearchPop() {
 /* ===== Auth ===== */
 function viewLogin() {
   const err = UI.f.loginErr;
+  const steps = [['Medical', 'Junior', 'Ahmed Ali'], ['Medical', 'Senior', 'Sara Ahmed'], ['Legal', 'Senior', 'Rania Haddad'], ['Regulatory', 'Senior', 'Layla Nasser']];
   return `<div class="login">
   <section class="login-brand">
-    <img src="${LOGO}" alt="SAJA">
-    <div class="stack" style="gap:16px"><span class="section-title">SAJA MedLR</span><h1>Create once.<br><em>Approve once.</em><br>Reuse safely.</h1>
-    <p class="lede">Modular pharmaceutical content with Medical, Legal and Regulatory review built in — every approved module can be reused with confidence across markets and channels.</p></div>
-    <div class="flowline" aria-label="Product flow"><span>Content strategy</span>${icon('arrow', 'sm')}<span>Modules</span>${icon('arrow', 'sm')}<span>MLR review</span>${icon('arrow', 'sm')}<span>Approved library</span>${icon('arrow', 'sm')}<span>Assets</span>${icon('arrow', 'sm')}<span>Lifecycle</span></div>
-    <p class="muted" style="font-size:12px;margin-top:auto">Prototype for client review. All products, studies, people and data are fictional.</p>
+    <img class="login-logo" src="${LOGO}" alt="SAJA">
+    <div class="login-hero"><span class="eyebrow">SAJA MedLR · Modular content &amp; MLR review</span><h1>Create once.<br><em>Approve once.</em><br>Reuse safely.</h1>
+    <p class="lede">Medical, Legal and Regulatory review built into every module — so approved content can be reused with confidence across markets and channels.</p></div>
+    <div class="login-preview" aria-hidden="true">
+      <div class="lp-card">
+        <div class="lp-head"><span class="lp-ico">${icon('quote', 'sm')}</span><div class="lp-title"><b>Clinical Claim A — Hospitalisation reduction</b><span class="mono">MOD-A-014 · v2</span></div><span class="chip ok">Approved</span></div>
+        <div class="lp-steps">${steps.map((x, i) => `<div class="lp-step" style="animation-delay:${0.25 + i * 0.18}s"><span class="lp-dot">${icon('check', 'sm')}</span><span class="lp-fn">${x[0]}</span>${sen(x[1])}<span class="lp-who">${x[2]}</span></div>`).join('')}</div>
+      </div>
+      <div class="lp-float"><span class="lp-ico">${icon('layers', 'sm')}</span><span><b>Reused in 4 assets</b><span>Saudi Arabia · UAE</span></span></div>
+    </div>
+    <p class="login-foot">Prototype for client review. All products, studies, people and data are fictional.</p>
   </section>
   <section class="login-form">
     ${UI.route.name === 'forgot' ? viewForgot() : `<form class="login-card" data-form="login" novalidate>
-      <div class="stack" style="gap:6px"><h2>Sign in</h2><p class="ink2">Use your SAJA work email.</p></div>
+      <div class="stack" style="gap:6px"><h2>Sign in</h2><p class="ink2">Welcome back. Use your SAJA work email.</p></div>
       ${err ? `<div class="banner bad" role="alert">${icon('alert')}<div class="txt"><b>${esc(err)}</b></div></div>` : ''}
       <div class="field"><label for="login-email">Work email</label><input class="input" id="login-email" name="email" type="email" autocomplete="username" value="${esc(F('loginEmail', 'omar.khalil@saja-demo.com'))}" required></div>
       <div class="field"><div class="row between"><label for="login-pass">Password</label><button type="button" class="btn ghost sm" ${goAttr('forgot')}>Forgot password?</button></div><input class="input" id="login-pass" name="password" type="password" autocomplete="current-password" value="demo-password" required></div>
-      <button class="btn primary" type="submit" style="height:44px">Sign in</button>
-      <div class="stack" style="gap:8px"><span class="section-title">Demo accounts</span><div class="demo-accts">${['u-omar', 'u-ahmed', 'u-sara', 'u-karim', 'u-ali'].map(id => { const x = user(id); return `<button type="button" data-act="login-as" data-id="${id}">${avatar(x, 'sm')}<span style="flex:1"><b style="font-size:13px">${esc(x.name)}</b> <span class="muted" style="font-size:12px">· ${esc(x.type)}</span></span>${sen(x.seniority)}</button>`; }).join('')}</div><p class="muted" style="font-size:12px">Any password works in the prototype. You can switch user at any time from the top-right menu.</p></div>
+      <button class="btn primary" type="submit" style="height:46px">Sign in</button>
+      <div class="login-div"><span>or try a demo account</span></div>
+      <div class="demo-accts">${['u-omar', 'u-ahmed', 'u-sara', 'u-karim', 'u-ali'].map(id => { const x = user(id); return `<button type="button" data-act="login-as" data-id="${id}">${avatar(x, 'sm')}<span class="da-txt"><b>${esc(x.name)}</b><span>${esc(x.type)}</span></span>${sen(x.seniority)}${icon('chevron', 'sm')}</button>`; }).join('')}</div>
+      <p class="muted" style="font-size:12px">Any password works in the prototype. Switch user any time from the top-right menu.</p>
     </form>`}
   </section></div>`;
 }
@@ -111,7 +117,6 @@ function viewForgot() {
 /* ===== Home ===== */
 function viewHome() {
   const u = me(); const tasks = tasksFor(u); const a = authority(u.type, u.seniority); const first = u.name.split(' ')[0];
-  const hr = new Date().getHours(); const greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
   let quick = [];
   if (u.type === 'Content Owner') quick = [['Create a module', 'One claim, safety statement or headline', 'plus', 'module-new'], ['My tasks', tasks.length + ' waiting on you', 'inbox', 'tasks'], ['Approved library', 'Reuse approved modules', 'book', 'library'], ['Lifecycle', 'Expiring content and versions', 'clock', 'lifecycle']];
   else if (FUNCTION_OF[u.type]) quick = [[tasks.length ? 'Open next review' : 'My tasks', tasks.length ? esc(tasks[0].title) : 'Nothing waiting on you', 'shieldcheck', tasks.length ? (tasks[0].type === 'Asset' ? 'asset-review' : 'review') : 'tasks', tasks.length ? tasks[0].id : null], ['My tasks', tasks.length + ' assigned to you', 'inbox', 'tasks'], ['Approved library', 'Search approved modules', 'book', 'library'], ['Audit trail', 'Every decision, with seniority', 'history', 'audit']];
@@ -120,7 +125,7 @@ function viewHome() {
   const counts = st => S.modules.filter(m => st.includes(lifeStatus(m))).length;
   const pipe = [['Draft', ['Draft', 'Awaiting Senior submit']], ['In review', ['In Review']], ['Changes requested', ['Changes Requested']], ['Approved & active', ['Approved', 'Active']], ['Expiring / review', ['Expiring', 'Review Required']]];
   const recent = [...S.audit].sort((x, y) => y.ts - x.ts).slice(0, 6);
-  return `<div class="hello"><div class="stack" style="gap:6px"><h1>${greet}, ${esc(first)}</h1><div class="row ink2">${esc(u.type)} ${sen(u.seniority)} <span class="muted">·</span> ${icon(a.final ? 'key' : 'eye', 'sm')} ${esc(a.short)}</div></div></div>
+  return `<div class="hello"><div class="stack" style="gap:6px"><h1>Welcome, ${esc(first)}</h1><div class="row ink2">${esc(u.type)} ${sen(u.seniority)} <span class="muted">·</span> ${icon(a.final ? 'key' : 'eye', 'sm')} ${esc(a.short)}</div></div></div>
   <div class="quick">${quick.map(q => `<button ${q[3] === 'asset-new' ? 'data-act="asset-new"' : goAttr(q[3], q[4])}><span class="qi">${icon(q[2])}</span><b>${q[0]}</b><span>${q[1]}</span></button>`).join('')}</div>
   <div class="grid cols-main">
     <section class="panel"><div class="panel-head"><h3>Waiting on you</h3><span class="chip plain">${tasks.length}</span><div class="grow" style="flex:1"></div><button class="btn ghost sm" ${goAttr('tasks')}>View all</button></div>

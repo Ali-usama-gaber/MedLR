@@ -27,10 +27,11 @@ function render() {
     else inner = (ROUTES[r] || viewHome)();
     html = viewShell(inner + '<p class="disclaimer">SAJA MedLR prototype · All products, studies, people and data are fictional and for demonstration only.</p>');
     html += UI.guide ? viewGuide() : '';
-    html += `<button class="guide-fab" data-act="guide" aria-expanded="${UI.guide}">${icon(UI.guide ? 'x' : 'play', 'sm')}${UI.guide ? 'Close guide' : 'Demo guide'}</button>`;
+    html += `<button class="guide-fab" data-act="guide" aria-expanded="${UI.guide}" aria-label="${UI.guide ? 'Close guide' : 'Demo guide'}">${icon(UI.guide ? 'x' : 'play', 'sm')}<span class="lbl">${UI.guide ? 'Close guide' : 'Demo guide'}</span></button>`;
   }
   html += UI.modal ? viewModal() : '';
   app.innerHTML = html;
+  app.querySelectorAll('table.tbl').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (hs[i]) td.setAttribute('data-label', hs[i]); })); });
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch (e) {} } }
 }
 
@@ -132,7 +133,6 @@ function nextAssetId() { return 'AST-' + (Math.max(100, ...S.assets.map(a => +a.
 function curAsset() { return assetById(UI.route.p.id); }
 
 const ACT = {
-  'nav-toggle': () => { UI.navOpen = !UI.navOpen; render(); },
   pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') S.notifSeen = Date.now(); render(); },
   persona: el => switchPersona(el.dataset.id, el.dataset.then, el.dataset.target),
   reset: () => { UI.modal = null; UI.guide = true; resetDemo(); ensureAssetWorkflows(); save(); render(); },

@@ -71,7 +71,6 @@ p { margin: 0; }
 
 .main { min-width: 0; display: flex; flex-direction: column; }
 .topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; gap: 12px; padding: 12px 28px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
-.menu-btn { display: none; }
 .search { position: relative; flex: 1; max-width: 460px; }
 .search input { width: 100%; height: 40px; padding: 0 14px 0 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 .search .ico { position: absolute; left: 12px; top: 11px; color: var(--ink-3); }
@@ -275,7 +274,7 @@ button.life-st:hover { border-color: var(--ink-3); }
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { transform: translateY(10px); opacity: 0; } }
 
-.toasts { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+#toasts, .toasts { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
 .toast { display: flex; gap: 10px; align-items: center; padding: 11px 16px; border-radius: 12px; background: var(--ink); color: var(--surface); font-weight: 700; font-size: 13.5px; box-shadow: var(--shadow-2); animation: rise .2s ease; max-width: min(560px, calc(100vw - 32px)); }
 
 .pop { position: absolute; right: 0; top: calc(100% + 8px); width: 340px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-2); z-index: 60; padding: 8px; max-height: 70vh; overflow: auto; }
@@ -356,20 +355,49 @@ button.life-st:hover { border-color: var(--ink-3); }
 .flow-add:hover { border-color: var(--accent); color: var(--accent); }
 
 /* login */
-.login { min-height: 100%; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); background: var(--bg); }
-.login-brand { padding: 48px 56px; display: flex; flex-direction: column; gap: 28px; background: var(--surface); border-right: 1px solid var(--line); }
-.login-brand img { width: 220px; }
-.login-brand h1 { font-size: 46px; line-height: 1.08; font-weight: 800; letter-spacing: -0.025em; }
+.login { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); background: var(--surface); }
+.login-brand { position: relative; overflow: hidden; padding: 44px clamp(28px, 5vw, 64px); display: flex; flex-direction: column; gap: 32px; background: linear-gradient(160deg, #f7f9f8 0%, #eef3f0 100%); border-right: 1px solid var(--line); }
+.login-brand::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(var(--line-strong) 1px, transparent 1px); background-size: 22px 22px; opacity: .45; -webkit-mask-image: linear-gradient(180deg, transparent, #000 40%, #000 70%, transparent); mask-image: linear-gradient(180deg, transparent, #000 40%, #000 70%, transparent); pointer-events: none; }
+.login-brand::after { content: ""; position: absolute; width: 520px; height: 520px; right: -180px; bottom: -200px; border-radius: 50%; background: radial-gradient(closest-side, rgba(23, 113, 61, .10), transparent); pointer-events: none; }
+.login-brand > * { position: relative; z-index: 1; }
+.login-logo { width: 176px; animation: fadeUp .5s ease both; }
+.login-hero { display: flex; flex-direction: column; gap: 16px; animation: fadeUp .5s .08s ease both; }
+.eyebrow { font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.login-brand h1 { font-size: clamp(34px, 3.6vw, 50px); line-height: 1.06; font-weight: 800; letter-spacing: -0.03em; }
 .login-brand h1 em { font-style: normal; color: var(--accent); }
-.login-brand .lede { font-size: 16px; color: var(--ink-2); max-width: 46ch; }
-.flowline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.flowline span { padding: 6px 12px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 700; font-size: 12.5px; color: var(--ink-2); }
-.login-form { display: grid; place-items: center; padding: 40px 24px; }
-.login-card { width: min(420px, 100%); display: grid; gap: 18px; }
-.login-card h2 { font-size: 28px; font-weight: 800; }
+.login-brand .lede { font-size: 15.5px; color: var(--ink-2); max-width: 46ch; }
+.login-preview { position: relative; max-width: 460px; padding-bottom: 34px; animation: fadeUp .5s .16s ease both; }
+.lp-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 20px 50px rgba(16, 24, 20, .10), 0 2px 6px rgba(16, 24, 20, .05); padding: 16px; }
+.lp-head { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.lp-ico { width: 32px; height: 32px; flex: none; border-radius: 9px; display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); }
+.lp-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lp-title b { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-title .mono { font-size: 11px; color: var(--ink-3); }
+.lp-steps { display: grid; gap: 2px; padding-top: 10px; }
+.lp-step { display: flex; align-items: center; gap: 10px; padding: 7px 4px; font-size: 13px; opacity: 0; animation: fadeUp .4s ease forwards; }
+.lp-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; flex: none; }
+.lp-dot svg { width: 13px; height: 13px; }
+.lp-fn { font-weight: 700; min-width: 84px; }
+.lp-who { margin-left: auto; color: var(--ink-3); font-size: 12px; }
+.lp-float { position: absolute; right: -18px; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 10px 14px 10px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 14px 34px rgba(16, 24, 20, .12); animation: fadeUp .5s 1s ease both; }
+.lp-float .lp-ico { background: var(--accent-soft); color: var(--accent); }
+.lp-float b { display: block; font-size: 13px; }
+.lp-float span span { font-size: 11.5px; color: var(--ink-3); }
+.login-foot { margin-top: auto; font-size: 12px; color: var(--ink-3); }
+.login-form { display: grid; place-items: center; padding: 40px 24px; background: var(--surface); }
+.login-card { width: min(400px, 100%); display: grid; gap: 18px; animation: fadeUp .45s .1s ease both; }
+.login-card h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.login-card .input { height: 46px; }
+.login-div { display: flex; align-items: center; gap: 12px; color: var(--ink-3); font-size: 12px; font-weight: 600; }
+.login-div::before, .login-div::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .demo-accts { display: grid; gap: 6px; }
-.demo-accts button { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); text-align: left; }
-.demo-accts button:hover { border-color: var(--accent); }
+.demo-accts button { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); text-align: left; transition: border-color .15s, background .15s, transform .15s; }
+.demo-accts button:hover { border-color: var(--accent); background: var(--surface-2); transform: translateY(-1px); }
+.demo-accts button > svg:last-child { color: var(--ink-3); }
+.da-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.da-txt b { font-size: 13px; }
+.da-txt span { font-size: 12px; color: var(--ink-3); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
 /* demo guide */
 .guide-fab { position: fixed; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 70; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 99px; border: 0; background: var(--ink); color: var(--surface); font-weight: 800; box-shadow: var(--shadow-2); }
@@ -411,10 +439,7 @@ button.life-st:hover { border-color: var(--ink-3); }
   .quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1024px) {
-  .shell { grid-template-columns: minmax(0, 1fr); }
-  .side { position: fixed; left: 0; top: 0; bottom: 0; width: 264px; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--shadow-2); }
-  .shell.nav-open .side { transform: none; }
-  .menu-btn { display: inline-flex; }
+  .shell { grid-template-columns: 76px minmax(0, 1fr); }
   .topbar { padding: 10px 16px; }
   .content { padding: 20px 16px 80px; }
   .login { grid-template-columns: minmax(0, 1fr); }
@@ -433,6 +458,87 @@ button.life-st:hover { border-color: var(--ink-3); }
   .quick { grid-template-columns: minmax(0, 1fr); }
   .toolbar input[type=search] { min-width: 0; width: 100%; }
   .toolbar .field-inline { flex: 1 1 100%; }
+}
+
+/* ---------- Responsive refinements ---------- */
+@media (max-width: 1024px) {
+  .tbl th, .tbl td { padding-left: 10px; padding-right: 10px; }
+  .login { grid-template-columns: minmax(0, 1fr); }
+  .login-brand { border-right: 0; border-bottom: 1px solid var(--line); padding: 28px 24px 32px; gap: 22px; }
+  .login-preview, .login-foot { display: none; }
+  .login-brand h1 { font-size: 34px; }
+  .login-form { padding: 32px 24px 48px; place-items: start center; }
+}
+@media (max-width: 820px) {
+  .table-wrap { overflow: visible; }
+  table.tbl, .tbl tbody { display: block; }
+  .tbl thead { display: none; }
+  .tbl tr { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 18px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .tbl tr:last-child { border-bottom: 0; }
+  .tbl td, .tbl tr:last-child td { display: block; padding: 0; border: 0; min-width: 0; }
+  .tbl td:first-child { flex: 1 1 100%; }
+  .tbl td[data-label]:not(:first-child)::before { content: attr(data-label); display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 3px; }
+  .tbl td:empty { display: none; }
+  .tbl tr.click:hover td { background: none; }
+  .tbl tr.click:hover { background: var(--surface-2); }
+}
+@media (max-width: 760px) {
+  .login-brand { padding: 22px 20px 24px; gap: 16px; }
+  .login-logo { width: 132px; }
+  .login-brand h1 { font-size: 28px; }
+  .login-brand .lede { font-size: 14px; }
+  .login-card h2 { font-size: 26px; }
+  .login-form { padding: 24px 20px 40px; }
+  .task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 12px; row-gap: 6px; align-items: center; }
+  .task > :first-child:not(.body) { grid-row: 1 / span 2; align-self: start; }
+  .task .body { grid-column: 2; }
+  .task > .chip { grid-column: 2; justify-self: start; }
+  .task > svg:last-child { grid-column: 3; grid-row: 1 / span 2; }
+  .task > .num { grid-column: 3; grid-row: 1; }
+  .banner { flex-wrap: wrap; }
+  .banner .txt { flex: 1 1 calc(100% - 40px); }
+  .banner > .btn { margin-left: 34px; }
+  .guide-fab { width: 48px; height: 48px; padding: 0; justify-content: center; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .guide-fab .lbl { display: none; }
+  .guide { right: 12px; left: 12px; width: auto; bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
+  .hello h1, .page-head h1 { font-size: 24px; }
+  .content { padding: 18px 14px 88px; }
+}
+
+/* Navigation: icon rail on tablet, bottom bar on phone (no menu button) */
+@media (max-width: 1024px) {
+  .side { padding: 14px 10px; align-items: center; gap: 4px; }
+  .side .brand { padding: 2px 0 14px; }
+  .side .brand img { height: auto; width: 54px; }
+  .nav-label { display: block; width: 32px; height: 1px; padding: 0; margin: 8px 0; background: var(--line); font-size: 0; }
+  .side-user { display: none; }
+  .nav-item { position: relative; width: 48px; height: 44px; padding: 0; justify-content: center; flex: none; }
+  .nav-item > span:not(.count) { display: none; }
+  .nav-item .count { position: absolute; top: 3px; right: 2px; margin: 0; min-width: 17px; padding: 0 4px; font-size: 10px; line-height: 16px; }
+}
+@media (max-width: 760px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { position: fixed; top: auto; left: 0; right: 0; bottom: 0; height: auto; flex-direction: row; align-items: stretch; gap: 2px; padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); border-right: 0; border-top: 1px solid var(--line); overflow-x: auto; overflow-y: hidden; z-index: 65; box-shadow: 0 -6px 20px rgba(16, 24, 20, .06); scrollbar-width: none; }
+  .side::-webkit-scrollbar { display: none; }
+  .side .brand, .side .spacer { display: none; }
+  .nav-label { width: 1px; height: auto; margin: 8px 4px; flex: none; }
+  .nav-item { width: auto; min-width: 66px; height: 52px; flex-direction: column; gap: 3px; padding: 0 8px; }
+  .nav-item > span:not(.count) { display: block; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+  .nav-item .count { top: 2px; right: 10px; }
+  .content { padding-bottom: 150px; }
+  .guide-fab { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  .guide { bottom: calc(138px + env(safe-area-inset-bottom, 0px)); max-height: calc(100vh - 210px); }
+  #toasts { bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important; }
+}
+@media (max-width: 760px) {
+  .topbar .grow { display: none; }
+  .topbar .search { max-width: none; }
+}
+@media (max-width: 760px) {
+  .side .nav-label:first-of-type { display: none; }
+  .quick { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .quick button { padding: 14px; }
+  .quick button > span:last-child { font-size: 11.5px; }
 }
 
 </style>
@@ -867,9 +973,9 @@ function viewShell(inner) {
   const nav = NAV.map(n => {
     if (n.length <= 2) { if (n[1] === 'admin' && !isAdmin(u)) return ''; return `<div class="nav-label">${n[0]}</div>`; }
     if (n[4] === 'admin' && !isAdmin(u)) return '';
-    return `<button class="nav-item ${active === n[0] ? 'active' : ''}" ${goAttr(n[0])} ${active === n[0] ? 'aria-current="page"' : ''}>${icon(n[2])}<span>${n[1]}</span>${n[3] && nTasks ? `<span class="count">${nTasks}</span>` : ''}</button>`;
+    return `<button class="nav-item ${active === n[0] ? 'active' : ''}" title="${n[1]}" ${goAttr(n[0])} ${active === n[0] ? 'aria-current="page"' : ''}>${icon(n[2])}<span>${n[1]}</span>${n[3] && nTasks ? `<span class="count">${nTasks}</span>` : ''}</button>`;
   }).join('');
-  return `<div class="shell ${UI.navOpen ? 'nav-open' : ''}">
+  return `<div class="shell">
   <aside class="side" aria-label="Main navigation">
     <button class="brand" ${goAttr('home')} aria-label="SAJA MedLR home"><img src="${LOGO}" alt="SAJA"></button>
     ${nav}
@@ -885,12 +991,9 @@ function viewShell(inner) {
 
 function viewTopbar(u) {
   const notifs = notificationsFor(u); const unread = notifs.some(n => n.ts > (S.notifSeen || 0));
-  const createItems = [canCreateModule(u) ? ['Module', 'module-new', 'grid', 'Claim, safety statement, headline…'] : null, canCreateAsset(u) ? ['Asset', 'asset-new', 'layers', 'Assemble from approved modules'] : null, isAdmin(u) ? ['User', 'user-new', 'users', 'Add a person with type and seniority'] : null].filter(Boolean);
   return `<header class="topbar">
-    <button class="btn icon menu-btn" data-act="nav-toggle" aria-label="Open navigation">${icon('menu')}</button>
     <div class="search" id="gsearch">${icon('search', 'sm')}<input id="global-search" type="search" placeholder="Search modules, assets, people…" value="${esc(UI.search)}" aria-label="Search" autocomplete="off">${UI.search ? viewSearchPop() : ''}</div>
     <div class="grow"></div>
-    ${createItems.length ? `<div class="rel"><button class="btn primary" data-act="pop" data-pop="create">${icon('plus', 'sm')}<span class="hide-sm">Create</span></button>${UI.pop === 'create' ? `<div class="pop" role="menu">${createItems.map(c => `<button class="pop-item" role="menuitem" ${c[1] === 'asset-new' ? 'data-act="asset-new"' : goAttr(c[1])}><span class="type-ico">${icon(c[2], 'sm')}</span><span><b style="display:block;font-size:13.5px">${c[0]}</b><span class="muted" style="font-size:12px">${c[3]}</span></span></button>`).join('')}</div>` : ''}</div>` : ''}
     <div class="rel"><button class="btn icon" data-act="pop" data-pop="bell" aria-label="Notifications">${icon('bell')}${unread ? '<span class="bell-dot"></span>' : ''}</button>${UI.pop === 'bell' ? viewNotifPop(notifs) : ''}</div>
     <div class="rel"><button class="userbtn" data-act="pop" data-pop="user" aria-label="Switch demo user">${avatar(u)}<span class="meta"><b>${esc(u.name)}</b><span>${esc(roleLabel(u))}</span></span>${icon('down', 'sm')}</button>${UI.pop === 'user' ? viewUserPop(u) : ''}</div>
   </header>`;
@@ -923,22 +1026,31 @@ function viewSearchPop() {
 /* ===== Auth ===== */
 function viewLogin() {
   const err = UI.f.loginErr;
+  const steps = [['Medical', 'Junior', 'Ahmed Ali'], ['Medical', 'Senior', 'Sara Ahmed'], ['Legal', 'Senior', 'Rania Haddad'], ['Regulatory', 'Senior', 'Layla Nasser']];
   return `<div class="login">
   <section class="login-brand">
-    <img src="${LOGO}" alt="SAJA">
-    <div class="stack" style="gap:16px"><span class="section-title">SAJA MedLR</span><h1>Create once.<br><em>Approve once.</em><br>Reuse safely.</h1>
-    <p class="lede">Modular pharmaceutical content with Medical, Legal and Regulatory review built in — every approved module can be reused with confidence across markets and channels.</p></div>
-    <div class="flowline" aria-label="Product flow"><span>Content strategy</span>${icon('arrow', 'sm')}<span>Modules</span>${icon('arrow', 'sm')}<span>MLR review</span>${icon('arrow', 'sm')}<span>Approved library</span>${icon('arrow', 'sm')}<span>Assets</span>${icon('arrow', 'sm')}<span>Lifecycle</span></div>
-    <p class="muted" style="font-size:12px;margin-top:auto">Prototype for client review. All products, studies, people and data are fictional.</p>
+    <img class="login-logo" src="${LOGO}" alt="SAJA">
+    <div class="login-hero"><span class="eyebrow">SAJA MedLR · Modular content &amp; MLR review</span><h1>Create once.<br><em>Approve once.</em><br>Reuse safely.</h1>
+    <p class="lede">Medical, Legal and Regulatory review built into every module — so approved content can be reused with confidence across markets and channels.</p></div>
+    <div class="login-preview" aria-hidden="true">
+      <div class="lp-card">
+        <div class="lp-head"><span class="lp-ico">${icon('quote', 'sm')}</span><div class="lp-title"><b>Clinical Claim A — Hospitalisation reduction</b><span class="mono">MOD-A-014 · v2</span></div><span class="chip ok">Approved</span></div>
+        <div class="lp-steps">${steps.map((x, i) => `<div class="lp-step" style="animation-delay:${0.25 + i * 0.18}s"><span class="lp-dot">${icon('check', 'sm')}</span><span class="lp-fn">${x[0]}</span>${sen(x[1])}<span class="lp-who">${x[2]}</span></div>`).join('')}</div>
+      </div>
+      <div class="lp-float"><span class="lp-ico">${icon('layers', 'sm')}</span><span><b>Reused in 4 assets</b><span>Saudi Arabia · UAE</span></span></div>
+    </div>
+    <p class="login-foot">Prototype for client review. All products, studies, people and data are fictional.</p>
   </section>
   <section class="login-form">
     ${UI.route.name === 'forgot' ? viewForgot() : `<form class="login-card" data-form="login" novalidate>
-      <div class="stack" style="gap:6px"><h2>Sign in</h2><p class="ink2">Use your SAJA work email.</p></div>
+      <div class="stack" style="gap:6px"><h2>Sign in</h2><p class="ink2">Welcome back. Use your SAJA work email.</p></div>
       ${err ? `<div class="banner bad" role="alert">${icon('alert')}<div class="txt"><b>${esc(err)}</b></div></div>` : ''}
       <div class="field"><label for="login-email">Work email</label><input class="input" id="login-email" name="email" type="email" autocomplete="username" value="${esc(F('loginEmail', 'omar.khalil@saja-demo.com'))}" required></div>
       <div class="field"><div class="row between"><label for="login-pass">Password</label><button type="button" class="btn ghost sm" ${goAttr('forgot')}>Forgot password?</button></div><input class="input" id="login-pass" name="password" type="password" autocomplete="current-password" value="demo-password" required></div>
-      <button class="btn primary" type="submit" style="height:44px">Sign in</button>
-      <div class="stack" style="gap:8px"><span class="section-title">Demo accounts</span><div class="demo-accts">${['u-omar', 'u-ahmed', 'u-sara', 'u-karim', 'u-ali'].map(id => { const x = user(id); return `<button type="button" data-act="login-as" data-id="${id}">${avatar(x, 'sm')}<span style="flex:1"><b style="font-size:13px">${esc(x.name)}</b> <span class="muted" style="font-size:12px">· ${esc(x.type)}</span></span>${sen(x.seniority)}</button>`; }).join('')}</div><p class="muted" style="font-size:12px">Any password works in the prototype. You can switch user at any time from the top-right menu.</p></div>
+      <button class="btn primary" type="submit" style="height:46px">Sign in</button>
+      <div class="login-div"><span>or try a demo account</span></div>
+      <div class="demo-accts">${['u-omar', 'u-ahmed', 'u-sara', 'u-karim', 'u-ali'].map(id => { const x = user(id); return `<button type="button" data-act="login-as" data-id="${id}">${avatar(x, 'sm')}<span class="da-txt"><b>${esc(x.name)}</b><span>${esc(x.type)}</span></span>${sen(x.seniority)}${icon('chevron', 'sm')}</button>`; }).join('')}</div>
+      <p class="muted" style="font-size:12px">Any password works in the prototype. Switch user any time from the top-right menu.</p>
     </form>`}
   </section></div>`;
 }
@@ -952,7 +1064,6 @@ function viewForgot() {
 /* ===== Home ===== */
 function viewHome() {
   const u = me(); const tasks = tasksFor(u); const a = authority(u.type, u.seniority); const first = u.name.split(' ')[0];
-  const hr = new Date().getHours(); const greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
   let quick = [];
   if (u.type === 'Content Owner') quick = [['Create a module', 'One claim, safety statement or headline', 'plus', 'module-new'], ['My tasks', tasks.length + ' waiting on you', 'inbox', 'tasks'], ['Approved library', 'Reuse approved modules', 'book', 'library'], ['Lifecycle', 'Expiring content and versions', 'clock', 'lifecycle']];
   else if (FUNCTION_OF[u.type]) quick = [[tasks.length ? 'Open next review' : 'My tasks', tasks.length ? esc(tasks[0].title) : 'Nothing waiting on you', 'shieldcheck', tasks.length ? (tasks[0].type === 'Asset' ? 'asset-review' : 'review') : 'tasks', tasks.length ? tasks[0].id : null], ['My tasks', tasks.length + ' assigned to you', 'inbox', 'tasks'], ['Approved library', 'Search approved modules', 'book', 'library'], ['Audit trail', 'Every decision, with seniority', 'history', 'audit']];
@@ -961,7 +1072,7 @@ function viewHome() {
   const counts = st => S.modules.filter(m => st.includes(lifeStatus(m))).length;
   const pipe = [['Draft', ['Draft', 'Awaiting Senior submit']], ['In review', ['In Review']], ['Changes requested', ['Changes Requested']], ['Approved & active', ['Approved', 'Active']], ['Expiring / review', ['Expiring', 'Review Required']]];
   const recent = [...S.audit].sort((x, y) => y.ts - x.ts).slice(0, 6);
-  return `<div class="hello"><div class="stack" style="gap:6px"><h1>${greet}, ${esc(first)}</h1><div class="row ink2">${esc(u.type)} ${sen(u.seniority)} <span class="muted">·</span> ${icon(a.final ? 'key' : 'eye', 'sm')} ${esc(a.short)}</div></div></div>
+  return `<div class="hello"><div class="stack" style="gap:6px"><h1>Welcome, ${esc(first)}</h1><div class="row ink2">${esc(u.type)} ${sen(u.seniority)} <span class="muted">·</span> ${icon(a.final ? 'key' : 'eye', 'sm')} ${esc(a.short)}</div></div></div>
   <div class="quick">${quick.map(q => `<button ${q[3] === 'asset-new' ? 'data-act="asset-new"' : goAttr(q[3], q[4])}><span class="qi">${icon(q[2])}</span><b>${q[0]}</b><span>${q[1]}</span></button>`).join('')}</div>
   <div class="grid cols-main">
     <section class="panel"><div class="panel-head"><h3>Waiting on you</h3><span class="chip plain">${tasks.length}</span><div class="grow" style="flex:1"></div><button class="btn ghost sm" ${goAttr('tasks')}>View all</button></div>
@@ -1505,10 +1616,11 @@ function render() {
     else inner = (ROUTES[r] || viewHome)();
     html = viewShell(inner + '<p class="disclaimer">SAJA MedLR prototype · All products, studies, people and data are fictional and for demonstration only.</p>');
     html += UI.guide ? viewGuide() : '';
-    html += `<button class="guide-fab" data-act="guide" aria-expanded="${UI.guide}">${icon(UI.guide ? 'x' : 'play', 'sm')}${UI.guide ? 'Close guide' : 'Demo guide'}</button>`;
+    html += `<button class="guide-fab" data-act="guide" aria-expanded="${UI.guide}" aria-label="${UI.guide ? 'Close guide' : 'Demo guide'}">${icon(UI.guide ? 'x' : 'play', 'sm')}<span class="lbl">${UI.guide ? 'Close guide' : 'Demo guide'}</span></button>`;
   }
   html += UI.modal ? viewModal() : '';
   app.innerHTML = html;
+  app.querySelectorAll('table.tbl').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (hs[i]) td.setAttribute('data-label', hs[i]); })); });
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch (e) {} } }
 }
 
@@ -1610,7 +1722,6 @@ function nextAssetId() { return 'AST-' + (Math.max(100, ...S.assets.map(a => +a.
 function curAsset() { return assetById(UI.route.p.id); }
 
 const ACT = {
-  'nav-toggle': () => { UI.navOpen = !UI.navOpen; render(); },
   pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') S.notifSeen = Date.now(); render(); },
   persona: el => switchPersona(el.dataset.id, el.dataset.then, el.dataset.target),
   reset: () => { UI.modal = null; UI.guide = true; resetDemo(); ensureAssetWorkflows(); save(); render(); },
