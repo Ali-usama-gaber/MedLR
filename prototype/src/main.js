@@ -166,6 +166,7 @@ const ACT = {
   guide: () => { UI.guide = !UI.guide; render(); },
   'modal-close': () => { UI.modal = null; render(); },
   'modal-bg': (el, ev) => { if (ev.target === el) { UI.modal = null; render(); } },
+  'toggle-f': el => { const k = el.dataset.k; UI.f[k] = UI.f[k] === el.dataset.v ? '' : el.dataset.v; render(); },
   'set-f': el => { UI.f[el.dataset.k] = el.dataset.v; render(); },
   'clear-filters': el => { el.dataset.keys.split(',').forEach(k => { UI.f[k] = k === 'lstat' ? 'usable' : ''; }); render(); },
 
