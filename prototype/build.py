@@ -4,13 +4,15 @@
 dist/index.html        – standalone page (open directly in a browser)
 dist/artifact.html     – same content without the document skeleton (for hosting as a claude.ai Artifact)
 """
-import base64, pathlib
+import base64, datetime, pathlib
 root = pathlib.Path(__file__).parent
 src = root / 'src'
 logo = 'data:image/png;base64,' + base64.b64encode((root / 'assets' / 'saja-logo.png').read_bytes()).decode()
 css = (src / 'styles.css').read_text()
 js = '\n'.join((src / f).read_text() for f in ['data.js', 'core.js', 'pages.js', 'main.js']).replace("'__LOGO__'", repr(logo))
-body = f'''<title>SAJA MedLR</title>
+stamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+body = f'''<!-- SAJA MedLR prototype build {stamp} -->
+<title>SAJA MedLR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
