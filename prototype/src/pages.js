@@ -129,7 +129,8 @@ function viewHome() {
   const nWait = tasks.length, nRev = counts(['In Review']), nOk = counts(['Approved', 'Active']), nBad = counts(['Expiring', 'Review Required']);
   const kpis = [['Waiting on you', nWait, nWait ? 'warn' : 'ok', nWait ? 'Oldest ' + ago(Math.min(...tasks.map(t => t.since))) : 'Nothing pending', goAttr('tasks')], ['In review', nRev, 'warn', 'Across Medical, Legal, Regulatory', goAttr('modules', null, ' data-status="In Review"')], ['Approved & active', nOk, 'ok', 'Ready to reuse in assets', goAttr('library')], ['Expiring or overdue', nBad, nBad ? 'bad' : 'ok', 'Need re-approval', goAttr('lifecycle')]];
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const segs = [['Draft', counts(['Draft', 'Awaiting Senior submit']), 'dim', 'Draft'], ['In review', nRev, 'warn', 'In Review'], ['Changes requested', counts(['Changes Requested']), 'warn2', 'Changes Requested'], ['Approved & active', nOk, 'ok', 'Approved'], ['Expiring or overdue', nBad, 'bad', 'Expiring']];
+  const nPend = counts(['In Review', 'Changes Requested', 'Awaiting Senior submit']);
+  const segs = [['Approved & active', nOk, 'ok', 'Approved', 'check'], ['Pending review', nPend, 'warn', 'In Review', 'clock'], ['Expiring or overdue', nBad, 'bad', 'Expiring', 'x'], ['Draft', counts(['Draft']), 'dim', 'Draft', 'edit']];
   const segTotal = segs.reduce((s, x) => s + x[1], 0) || 1;
   return `<div class="home">
   <header class="home-head">
@@ -143,8 +144,8 @@ function viewHome() {
       ${tasks.length ? tasks.slice(0, 5).map(viewTaskRow).join('') : `<div class="empty"><h4>You are all caught up</h4><p>New review tasks appear here as soon as they are assigned to ${esc(roleLabel(u))}s.</p></div>`}
     </section>
       <section class="side-block pipe-block"><div class="sb-head"><h3>Content pipeline</h3><span class="muted mono">${S.modules.length} modules</span></div>
-        <div class="pbar" role="img" aria-label="Modules by status">${segs.filter(s => s[1]).map(s => `<span class="${s[2]}" style="flex:${s[1]}" title="${s[0]}: ${s[1]}"></span>`).join('')}</div>
-        <div class="plegend">${segs.map(s => `<button ${goAttr('modules', null, ` data-status="${s[3]}"`)}><span class="k-dot ${s[2]}"></span><span>${s[0]}</span><b>${s[1]}</b><span class="pct mono">${Math.round(s[1] / segTotal * 100)}%</span></button>`).join('')}</div>
+        <div class="pbar" role="img" aria-label="Modules by status: ${segs.map(s => s[0] + ' ' + s[1]).join(', ')}">${segs.filter(s => s[1]).map(s => `<span class="${s[2]}" style="flex:${s[1]}" data-tip="${s[0]} · ${s[1]} (${Math.round(s[1] / segTotal * 100)}%)"></span>`).join('')}</div>
+        <div class="plegend">${segs.map(s => `<button ${goAttr('modules', null, ` data-status="${s[3]}"`)}><span class="lg-key ${s[2]}">${icon(s[4], 'sm')}</span><span>${s[0]}</span><b>${s[1]}</b><span class="pct mono">${Math.round(s[1] / segTotal * 100)}%</span></button>`).join('')}</div>
       </div>
     <aside class="home-side">
       <section class="side-block"><div class="sb-head"><h3>Recent activity</h3><button class="btn ghost sm" ${goAttr('audit')}>Audit trail</button></div>${viewTimeline(recent.slice(0, 4), true)}</section>
@@ -304,8 +305,9 @@ function metaKV(m, v) {
 }
 function viewModuleOverview(m) {
   const l = latest(m);
-  return `<div class="grid cols-main"><div class="stack"><section class="panel"><div class="panel-head"><h3>Content</h3><span class="tag">v${l.v}</span></div><div class="panel-body stack" style="gap:18px"><p class="claim" ${m.type === 'Headline' ? 'style="font-size:24px;font-weight:800"' : ''}>${esc(l.body)}</p></div></section>
-  <section class="panel"><div class="panel-head"><h3>References</h3><span class="chip plain">${l.refs.length}</span></div><div class="panel-body">${refsList(l.refs)}</div></section></div>
+  return `<div class="grid cols-main"><div class="stack"><section class="panel sheet-card"><div class="sheet-strip"><span class="mono">${m.id} · v${l.v}</span><span>${esc(m.type)}</span><span>${esc(m.audience)}</span><span class="grow"></span>${chip(l.status === 'Approved' ? lifeStatus(m) : l.status)}</div>
+    <div class="sheet-body"><p class="claim ${m.type === 'Headline' ? 'is-headline' : ''}">${esc(l.body)}</p>
+    <div class="footnotes"><span class="fn-title">References</span>${l.refs.length ? `<ol>${l.refs.map(r => { const R = refById(r); return `<li><b>${esc(R.title)}</b> <span>${esc(R.source)}</span></li>`; }).join('')}</ol>` : '<p class="muted">No references attached.</p>'}</div></div></section></div>
   <section class="panel"><div class="panel-head"><h3>Details</h3></div><div class="panel-body">${metaKV(m, l)}</div></section></div>`;
 }
 function wfProgress(obj, isMod) {
@@ -365,7 +367,7 @@ function viewReview() {
   const juniorNotes = m.review.comments.filter(c => c.fn === st.fn && c.seniority === 'Junior');
   const hist = m.review.comments;
   const lastRound = l.lastReview || [];
-  return pageHead(esc(m.title), `<span class="row" style="gap:8px">${chip('In Review')}${vtag(l.v)}<span class="mono">${m.id}</span>${wfInline(wfById(m.review.wf), m.review.step, false)}</span>`, mine ? decisionButtons(m, 'Module') : '', [['My Tasks', 'tasks'], [m.id, 'module', m.id], ['Review']]) +
+  return pageHead(esc(m.title), `<span class="row" style="gap:8px">${chip('In Review')}${vtag(l.v)}<span class="mono">${m.id}</span></span>`, mine ? decisionButtons(m, 'Module') : '', [['My Tasks', 'tasks'], [m.id, 'module', m.id], ['Review']]) +
   (!mine ? `<div class="banner info" style="margin-bottom:14px">${icon('eye')}<div class="txt"><b>View only — this step is assigned to the ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</b><p>You are signed in as ${esc(roleLabel(u))}. Switch user from the top-right menu to act on this step.</p></div><button class="btn sm" data-act="persona" data-id="${(assigneeFor(st)[0] || {}).id}" data-then="review" data-target="${m.id}">Switch to ${esc((assigneeFor(st)[0] || {}).name || '')}</button></div>` : '') +
   `<div class="stack" style="margin-bottom:16px">${authorityBanner(m)}</div>
   <div class="grid cols-main"><div class="stack">
@@ -407,8 +409,8 @@ function viewLibrary() {
   <select aria-label="Status" data-filter="lstat">${opt('usable', stF, 'Status: usable')}${opt('', stF, 'All statuses')}${['Approved', 'Active', 'Expiring', 'Review Required'].map(s => opt(s, stF)).join('')}</select>
   <select aria-label="Expiry" data-filter="lexp">${opt('', exp, 'Any expiry')}${opt('30', exp, 'Expires within 30 days')}${opt('90', exp, 'Expires within 90 days')}${opt('later', exp, 'Expires after 90 days')}${opt('expired', exp, 'Expired')}</select>
   ${any ? btn('Clear', 'clear-filters', 'ghost sm', 'data-keys="lq,lprod,lmkt,laud,lch,ltype,lexp,lstat"') : ''}<span class="muted" style="margin-left:auto">${rows.length} modules</span></div>
-  <section class="panel table-wrap">${rows.length ? `<table class="tbl"><thead><tr><th>Module</th><th>Type</th><th>Product</th><th>Market</th><th>Audience</th><th>Channel</th><th>Version</th><th>Status</th><th>Expiry</th><th>Approved</th></tr></thead><tbody>${rows.map(m => { const lv = live(m); const ls = lifeStatus(m); const shown = ['In Review', 'Draft', 'Changes Requested', 'Awaiting Senior submit'].includes(ls) ? (daysTo(m.expiry) <= 45 ? 'Expiring' : (usedInApproved(m.id) ? 'Active' : 'Approved')) : ls;
-    return `<tr class="click" ${goAttr('module', m.id)} tabindex="0"><td><div class="cell-title">${typeIco(m.type)}<div><div class="title">${esc(m.title)}</div><span class="mono muted">${m.id}</span></div></div></td><td>${esc(m.type)}</td><td>${esc(product(m.product).name)}</td><td>${m.markets.map(x => `<span class="tag" title="${esc(market(x).name)}">${x}</span>`).join(' ')}</td><td style="font-size:12.5px">${esc(m.audience)}</td><td style="font-size:12.5px">${esc(m.channels.join(', '))}</td><td>${vtag(lv.v)}</td><td>${chip(shown)}</td><td class="num">${fmtD(m.expiry)}</td><td class="num">${fmtD(lv.approvedAt)}</td></tr>`; }).join('')}</tbody></table>` : `<div class="empty"><h4>No approved modules match</h4><p>Adjust the filters, or approve more content through the MLR workflow.</p></div>`}</section>`;
+  <section class="panel table-wrap">${rows.length ? `<table class="tbl lib-tbl"><thead><tr><th>Module</th><th>Product</th><th>Approved for</th><th>Version</th><th>Status</th><th>Valid until</th></tr></thead><tbody>${rows.map(m => { const lv = live(m); const ls = lifeStatus(m); const shown = ['In Review', 'Draft', 'Changes Requested', 'Awaiting Senior submit'].includes(ls) ? (daysTo(m.expiry) <= 45 ? 'Expiring' : (usedInApproved(m.id) ? 'Active' : 'Approved')) : ls; const dl = daysTo(m.expiry);
+    return `<tr class="click" ${goAttr('module', m.id)} tabindex="0"><td><div class="cell-title">${typeIco(m.type)}<div><div class="title">${esc(m.title)}</div><span class="mono muted">${m.id} · ${esc(m.type)}</span></div></div></td><td>${esc(product(m.product).name)}</td><td><div class="usable"><span>${m.markets.map(x => `<span class="tag" title="${esc(market(x).name)}">${x}</span>`).join('')}</span><span class="muted">${esc(m.audience)} · ${esc(m.channels.join(', '))}</span></div></td><td>${vtag(lv.v)}</td><td>${chip(shown)}</td><td><div class="valid"><b class="num">${fmtD(m.expiry)}</b><span class="${dl < 0 ? 'late' : dl <= 45 ? 'soon' : 'muted'}">${dl < 0 ? Math.abs(dl) + ' days overdue' : dl > 60 ? Math.round(dl / 30) + ' months left' : dl + ' days left'}</span></div></td></tr>`; }).join('')}</tbody></table>` : `<div class="empty"><h4>No approved modules match</h4><p>Adjust the filters, or approve more content through the MLR workflow.</p></div>`}</section>`;
 }
 
 /* ===== Assets ===== */
@@ -488,7 +490,7 @@ function viewAssetReview() {
   const a = assetById(UI.route.p.id); if (!a) return viewMissing('Asset');
   if (!a.review) return pageHead(esc(a.name), 'This asset is not in review.', goBtn('Open asset', 'asset', a.id, 'primary'), [['My Tasks', 'tasks'], [a.id]]);
   const u = me(); const mine = canActOn(u, a); const V = assetValidation(a); const st = curStep(a);
-  return pageHead(esc(a.name), `<span class="row" style="gap:8px">${chip('In Review')}<span class="mono">${a.id}</span>${wfInline(wfById(a.review.wf), a.review.step, false)}</span>`, mine ? decisionButtons(a, 'Asset') : '', [['My Tasks', 'tasks'], [a.id, 'asset', a.id], ['Review']]) +
+  return pageHead(esc(a.name), `<span class="row" style="gap:8px">${chip('In Review')}<span class="mono">${a.id}</span></span>`, mine ? decisionButtons(a, 'Asset') : '', [['My Tasks', 'tasks'], [a.id, 'asset', a.id], ['Review']]) +
   (!mine ? `<div class="banner info" style="margin-bottom:14px">${icon('eye')}<div class="txt"><b>View only — assigned to the ${esc(st.seniority)} ${esc(REVIEWER_OF[st.fn])}</b></div><button class="btn sm" data-act="persona" data-id="${(assigneeFor(st)[0] || {}).id}" data-then="asset-review" data-target="${a.id}">Switch to ${esc((assigneeFor(st)[0] || {}).name || '')}</button></div>` : '') +
   `<div class="stack" style="margin-bottom:16px">${authorityBanner(a)}<div class="row"><span class="chip ok">${V.mods.length} approved module${V.mods.length === 1 ? '' : 's'} · locked</span>${V.nNew ? `<span class="chip warn">${V.nNew} new content block${V.nNew > 1 ? 's' : ''} · review required</span>` : '<span class="chip plain">No new content</span>'}</div></div>
   <div class="grid cols-main"><div class="canvas">${sheet(a, false, true)}</div><div class="stack">
@@ -524,20 +526,33 @@ function viewAudit() {
 }
 
 /* ===== Reports ===== */
+function chartCard(key, title, sub, chart, rows, cols, legend) {
+  const mode = F('rv-' + key) || 'chart';
+  return `<section class="panel chart-card"><div class="panel-head"><div class="ch-title"><h3>${title}</h3>${sub ? `<span class="muted">${sub}</span>` : ''}</div><span class="grow"></span><div class="seg sm" role="tablist" aria-label="${esc(title)} view">${['chart', 'table'].map(m => `<button type="button" class="${mode === m ? 'on' : ''}" data-act="rv-mode" data-k="${key}" data-v="${m}" role="tab" aria-selected="${mode === m}">${m === 'chart' ? 'Chart' : 'Table'}</button>`).join('')}</div></div>
+  <div class="panel-body">${mode === 'chart' ? (legend || '') + chart : `<div class="table-wrap"><table class="tbl compact"><thead><tr>${cols.map((c, i) => `<th${i ? ' style="text-align:right"' : ''}>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((v, i) => `<td${i ? ' class="num" style="text-align:right"' : ''}>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}</div></section>`;
+}
+function hbars(rows, max, cls) { return `<div class="hb">${rows.map(r => `<div class="hb-row"><span class="hb-l">${r[0]}</span><span class="hb-track"><span class="hb-bar ${r[2] || cls || ''}" style="width:${max ? Math.max(r[1] ? 1.5 : 0, 100 * r[1] / max) : 0}%" data-tip="${esc(String(r[0]).replace(/<[^>]+>/g, ''))}: ${r[1]}"></span></span><b class="hb-v">${r[1]}</b></div>`).join('')}</div>`; }
 function viewReports() {
   const approvedVers = S.modules.flatMap(m => m.versions.filter(v => v.approvedAt && v.approvedAt > Date.now() - 180 * DAY));
-  const decisions = S.audit.filter(e => /Final|Sent to Senior|Requested changes|Returned|Rejected/.test(e.action));
-  const changes = decisions.filter(e => e.action === 'Requested changes').length; const finals = decisions.filter(e => /^Final/.test(e.action)).length;
+  const finals = S.audit.filter(e => /^Final/.test(e.action)).length, changes = S.audit.filter(e => e.action === 'Requested changes').length, rejects = S.audit.filter(e => e.action === 'Rejected').length;
+  const outTotal = finals + changes + rejects || 1;
   const reuse = {}; S.assets.forEach(a => a.blocks.forEach(b => { if (b.moduleId) reuse[b.moduleId] = (reuse[b.moduleId] || 0) + 1; }));
-  const topReuse = Object.entries(reuse).sort((a, b) => b[1] - a[1]).slice(0, 5); const maxR = topReuse.length ? topReuse[0][1] : 1;
+  const topReuse = Object.entries(reuse).sort((a, b) => b[1] - a[1]).slice(0, 6); const maxR = topReuse.length ? topReuse[0][1] : 1;
   const stages = LIFE.map(s => [s, s === 'Superseded' ? S.modules.filter(m => m.versions.some(v => v.status === 'Superseded')).length : S.modules.filter(m => { const ls = lifeStatus(m); return s === 'Draft' ? ['Draft', 'Awaiting Senior submit', 'Changes Requested', 'Rejected'].includes(ls) : ls === s; }).length]); const maxS = Math.max(1, ...stages.map(x => x[1]));
   const byRole = ['Medical', 'Legal', 'Regulatory'].map(fn => [fn, ['Junior', 'Senior'].map(sn => S.audit.filter(e => { const x = user(e.user); return x.type === REVIEWER_OF[fn] && x.seniority === sn; }).length)]); const maxB = Math.max(1, ...byRole.flatMap(x => x[1]));
   const blocks = S.assets.reduce((n, a) => n + a.blocks.filter(b => b.kind === 'module').length, 0);
+  const inRev = S.modules.filter(m => m.review).length + S.assets.filter(a => a.review).length;
+  const outcomes = [['Approved', finals, 'ok', 'check'], ['Changes requested', changes, 'warn', 'clock'], ['Rejected', rejects, 'bad', 'x']];
+  const kpi = (v, l, s, tone) => `<div class="kpi static"><span class="k-label">${tone ? `<span class="k-dot ${tone}"></span>` : ''}${l}</span><b>${v}</b><span class="k-sub">${s}</span></div>`;
   return pageHead('Reports', 'How content moves through review and how much of it is reused. Figures update as you use the prototype.') +
-  `<section class="panel" style="margin-bottom:18px"><div class="metrics"><div class="metric"><b>${approvedVers.length}</b><span>Module versions approved · last 180 days</span></div><div class="metric"><b>${finals + changes ? Math.round(100 * finals / (finals + changes)) : 0}%</b><span>Decisions that were approvals</span></div><div class="metric"><b>${blocks}</b><span>Approved modules reused in assets</span></div><div class="metric"><b>${S.modules.filter(m => m.review).length + S.assets.filter(a => a.review).length}</b><span>Items in review now</span></div></div></section>
-  <div class="grid cols-2"><section class="panel"><div class="panel-head"><h3>Modules by lifecycle stage</h3></div><div class="panel-body bars">${stages.map(([s, n]) => `<div class="bar-row"><span>${s}</span><span class="bar-track"><span class="bar-fill" style="width:${100 * n / maxS}%;display:block"></span></span><b class="num">${n}</b></div>`).join('')}</div></section>
-  <section class="panel"><div class="panel-head"><h3>Review actions by function and seniority</h3></div><div class="panel-body bars">${byRole.map(([fn, v]) => `<div class="bar-row"><span>${fn} · Junior</span><span class="bar-track"><span class="bar-fill alt" style="width:${100 * v[0] / maxB}%;display:block"></span></span><b class="num">${v[0]}</b></div><div class="bar-row"><span>${fn} · Senior</span><span class="bar-track"><span class="bar-fill" style="width:${100 * v[1] / maxB}%;display:block"></span></span><b class="num">${v[1]}</b></div>`).join('')}<div class="row" style="font-size:12px;margin-top:4px"><span class="row" style="gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--ink-3)"></span>Junior</span><span class="row" style="gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span>Senior</span></div></div></section>
-  <section class="panel" style="grid-column:1/-1"><div class="panel-head"><h3>Most reused modules</h3></div><div class="panel-body bars">${topReuse.map(([id, n]) => { const m = modById(id); return `<div class="bar-row" style="grid-template-columns:minmax(0,320px) minmax(0,1fr) 40px"><button class="btn ghost sm" style="justify-content:flex-start;overflow:hidden;text-overflow:ellipsis" ${goAttr('module', id)}>${esc(m ? m.title : id)}</button><span class="bar-track"><span class="bar-fill" style="width:${100 * n / maxR}%;display:block"></span></span><b class="num">${n}</b></div>`; }).join('')}</div></section></div>`;
+  `<div class="kpis" style="margin-bottom:18px">${kpi(approvedVers.length, 'Versions approved', 'Last 180 days', 'ok')}${kpi(Math.round(100 * finals / outTotal) + '%', 'Approval rate', finals + ' of ' + (finals + changes + rejects) + ' final decisions', '')}${kpi(blocks, 'Module reuses', 'Approved modules placed in assets', '')}${kpi(inRev, 'In review now', 'Modules and assets', 'warn')}</div>
+  <div class="reports-grid">
+  ${chartCard('outcome', 'Review outcomes', 'Final decisions across all reviews', `<div class="sbar" role="img" aria-label="${outcomes.map(o => o[0] + ' ' + o[1]).join(', ')}">${outcomes.filter(o => o[1]).map(o => `<span class="${o[2]}" style="flex:${o[1]}" data-tip="${o[0]} · ${o[1]} (${Math.round(100 * o[1] / outTotal)}%)"></span>`).join('')}</div>
+    <div class="sb-legend">${outcomes.map(o => `<div><span class="lg-key ${o[2]}">${icon(o[3], 'sm')}</span><span>${o[0]}</span><b>${o[1]}</b><span class="pct mono">${Math.round(100 * o[1] / outTotal)}%</span></div>`).join('')}</div>`, outcomes.map(o => [o[0], o[1], Math.round(100 * o[1] / outTotal) + '%']), ['Outcome', 'Decisions', 'Share'])}
+  ${chartCard('stage', 'Modules by lifecycle stage', 'Current stage of every module', hbars(stages, maxS, 's1'), stages.map(s => [s[0], s[1]]), ['Stage', 'Modules'])}
+  ${chartCard('role', 'Review actions by function', 'Junior and Senior reviewers', `<div class="hb grouped">${byRole.map(([fn, v]) => `<div class="hb-group"><span class="hb-gl">${fnBadge(fn, 'sm')}${fn}</span>${hbars([['Junior', v[0], 'o1'], ['Senior', v[1], 'o2']], maxB)}</div>`).join('')}</div>`, byRole.map(([fn, v]) => [fn, v[0], v[1]]), ['Function', 'Junior', 'Senior'], `<div class="legend"><span><i class="o1"></i>Junior</span><span><i class="o2"></i>Senior</span></div>`)}
+  ${chartCard('reuse', 'Most reused modules', 'Times placed in an asset', hbars(topReuse.map(([id, n]) => { const m = modById(id); return [`<button class="linklike" ${goAttr('module', id)}>${esc(m ? m.title : id)}</button>`, n]; }), maxR, 's1'), topReuse.map(([id, n]) => { const m = modById(id); return [esc(m ? m.title : id), n]; }), ['Module', 'Reuses'])}
+  </div>`;
 }
 
 /* ===== Administration ===== */

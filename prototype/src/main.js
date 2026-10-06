@@ -252,6 +252,7 @@ const ACT = {
   'market-new': () => { UI.modal = { type: 'simple', kind: 'market', title: 'Add market', fields: [['name', 'Country', 'text', 'e.g. Kuwait'], ['code', 'Code', 'text', 'e.g. KW'], ['auth', 'Health authority', 'text', 'e.g. MOH Kuwait']] }; render(); },
   'material-new': () => { UI.modal = { type: 'simple', kind: 'material', title: 'Add material type', fields: [['name', 'Material type', 'text', 'e.g. Congress poster'], ['channel', 'Channel', 'select', S.channels], ['wf', 'Workflow', 'select', S.workflows.filter(w => !w.hidden).map(w => [w.id, w.name])]] }; render(); },
   'wf-new': () => go('workflow-new'),
+  'rv-mode': el => { UI.f['rv-' + el.dataset.k] = el.dataset.v; render(); },
   'wf-add-mail': el => { const i = +el.dataset.i; UI.wfDraft.steps.splice(i, 0, notifyStep()); UI.wfSel = i; render(); toast('Email step added — choose who receives it'); },
   'wf-kind': el => { const st = UI.wfDraft.steps; const cur = st[UI.wfSel]; if (el.dataset.v === 'notify' && !isNotify(cur)) st[UI.wfSel] = notifyStep(); if (el.dataset.v === 'review' && isNotify(cur)) st[UI.wfSel] = { id: uid('s'), fn: 'Medical', seniority: 'Junior', req: 'review' }; render(); },
   'wf-rcpt': el => { const s = UI.wfDraft.steps[UI.wfSel]; const r = s.recipients || (s.recipients = []); const k = r.indexOf(el.dataset.v); k < 0 ? r.push(el.dataset.v) : r.splice(k, 1); render(); },
