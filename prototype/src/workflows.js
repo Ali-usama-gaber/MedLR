@@ -2,7 +2,7 @@
 function viewWorkflows() {
   const list = S.workflows.filter(w => !w.hidden);
   const inflight = w => S.modules.filter(m => m.review && m.review.wf === w.id).length + S.assets.filter(a => a.review && a.review.wf === w.id).length;
-  return pageHead('Workflows', 'Review routes. Each step names a function, a team level (Team Member or Team Lead) and whether it is a review or the final approval.', btn('New workflow', 'wf-new', 'primary', '', 'plus')) +
+  return pageHead('Workflows', 'Review routes. Each step names a function, a level (Member or Lead) and whether it is a review or the final approval.', btn('New workflow', 'wf-new', 'primary', '', 'plus')) +
   `<section class="panel table-wrap"><table class="tbl"><thead><tr><th>Workflow</th><th>Applies to</th><th>Review flow</th><th>Steps</th><th>In flight</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody>
   ${list.map(w => { const n = inflight(w); return `<tr class="click" ${goAttr('workflow', w.id)} tabindex="0">
     <td><div class="row nowrap" style="gap:12px"><span class="type-ico">${icon('workflow', 'sm')}</span><div style="min-width:0"><div class="title">${esc(w.name)}</div><div class="muted" style="font-size:12px;max-width:42ch">${esc(w.desc)}</div></div></div></td>
@@ -43,8 +43,8 @@ function viewWorkflow() {
     <div class="field"><label for="wf-fn">Function</label><select class="select" id="wf-fn" data-wf="fn">${uniq([...reviewFuncs(), s.fn]).map(fn => opt(fn, s.fn, fn)).join('')}</select></div>
     <div class="field"><label for="wf-team">Team</label><select class="select" id="wf-team" data-wf="team">${opt('', s.team || '', 'Any ' + s.fn + ' team')}${S.teams.filter(t => t.fn === s.fn && (t.active || t.id === s.team)).map(t => opt(t.id, s.team || '', t.name)).join('')}</select></div>
     <div class="field"><span class="label">Assigned to</span><div class="input" style="display:flex;align-items:center;background:var(--surface-2);height:auto;min-height:40px;padding:8px 12px">${esc(stepWho(s))} — ${esc(who(s))}</div><span class="hint">Everyone active with this role${s.team ? ' in this team' : ''}. Manage people in Users.</span></div>
-    <div class="field"><span class="label">Team level</span><div class="seg">${['Member', 'Lead'].map(x => `<button type="button" class="${s.level === x ? 'on' : ''}" data-act="wf-set" data-k="level" data-v="${x}">${levelName(x)}</button>`).join('')}</div></div>
-    <div class="field"><span class="label">Approval requirement</span><div class="seg">${[['review', 'Review & pass on'], ['approve', 'Approval with e-signature']].map(x => `<button type="button" class="${s.req === x[0] ? 'on' : ''}" data-act="wf-set" data-k="req" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><span class="hint">${s.req === 'approve' ? 'Requires an e-signature and the Approve permission (Final approval permission when it is the last step). Only a Team Lead can approve.' : 'Reviewer can comment, request changes or pass the item on.'}</span></div>
+    <div class="field"><span class="label">Level</span><div class="seg">${['Member', 'Lead'].map(x => `<button type="button" class="${s.level === x ? 'on' : ''}" data-act="wf-set" data-k="level" data-v="${x}">${levelName(x)}</button>`).join('')}</div></div>
+    <div class="field"><span class="label">Approval requirement</span><div class="seg">${[['review', 'Review & pass on'], ['approve', 'Approval with e-signature']].map(x => `<button type="button" class="${s.req === x[0] ? 'on' : ''}" data-act="wf-set" data-k="req" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><span class="hint">${s.req === 'approve' ? 'Requires an e-signature and the Approve permission (Final approval permission when it is the last step). Only a Lead can approve.' : 'Reviewer can comment, request changes or pass the item on.'}</span></div>
     <div class="row">${btn('Move up', 'wf-move', 'sm', `data-dir="-1" ${selI === 0 ? 'disabled' : ''}`, 'up')}${btn('Move down', 'wf-move', 'sm', `data-dir="1" ${selI === D.steps.length - 1 ? 'disabled' : ''}`, 'down')}${btn('Delete step', 'wf-del', 'sm danger', D.steps.length <= 1 ? 'disabled' : '', 'trash')}</div>
    </div></section>` : ''}
    <section class="panel"><div class="panel-head"><h3>Checks</h3></div><div class="panel-body stack" style="gap:8px">${issues.length ? issues.map(([t, msg]) => `<div class="check-row"><span class="${t === 'bad' ? 'no' : 'ok'}" style="${t === 'warn' ? 'color:var(--warn)' : ''}">${icon(t === 'bad' ? 'x' : 'alert', 'sm')}</span>${esc(msg)}</div>`).join('') : `<div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Workflow is valid</div>`}
@@ -53,7 +53,7 @@ function viewWorkflow() {
 }
 
 /* ===== New workflow (step form) ===== */
-const WSTEPS = [['Details', ['name'], 'Name the review route and say when it is used.'], ['Review flow', ['steps'], 'Add the review steps in order. Each step is a team, a team level (Team Member or Team Lead) and a decision type.'], ['Review & create', [], 'Check the route before creating it.']];
+const WSTEPS = [['Details', ['name'], 'Name the review route and say when it is used.'], ['Review flow', ['steps'], 'Add the review steps in order. Each step is a team, a level (Member or Lead) and a decision type.'], ['Review & create', [], 'Check the route before creating it.']];
 const WF_APPLIES = [['Module', 'file', 'Modules', 'Offered when a module is submitted for MLR review'], ['Asset', 'layers', 'Assets', 'Used by Material Types and for assets made of approved modules']];
 function validateWf(D) {
   const e = {};
@@ -85,21 +85,21 @@ function viewWorkflowNew() {
     <div class="nwf-fields">
       <select class="select" data-nwf="fn" data-i="${i}" aria-label="Function for step ${i + 1}">${uniq([...reviewFuncs(), s.fn]).map(fn => opt(fn, s.fn, fn)).join('')}</select>
       <select class="select" data-nwf="team" data-i="${i}" aria-label="Team for step ${i + 1}">${opt('', s.team || '', 'Any ' + s.fn + ' team')}${S.teams.filter(t => t.fn === s.fn && t.active).map(t => opt(t.id, s.team || '', t.name)).join('')}</select>
-      <div class="seg" aria-label="Team level">${['Member', 'Lead'].map(x => `<button type="button" class="${s.level === x ? 'on' : ''}" data-act="nwf-set" data-i="${i}" data-k="level" data-v="${x}">${levelName(x)}</button>`).join('')}</div>
+      <div class="seg" aria-label="Level">${['Member', 'Lead'].map(x => `<button type="button" class="${s.level === x ? 'on' : ''}" data-act="nwf-set" data-i="${i}" data-k="level" data-v="${x}">${levelName(x)}</button>`).join('')}</div>
       <div class="seg" aria-label="Decision">${[['review', 'Review'], ['approve', 'Approval']].map(x => `<button type="button" class="${s.req === x[0] ? 'on' : ''}" data-act="nwf-set" data-i="${i}" data-k="req" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>
     </div>
     <div class="nwf-tools"><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === D.steps.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button type="button" class="btn icon sm danger" data-act="nwf-del" data-i="${i}" aria-label="Remove step">${icon('trash', 'sm')}</button></div>
   </div>`;
-  return pageHead('New workflow', 'Build a review route step by step. Team level and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) +
+  return pageHead('New workflow', 'Build a review route step by step. Level and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) +
   wizBar('workflow', WSTEPS, D) +
   `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="workflow" novalidate><div class="stack">${wizHead(WSTEPS, D)}
   <section class="panel"${hid(0)}><div class="panel-head"><h3>Workflow details</h3></div><div class="panel-body form">
-    <div class="field"><label for="w-name">Workflow name</label><input class="input ${E.name ? 'invalid' : ''}" id="w-name" data-w="name" value="${esc(D.name)}" placeholder="e.g. Medical education — Team Lead only">${err('name')}</div>
+    <div class="field"><label for="w-name">Workflow name</label><input class="input ${E.name ? 'invalid' : ''}" id="w-name" data-w="name" value="${esc(D.name)}" placeholder="e.g. Medical education — Lead only">${err('name')}</div>
     <div class="field"><label for="w-desc">When is it used? <span class="muted" style="font-weight:500">(optional)</span></label><textarea class="textarea" id="w-desc" data-w="desc" placeholder="e.g. Non-promotional scientific content for congresses">${esc(D.desc)}</textarea></div>
     <div class="field"><span class="label">Applies to</span><div class="type-cards" role="radiogroup" aria-label="Applies to">${WF_APPLIES.map(u => `<button type="button" class="type-card ${D.appliesTo === u[0] ? 'on' : ''}" data-act="nwf-use" data-v="${u[0]}" role="radio" aria-checked="${D.appliesTo === u[0]}"><span class="type-ico">${icon(u[1])}</span><span><b>${u[2]}</b><span>${u[3]}</span></span></button>`).join('')}</div></div>
   </div></section>
   <section class="panel"${hid(1)}><div class="panel-head"><h3>Review flow</h3><span class="chip plain">${D.steps.length} step${D.steps.length === 1 ? '' : 's'}</span></div><div class="panel-body stack">
-    <div class="row"><span class="label" style="margin:0">Start from</span>${[['std', 'Standard — Team Member then Team Lead'], ['senior', 'Team Lead only'], ['blank', 'Blank']].map(t => `<button type="button" class="btn sm" data-act="nwf-tpl" data-v="${t[0]}">${t[1]}</button>`).join('')}</div>
+    <div class="row"><span class="label" style="margin:0">Start from</span>${[['std', 'Standard — Member then Lead'], ['senior', 'Lead only'], ['blank', 'Blank']].map(t => `<button type="button" class="btn sm" data-act="nwf-tpl" data-v="${t[0]}">${t[1]}</button>`).join('')}</div>
     ${D.steps.length ? `<div class="nwf-list">${D.steps.map(row).join('<span class="nwf-link"></span>')}</div>` : `<div class="empty" style="padding:26px"><p>No steps yet. Pick a template above or add a step below.</p></div>`}
     <div class="nwf-add">${reviewFuncs().map(fn => `<button type="button" class="btn" data-act="nwf-add" data-v="${fn}">${fnBadge(fn)}Add ${fn}</button>`).join('')}<button type="button" class="btn" data-act="nwf-add" data-v="Email">${fnBadge('Email')}Add email step</button></div>
     ${err('steps')}
@@ -118,9 +118,9 @@ function wfIssues(D) {
   const out = [];
   if (!D.steps.length) out.push(['bad', 'Add at least one step.']);
   D.steps.forEach((s, i) => { if (isNotify(s) && !notifyTo(s).length) out.push(['bad', 'Step ' + (i + 1) + ': choose who receives the email.']); });
-  D.steps.forEach((s, i) => { if (s.req === 'approve' && s.level === 'Member') out.push(['bad', 'Step ' + (i + 1) + ': approval steps must be held by a Team Lead.']); });
+  D.steps.forEach((s, i) => { if (s.req === 'approve' && s.level === 'Member') out.push(['bad', 'Step ' + (i + 1) + ': approval steps must be held by a Lead.']); });
   const rv = D.steps.filter(s => !isNotify(s)); const last = rv[rv.length - 1]; if (!rv.length) out.push(['bad', 'Add at least one review step.']); if (last && last.req !== 'approve') out.push(['bad', 'The last step must be a final approval.']);
-  uniq(D.steps.filter(s => !isNotify(s)).map(s => s.fn)).forEach(fn => { const st = D.steps.filter(s => s.fn === fn); if (!st.some(s => s.req === 'approve')) out.push(['warn', fn + ' has a review step but no Team Lead approval.']); if (!fnInfo(fn).active || !fnInfo(fn).reviews) out.push(['bad', fn + ' is not an active review function.']); });
+  uniq(D.steps.filter(s => !isNotify(s)).map(s => s.fn)).forEach(fn => { const st = D.steps.filter(s => s.fn === fn); if (!st.some(s => s.req === 'approve')) out.push(['warn', fn + ' has a review step but no Lead approval.']); if (!fnInfo(fn).active || !fnInfo(fn).reviews) out.push(['bad', fn + ' is not an active review function.']); });
   D.steps.forEach((s, i) => { if (!isNotify(s) && !assigneeFor(s).length) out.push(['warn', 'Step ' + (i + 1) + ': no active ' + stepWho(s) + (s.team ? ' in ' + team(s.team).name : '') + ' — nobody can act on it.']); });
   return out;
 }

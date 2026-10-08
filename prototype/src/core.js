@@ -32,6 +32,11 @@ const mtype = id => S.moduleTypes.find(t => t.id === id) || S.moduleTypes.find(t
 const mat = id => S.materialTypes.find(t => t.id === id) || { id, name: id || '—' };
 const chan = id => S.channels.find(c => c.id === id) || { id, name: id || '—' };
 const aud = id => S.audiences.find(a => a.id === id) || { id, name: id || '—' };
+// Module type kind: 'content' (text + references) or 'image' / 'video' / 'document' (an approved file).
+const kindOfType = id => mtype(id).kind || 'content';
+const isMediaType = id => kindOfType(id) !== 'content';
+const kindLabel = k => (MODULE_KINDS.find(x => x[0] === k) || [k, k])[1];
+const modCategory = id => isMediaType(id) ? 'Media & documents' : 'Content';
 const fnInfo = id => S.functions.find(f => f.id === id) || { id, desc: '', reviews: false };
 const funcIds = (all) => S.functions.filter(f => all || f.active).map(f => f.id);
 const reviewFuncs = (all) => S.functions.filter(f => f.reviews && (all || f.active)).map(f => f.id);
@@ -50,11 +55,11 @@ const productsTxt = ids => (ids || []).map(i => product(i).name).join(', ');
 const marketsTxt = ids => (ids || []).map(i => market(i).name).join(', ');
 
 /* ---------- people, roles, permissions ---------- */
-const levelName = l => l === 'Lead' ? 'Team Lead' : l === 'Member' ? 'Team Member' : '';
+const levelName = l => l === 'Lead' ? 'Lead' : l === 'Member' ? 'Member' : '';
 const isAdmin = u => !!u && u.fn === 'Administrator';
 const roleId = u => isAdmin(u) ? 'Administrator' : u.fn + '-' + u.level;
 const roleLabel = u => isAdmin(u) ? 'Administrator' : u.fn + ' ' + levelName(u.level);
-const roleName = id => id === 'Administrator' ? 'Administrator' : id.replace(/-(Member|Lead)$/, ' Team $1');
+const roleName = id => id === 'Administrator' ? 'Administrator' : id.replace(/-(Member|Lead)$/, ' $1');
 const stepWho = s => s.fn + ' ' + levelName(s.level);
 const can = (u, perm) => isAdmin(u) || ((S.roles[roleId(u)] || []).includes(perm));
 const canCreateModule = u => can(u, 'create');
@@ -70,9 +75,9 @@ function authority(fn, level) {
   if (fn === 'Administrator') return { short: 'Full system control', long: 'Manages users, roles, permissions, workflows, SOPs and all configuration, sees every report and the full audit trail, and can act on any approval step.', final: true };
   const rid = fn + '-' + level; const has = p => (S.roles[rid] || []).includes(p);
   if (fnInfo(fn).reviews) return level === 'Lead'
-    ? { short: (has('final_approve') ? 'Final ' : '') + fn + ' approval', long: 'Reviews the Team Member review, can return items to the Team Member and gives the ' + fn + ' approval with e-signature.', final: has('final_approve') }
-    : { short: 'Initial ' + fn + ' review', long: 'Reviews content, comments, requests amendments and passes the item to the ' + fn + ' Team Lead.', final: false };
-  return has('submit') ? { short: 'Creates and submits content', long: fnInfo(fn).desc + '. Can submit content for MLR review.', final: true } : { short: 'Prepares content', long: fnInfo(fn).desc + '. Submission is done by a Team Lead of the same team.', final: false };
+    ? { short: (has('final_approve') ? 'Final ' : '') + fn + ' approval', long: 'Reviews the Member review, can return items to the Member and gives the ' + fn + ' approval with e-signature.', final: has('final_approve') }
+    : { short: 'Initial ' + fn + ' review', long: 'Reviews content, comments, requests amendments and passes the item to the ' + fn + ' Lead.', final: false };
+  return has('submit') ? { short: 'Creates and submits content', long: fnInfo(fn).desc + '. Can submit content for MLR review.', final: true } : { short: 'Prepares content', long: fnInfo(fn).desc + '. Submission is done by a Lead of the same team.', final: false };
 }
 
 /* ---------- versions and status ---------- */
@@ -130,6 +135,30 @@ function eligibility(m, a) {
   return { ok: prodOk && checks.every(c => c[1]), checks, prodOk, reason: !prodOk ? 'Different product' : (checks.find(c => !c[1]) || [''])[0] };
 }
 
+/* ---------- Media file store ----------
+   File metadata (name, type, size, checksum, source, usage rules) is part of the version record in S.
+   The file bytes live in IndexedDB keyed by fileId, so they survive reloads without filling localStorage.
+   Files of the initial workspace are bundled (fileId 'seed:…'). */
+const MEDIA = { urls: {}, pending: {} };
+let mediaDb = null;
+function mediaDB() { return mediaDb || (mediaDb = new Promise((res, rej) => { try { const r = indexedDB.open('saja-medlr-media', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } })); }
+function mediaTx(mode, fn) { return mediaDB().then(db => new Promise((res, rej) => { const tx = db.transaction('files', mode); const out = fn(tx.objectStore('files')); tx.oncomplete = () => res(out && out.result); tx.onerror = () => rej(tx.error); })); }
+// Keeps the file for this session even if the browser refuses persistent storage.
+function mediaPut(id, blob) { MEDIA.urls[id] = URL.createObjectURL(blob); return mediaTx('readwrite', st => st.put(blob, id)).then(() => true, () => false); }
+function mediaClear() { MEDIA.urls = {}; MEDIA.pending = {}; return mediaTx('readwrite', st => st.clear()).catch(() => {}); }
+// Returns a URL for the file, null while it loads (the page re-renders when ready) or 'missing'.
+function mediaUrl(fileId) {
+  if (!fileId) return 'missing';
+  if (fileId.startsWith('seed:')) { const x = SEED_MEDIA[fileId.slice(5)]; return x ? x.url : 'missing'; }
+  if (MEDIA.urls[fileId]) return MEDIA.urls[fileId];
+  if (!MEDIA.pending[fileId]) MEDIA.pending[fileId] = mediaTx('readonly', st => st.get(fileId)).then(b => { MEDIA.urls[fileId] = b ? URL.createObjectURL(b) : 'missing'; }, () => { MEDIA.urls[fileId] = 'missing'; }).then(() => { if (typeof renderSoon === 'function') renderSoon(); });
+  return null;
+}
+const fmtSize = n => n == null ? '—' : n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+const fmtSecs = t => t == null ? '—' : Math.floor(t / 60) + ':' + String(Math.round(t % 60)).padStart(2, '0');
+const mediaOf = (m, v) => (v || latest(m)).media || null;
+const mediaFacts = md => !md ? [] : [['File', md.name], ['Format', md.format || md.mime], ['Size', fmtSize(md.size)], ...(md.duration != null ? [['Duration', fmtSecs(md.duration)]] : []), ...(md.pages != null ? [['Pages', md.pages]] : []), ...(md.width ? [['Dimensions', md.width + ' × ' + md.height + ' px']] : []), ['Checksum', (md.algo || '') + ' ' + String(md.checksum || '').slice(0, 16) + '…']];
+
 /* ---------- Validation SOPs ---------- */
 function sopApplies(sop, obj, kind) {
   if (!sop.active) return false;
@@ -158,6 +187,8 @@ function sopCheck(sop, obj, kind) {
       const miss = isM ? [!obj.audience && 'audience', !obj.channels.length && 'channels', !obj.reviewDate && 'review date', !obj.expiry && 'expiry date'].filter(Boolean) : [!obj.audience && 'audience', !obj.channel && 'channel', !obj.type && 'material type'].filter(Boolean);
       return miss.length ? 'Complete: ' + miss.join(', ') + '.' : null;
     }
+    case 'media_file': { if (!isM || !isMediaType(obj.type)) return null; const md = v.media; return !md || !md.fileId ? 'Upload the ' + kindLabel(kindOfType(obj.type)).toLowerCase() + ' file.' : null; }
+    case 'media_rights': { if (!isM || !isMediaType(obj.type)) return null; const md = v.media || {}; const miss = [!(md.source || '').trim() && 'source', !(md.usage || '').trim() && 'usage rules'].filter(Boolean); return miss.length ? 'Add the ' + miss.join(' and ') + '.' : null; }
     case 'review_window': { const months = sop.months || 12; return isM && (!obj.reviewDate || obj.reviewDate > Date.now() + months * 30.5 * DAY) ? 'Set the review date within ' + months + ' months.' : null; }
   }
   return null;
@@ -254,7 +285,7 @@ function finalise(obj, kind) {
 /* Reviewer decisions.
    pass    — review step completed, item moves to the next step
    approve — approval step signed (final when it is the last step)
-   return  — Team Lead returns the item to the Team Member step
+   return  — Lead returns the item to the Member step
    amend   — Request amendment: back to the owner; resubmission resumes at THIS step
    reject  — Reject: back to the owner; a new version restarts the FULL cycle */
 function decide(obj, kind, decision, note) {
@@ -272,10 +303,10 @@ function decide(obj, kind, decision, note) {
     return { done: false, msg: stepLabel(st) + ' done — now with ' + stepLabel(curStep(obj)) + (mailed ? ' · email sent to ' + mailed : '') };
   }
   if (decision === 'return') {
-    const j = memberStepIndex(obj); rec.decision = 'Returned to Team Member'; cyc.decisions.push(rec);
-    log('Returned to Team Member', kind, obj, v, { note, prev: stepLabel(st), next: stepLabel(wfById(obj.review.wf).steps[j]) });
+    const j = memberStepIndex(obj); rec.decision = 'Returned to Member'; cyc.decisions.push(rec);
+    log('Returned to Member', kind, obj, v, { note, prev: stepLabel(st), next: stepLabel(wfById(obj.review.wf).steps[j]) });
     obj.review.step = j; obj.review.stepStartedAt = now; logAssigned(obj, kind); save();
-    return { done: false, msg: 'Returned to the ' + st.fn + ' Team Member' };
+    return { done: false, msg: 'Returned to the ' + st.fn + ' Member' };
   }
   if (decision === 'amend') {
     rec.decision = 'Amendment requested'; cyc.decisions.push(rec); cyc.amendments = (cyc.amendments || 0) + 1;
@@ -321,6 +352,6 @@ function allCycles() {
 // Time spent at each completed step (owner time during an amendment is excluded).
 function stepTimes(cycles) {
   const out = [];
-  cycles.forEach(c => c.decisions.forEach(x => { if (x.startedAt && x.at && ['Reviewed', 'Approved', 'Amendment requested', 'Rejected', 'Returned to Team Member'].includes(x.decision)) out.push({ fn: x.fn, level: x.level, req: x.req, ms: x.at - x.startedAt, cycle: c, by: x.by, at: x.at, decision: x.decision }); }));
+  cycles.forEach(c => c.decisions.forEach(x => { if (x.startedAt && x.at && ['Reviewed', 'Approved', 'Amendment requested', 'Rejected', 'Returned to Member'].includes(x.decision)) out.push({ fn: x.fn, level: x.level, req: x.req, ms: x.at - x.startedAt, cycle: c, by: x.by, at: x.at, decision: x.decision }); }));
   return out;
 }

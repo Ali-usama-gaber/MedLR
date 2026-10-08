@@ -5,6 +5,9 @@ const IC = {
   calendar: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
   timer: '<path d="M10 2h4"/><path d="M12 14l3-3"/><circle cx="12" cy="14" r="8"/>',
   award: '<circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/>',
+  image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+  video: '<path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 11"/><rect width="14" height="12" x="2" y="6" rx="2"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
   printer: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/>',
   filter: '<path d="M22 3H2l8 9.46V19l4 2v-8.54z"/>',
@@ -65,6 +68,6 @@ const icon = (n, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-
 const FN_ICON = { Medical: 'stethoscope', Legal: 'scale', Regulatory: 'filecheck', Email: 'mail', Content: 'file', Marketing: 'layers', Admin: 'key' };
 function fnBadge(fn, cls = '') { return `<span class="fn-badge fn-${String(fn).toLowerCase()} ${cls}" title="${fn}">${icon(FN_ICON[fn] || 'shieldcheck', 'sm')}</span>`; }
 // Icons an administrator can pick for a module type.
-const TYPE_ICONS = ['quote', 'alert', 'type', 'evidence', 'pointer', 'book', 'file', 'flag', 'sparkle', 'link', 'shield', 'pill'];
+const TYPE_ICONS = ['quote', 'alert', 'type', 'evidence', 'pointer', 'book', 'file', 'image', 'video', 'flag', 'sparkle', 'link', 'shield', 'pill'];
 // Module type icon and colour come from the Module Types configuration.
 const typeIco = id => { const t = id === 'new' ? { icon: 'edit', tone: 'safety' } : mtype(id); return `<span class="type-ico t-${t.tone || 'ref'}" aria-hidden="true">${icon(t.icon || 'file', 'sm')}</span>`; };

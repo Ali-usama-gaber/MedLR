@@ -9,7 +9,7 @@ function go(name, p = {}) {
   if (name !== 'workflow') UI.wfDraft = null;
   if (name === 'workflow-new' && UI.route.name !== 'workflow-new') UI.nwf = null;
   if (name !== 'settings') UI.setDraft = null;
-  UI.route = { name, p }; UI.pop = null; UI.search = ''; UI.f.rvc = '';
+  UI.route = { name, p }; UI.pop = null; UI.msel = null; UI.search = ''; UI.f.rvc = '';
   save(); render(); window.scrollTo(0, 0);
 }
 
@@ -31,7 +31,7 @@ function renderNow() {
   }
   html += UI.modal ? viewModal() : '';
   app.innerHTML = html;
-  paginateTables();
+  paginateTables(); hydratePdfs();
   const rk = UI.route.name + JSON.stringify(UI.route.p || {}) + (S.signedIn ? 1 : 0);
   if (rk !== UI._rk) { UI._rk = rk; const c = document.getElementById('content'); if (c) { c.classList.add('enter'); countUp(c); } }
   app.querySelectorAll('table.tbl').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (hs[i]) td.setAttribute('data-label', hs[i]); })); });
@@ -102,7 +102,7 @@ function viewModal() {
   }
   if (M.type === 'submit') {
     const m = modById(M.id); const l = latest(m); const issues = validationIssues(m, 'Module');
-    if (!canSubmit(u)) return modalShell('send', '', 'Send to Content Team Lead', 'Content Team Members prepare drafts. A Content Team Lead checks and submits them for MLR review.', objCard(m, 'Module') + (issues.length ? issuesBlock(issues) : ''), `${btn('Cancel', 'modal-close')}${btn('Send to Team Lead', 'submit-confirm', 'primary', `data-id="${m.id}" ${issues.length ? 'disabled' : ''}`, 'send')}`);
+    if (!canSubmit(u)) return modalShell('send', '', 'Send to Content Lead', 'Content Members prepare drafts. A Content Lead checks and submits them for MLR review.', objCard(m, 'Module') + (issues.length ? issuesBlock(issues) : ''), `${btn('Cancel', 'modal-close')}${btn('Send to Lead', 'submit-confirm', 'primary', `data-id="${m.id}" ${issues.length ? 'disabled' : ''}`, 'send')}`);
     const wfs = S.workflows.filter(w => w.appliesTo === 'Module' && !w.hidden && w.active !== false); const chosen = wfs.some(w => w.id === M.wf) ? M.wf : (wfs[0] || {}).id;
     if (!wfs.length) return modalShell('alert', 'bad', 'No active module workflow', 'An administrator needs to activate or create a workflow that applies to modules.', '', btn('Close', 'modal-close')); const reapp = l.v > 1 && !!live(m);
     return modalShell('send', '', reapp ? 'Submit version ' + l.v + ' for re-approval' : 'Submit for MLR review', 'A new approval cycle starts at the first step of the chosen workflow.',
@@ -125,7 +125,7 @@ function viewModal() {
     const obj = objById(M.kind, M.id); const st = curStep(obj); const nx = nextStepOf(obj); const j = memberStepIndex(obj);
     const cfg = {
       pass: ['send', '', nx ? 'Complete review — send to ' + stepWho(nx) : 'Complete review', nx ? `The item moves to ${esc(stepLabel(nx))}${assigneeFor(nx).length ? ' — ' + esc(assigneeFor(nx).map(x => x.name).join(', ')) : ''}. Your notes travel with it.` : 'This completes the workflow.', 'Notes for the next reviewer (optional)', false, 'primary', ''],
-      return: ['back', 'warn', 'Return to Team Member', `The item goes back to the ${esc(st.fn)} Team Member step${j >= 0 && assigneeFor(wfById(obj.review.wf).steps[j]).length ? ' (' + esc(assigneeFor(wfById(obj.review.wf).steps[j]).map(x => x.name).join(', ')) + ')' : ''}. It stays inside the review — the Material Owner is not involved.`, 'What should the Team Member look at?', true, 'primary', ''],
+      return: ['back', 'warn', 'Return to Member', `The item goes back to the ${esc(st.fn)} Member step${j >= 0 && assigneeFor(wfById(obj.review.wf).steps[j]).length ? ' (' + esc(assigneeFor(wfById(obj.review.wf).steps[j]).map(x => x.name).join(', ')) + ')' : ''}. It stays inside the review — the Material Owner is not involved.`, 'What should the Member look at?', true, 'primary', ''],
       amend: ['undo', 'warn', 'Request amendment', '<b>Return to Material Owner and resume approval from the current review step after changes are completed.</b>', 'What needs to change?', true, 'primary', pathDiagram('amend', st, obj)],
       reject: ['x', 'bad', 'Reject', '<b>Return to Material Owner and restart the approval cycle.</b>', 'Reason for rejection', true, 'danger', pathDiagram('reject', st, obj)]
     }[M.d];
@@ -154,8 +154,8 @@ function viewModal() {
     return modalShell('layers', '', 'Create asset', 'Choose the material type, products and countries. Only approved modules eligible for every selected country and the channel can be added.',
       `<div class="fgrid"><div class="field"><label for="an-type">Material type</label><select class="select" id="an-type" data-an="type">${activeOf(S.materialTypes, D.type).map(t => opt(t.id, D.type, t.name)).join('')}</select></div>
       <div class="field"><label for="an-name">Asset name</label><input class="input ${M.err === 'name' ? 'invalid' : ''}" id="an-name" data-an="name" value="${esc(D.name)}">${M.err === 'name' ? '<span class="err">Give the asset a name.</span>' : ''}</div></div>
-      <div class="field"><span class="label">Products</span>${multi('an-toggle', 'products', activeOf(S.products, D.products).map(p => [p.id, p.name + ' · ' + p.area]), D.products)}${M.err === 'products' ? '<span class="err">Select at least one product.</span>' : ''}</div>
-      <div class="field"><span class="label">Countries</span>${multi('an-toggle', 'markets', activeOf(S.markets, D.markets).map(x => [x.id, x.name]), D.markets)}${M.err === 'markets' ? '<span class="err">Select at least one country.</span>' : ''}</div>
+      <div class="field"><span class="label">Products</span>${chipSelect('an-products', 'an-toggle', 'products', activeOf(S.products, D.products).map(p => [p.id, p.name, p.area]), D.products, { ph: 'Select products', noun: 'products' })}${M.err === 'products' ? '<span class="err">Select at least one product.</span>' : ''}</div>
+      <div class="field"><span class="label">Countries</span>${chipSelect('an-markets', 'an-toggle', 'markets', activeOf(S.markets, D.markets).map(x => [x.id, x.name, x.id]), D.markets, { ph: 'Select countries', noun: 'countries' })}${M.err === 'markets' ? '<span class="err">Select at least one country.</span>' : ''}</div>
       <div class="fgrid"><div class="field"><label for="an-ch">Channel</label><select class="select" id="an-ch" data-an="channel">${activeOf(S.channels, D.channel).map(c => opt(c.id, D.channel, c.name)).join('')}</select></div>
       <div class="field"><label for="an-aud">Audience</label><select class="select" id="an-aud" data-an="audience">${activeOf(S.audiences, D.audience).map(c => opt(c.id, D.audience, c.name)).join('')}</select></div></div>
       ${M.module ? `<div class="banner info">${icon('layers')}<div class="txt"><b>${esc(modById(M.module).title)}</b><p>Added to the asset if it is eligible for the selected products, countries and channel.</p></div></div>` : ''}`,
@@ -175,7 +175,7 @@ function viewModal() {
   if (M.type === 'asset-submit') {
     const a = assetById(M.id); const V = assetValidation(a); const wf = wfById(assetWorkflow(a)); const blocked = V.empty || V.bad.length || V.sops.length;
     const problems = `${V.empty ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>The asset has no content</b><p>Add at least one approved module.</p></div></div>` : ''}${V.bad.length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${V.bad.length} module${V.bad.length > 1 ? 's are' : ' is'} not eligible</b><ul class="issue-list">${V.bad.map(x => `<li><b>${esc(x.m.id)}:</b> ${esc(eligibility(x.m, a).reason)}</li>`).join('')}</ul></div></div>` : ''}${V.sops.length ? issuesBlock(V.sops) : ''}`;
-    if (!canSubmit(u)) return modalShell('send', '', 'Send to Marketing Team Lead', 'Marketing Team Members assemble assets. A Marketing Team Lead submits them for review.', objCard(a, 'Asset') + problems, `${btn('Cancel', 'modal-close')}${btn('Send to Team Lead', 'asset-submit-confirm', 'primary', `data-id="${a.id}" ${blocked ? 'disabled' : ''}`, 'send')}`);
+    if (!canSubmit(u)) return modalShell('send', '', 'Send to Marketing Lead', 'Marketing Members assemble assets. A Marketing Lead submits them for review.', objCard(a, 'Asset') + problems, `${btn('Cancel', 'modal-close')}${btn('Send to Lead', 'asset-submit-confirm', 'primary', `data-id="${a.id}" ${blocked ? 'disabled' : ''}`, 'send')}`);
     return modalShell(blocked ? 'alert' : V.nNew ? 'alert' : 'shieldcheck', blocked ? 'bad' : V.nNew ? 'warn' : '', blocked ? 'Fix before submitting' : V.nNew ? 'New content detected' : 'Ready for streamlined review', blocked ? 'The asset fails one or more checks.' : V.nNew ? 'This asset contains text that is not an approved module and requires full MLR review.' : 'Every block is an approved module eligible for these countries and this channel.',
       objCard(a, 'Asset') + (blocked ? problems : `${V.nNew ? `<div class="stack" style="gap:8px">${a.blocks.filter(b => b.kind === 'new').map(b => `<div class="block new" style="margin:0"><div class="meta">${icon('edit', 'sm')}New content · ${esc(b.label || 'Text')}</div><div class="txt">${esc(b.text)}</div></div>`).join('')}</div>` : ''}<div class="banner ok">${icon('check')}<div class="txt"><b>All checks pass</b><p>${V.mods.length} eligible approved module${V.mods.length === 1 ? '' : 's'} · ${validate(a, 'Asset').length} Validation SOPs passed</p></div></div><div class="row"><span class="label" style="margin:0">Route</span><b>${esc(wf.name)}</b></div>${wfVisual(wf)}`),
       `${btn(blocked ? 'Back to assembly' : 'Keep editing', 'modal-close')}${btn('Submit for review', 'asset-submit-confirm', 'primary', `data-id="${a.id}" ${blocked ? 'disabled' : ''}`, 'send')}`, true);
@@ -214,7 +214,7 @@ function afterDecision(obj, kind, r) {
 function newVersion(obj, kind, reason) {
   const l = latest(obj); const nv = l.v + 1;
   if (kind === 'Asset') l.blocks = JSON.parse(JSON.stringify(obj.blocks));
-  obj.versions.push({ v: nv, body: kind === 'Asset' ? '' : l.body, refs: kind === 'Asset' ? [] : [...l.refs], createdAt: Date.now(), createdBy: me().id, reason, status: 'Draft', cycles: [], approvedAt: null, approvedBy: null });
+  obj.versions.push({ v: nv, body: kind === 'Asset' ? '' : l.body, refs: kind === 'Asset' ? [] : [...l.refs], media: l.media ? { ...l.media } : undefined, createdAt: Date.now(), createdBy: me().id, reason, status: 'Draft', cycles: [], approvedAt: null, approvedBy: null });
   obj.resume = null; obj.review = null; obj.updatedAt = Date.now();
   log('Version created', kind, obj, nv, { prev: 'v' + l.v + ' ' + l.status, next: 'v' + nv + ' Draft', note: reason });
   return nv;
@@ -223,7 +223,10 @@ function newVersion(obj, kind, reason) {
 const ACT = {
   pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') S.notifSeen = Date.now(); render(); },
   logout: () => { log('Signed out', 'User', me(), 1); S.signedIn = false; save(); UI.modal = null; go('login'); },
-  'modal-close': () => { UI.modal = null; render(); },
+  'modal-close': () => { UI.modal = null; UI.msel = null; render(); },
+  'msel-open': el => { UI.msel = UI.msel === el.dataset.id ? null : el.dataset.id; UI.mselq = ''; render(); setTimeout(() => { const i = document.getElementById('mselq-' + el.dataset.id); i && i.focus(); }, 20); },
+  'ap-stage': el => { UI.f.apfn = UI.f.apfn === el.dataset.v && (UI.route.p.tab || 'review') === 'review' ? '' : el.dataset.v; go('approvals', { tab: 'review' }); },
+  'msel-close': () => { UI.msel = null; UI.mselq = ''; render(); },
   'modal-bg': (el, ev) => { if (ev.target === el) { UI.modal = null; render(); } },
   'toggle-f': el => { const k = el.dataset.k; UI.f[k] = UI.f[k] === el.dataset.v ? '' : el.dataset.v; render(); },
   'set-f': el => { UI.f[el.dataset.k] = el.dataset.v; render(); },
@@ -236,7 +239,11 @@ const ACT = {
   'wiz-go': el => { const D = wizDraft(el.dataset.form); const i = +el.dataset.i; if (i <= (D.maxStep || 0)) wizShow(D, i); },
   'wiz-save': el => { const f = el.dataset.form; wizDraft(f).step = wizSteps(f).length - 1; (f === 'user' ? saveUserForm : f === 'workflow' ? saveWorkflowForm : saveModuleForm)(); },
   'wiz-back': el => { const D = wizDraft(el.dataset.form); wizShow(D, Math.max(0, (D.step || 0) - 1)); },
-  'd-type': el => { UI.draft.type = el.dataset.v; render(); },
+  'd-type': el => {
+    const D = UI.draft; const m = UI.route.p.id && modById(UI.route.p.id); const v = el.dataset.v;
+    if (m && isMediaType(v) !== isMediaType(m.type)) { toast('Content and media modules cannot be converted — create a new module'); return; }
+    if (D.type && isMediaType(D.type) && kindOfType(D.type) !== kindOfType(v) && D.media && D.media.fileId) D.media = { source: D.media.source || '', usage: D.media.usage || '' };
+    D.type = v; render(); },
   'd-toggle': el => { const D = UI.draft; const arr = D[el.dataset.k]; const i = arr.indexOf(el.dataset.v); i >= 0 ? arr.splice(i, 1) : arr.push(el.dataset.v);
     if (el.dataset.k === 'products') { const ok = uniq(S.products.filter(p => D.products.includes(p.id)).flatMap(p => p.indications)); D.indications = D.indications.filter(x => ok.includes(x)); }
     render(); },
@@ -248,11 +255,11 @@ const ACT = {
     log('Reference created', 'Reference', { id: r.id }, 1, { next: r.title, note: refKind(r.kind) }); D.refs.push(r.id); D.newRefTitle = ''; D.newRefSource = ''; save(); render(); toast('Reference added to the library and attached'); },
 
   /* submission */
-  'submit-open': el => { const m = modById(el.dataset.id); const l = latest(m); UI.modal = { type: 'submit', id: m.id, wf: l.v > 1 && live(m) ? S.settings.newVersionWorkflow : S.settings.defaultModuleWorkflow }; render(); },
+  'submit-open': el => { const m = modById(el.dataset.id); const l = latest(m); const tw = mtype(m.type).workflow; UI.modal = { type: 'submit', id: m.id, wf: l.v > 1 && live(m) ? S.settings.newVersionWorkflow : tw && wfById(tw) && wfById(tw).active !== false ? tw : S.settings.defaultModuleWorkflow }; render(); },
   'submit-wf': el => { UI.modal.wf = el.dataset.v; render(); },
   'submit-confirm': el => {
     const m = modById(el.dataset.id); const u = me(); if (validationIssues(m, 'Module').length) return;
-    if (!canSubmit(u)) { setStatus(m, 'Awaiting Lead submission'); m.updatedAt = Date.now(); log('Sent to Content Team Lead', 'Module', m, null, { prev: 'Draft', next: 'Awaiting Lead submission' }); UI.modal = null; save(); render(); toast('Sent to the Content Team Lead for submission'); return; }
+    if (!canSubmit(u)) { setStatus(m, 'Awaiting Lead submission'); m.updatedAt = Date.now(); log('Sent to Content Lead', 'Module', m, null, { prev: 'Draft', next: 'Awaiting Lead submission' }); UI.modal = null; save(); render(); toast('Sent to the Content Lead for submission'); return; }
     const mailed = startCycle(m, 'Module', UI.modal.wf || S.settings.defaultModuleWorkflow); save(); const st = curStep(m); UI.modal = null; render();
     toast('Submitted · cycle ' + m.review.cycle + ' · now with ' + stepWho(st) + (assigneeFor(st).length ? ' (' + assigneeFor(st).map(x => x.name).join(', ') + ')' : '') + (mailed ? ' · email sent' : ''));
   },
@@ -316,7 +323,7 @@ const ACT = {
   'asset-submit': el => { UI.modal = { type: 'asset-submit', id: el.dataset.id }; render(); },
   'asset-submit-confirm': el => {
     const a = assetById(el.dataset.id); const u = me(); const V = assetValidation(a); if (V.empty || V.bad.length || V.sops.length) return;
-    if (!canSubmit(u)) { setStatus(a, 'Awaiting Lead submission'); log('Sent to Marketing Team Lead', 'Asset', a, null, { prev: 'Draft', next: 'Awaiting Lead submission' }); UI.modal = null; save(); go('asset', { id: a.id }); toast('Sent to the Marketing Team Lead'); return; }
+    if (!canSubmit(u)) { setStatus(a, 'Awaiting Lead submission'); log('Sent to Marketing Lead', 'Asset', a, null, { prev: 'Draft', next: 'Awaiting Lead submission' }); UI.modal = null; save(); go('asset', { id: a.id }); toast('Sent to the Marketing Lead'); return; }
     startCycle(a, 'Asset', assetWorkflow(a)); UI.modal = null; save(); go('asset', { id: a.id }); const st = curStep(a); toast('Submitted · now with ' + stepWho(st));
   },
   'asset-version': el => { UI.modal = { type: 'asset-version', id: el.dataset.id }; render(); setTimeout(() => { const t = document.getElementById('m-note'); t && t.focus(); }, 30); },
@@ -383,7 +390,7 @@ const ACT = {
     UI.setDraft = null; save(); render(); toast(n ? n + ' setting' + (n > 1 ? 's' : '') + ' saved' : 'No changes');
   },
   'reset-open': () => { UI.modal = { type: 'confirm-reset' }; render(); },
-  'reset-confirm': () => { const v = document.getElementById('m-confirm').value.trim(); if (v !== 'RESTORE') { UI.modal.err = true; render(); return; } const pid = S.personaId; S = SEED(); S.signedIn = true; S.personaId = pid; UI.modal = null; UI.f = {}; UI.pg = {}; log('Workspace restored', 'Settings', { id: 'settings' }, 1, { note: 'Initial workspace restored' }); save(); go('home'); toast('Initial workspace restored'); },
+  'reset-confirm': () => { const v = document.getElementById('m-confirm').value.trim(); if (v !== 'RESTORE') { UI.modal.err = true; render(); return; } mediaClear(); const pid = S.personaId; S = SEED(); S.signedIn = true; S.personaId = pid; UI.modal = null; UI.f = {}; UI.pg = {}; log('Workspace restored', 'Settings', { id: 'settings' }, 1, { note: 'Initial workspace restored' }); save(); go('home'); toast('Initial workspace restored'); },
 
   /* workflows */
   'wf-new': () => go('workflow-new'),
@@ -424,6 +431,7 @@ const ACT = {
 document.addEventListener('click', ev => {
   const actEl = ev.target.closest('[data-act]'); const goEl = ev.target.closest('[data-go]');
   if (UI.pop && !ev.target.closest('.pop') && !ev.target.closest('[data-pop]') && !ev.target.closest('.search')) { UI.pop = null; if (!actEl && !goEl) { render(); return; } }
+  if (UI.msel && !ev.target.closest('.msel')) { UI.msel = null; UI.mselq = ''; if (!actEl && !goEl) { render(); return; } }
   if (UI.search && !ev.target.closest('.search')) { UI.search = ''; if (!actEl && !goEl) { render(); return; } }
   if (actEl && (!goEl || actEl === goEl || goEl.contains(actEl))) {
     if (actEl.disabled) return;
@@ -432,6 +440,7 @@ document.addEventListener('click', ev => {
   if (goEl) { ev.preventDefault(); const p = {}; ['id', 'tab', 'k', 'v'].forEach(k => { if (goEl.dataset[k]) p[k] = goEl.dataset[k]; }); if (goEl.dataset.go !== 'cover') delete p.v; if (!['cover', 'item'].includes(goEl.dataset.go)) delete p.k; if (goEl.dataset.mstat) UI.f.mstat = goEl.dataset.mstat; UI.modal = null; go(goEl.dataset.go, p); }
 });
 document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && UI.msel) { UI.msel = null; UI.mselq = ''; render(); return; }
   if (ev.key === 'Escape') { if (UI.modal) { UI.modal = null; render(); } else if (UI.pop || UI.search) { UI.pop = null; UI.search = ''; render(); } }
   if (ev.key === 'Enter' && ev.target.matches && ev.target.matches('tr.click')) ev.target.click();
 });
@@ -439,7 +448,9 @@ document.addEventListener('input', ev => {
   const t = ev.target;
   if (t.id === 'global-search') { UI.search = t.value; render(); return; }
   if (t.id === 'rv-comment') { UI.f.rvc = t.value; return; }
+  if (t.dataset.mselq) { UI.mselq = t.value; render(); return; }
   if (t.dataset.filter && t.tagName === 'INPUT') { UI.f[t.dataset.filter] = t.value; if (t.type === 'date') return; render(); return; }
+  if (t.dataset.dm) { const D = UI.draft; D.media = D.media || {}; D.media[t.dataset.dm] = t.dataset.dm === 'duration' ? (+t.value || null) : t.value; renderSoon(); return; }
   if (t.dataset.d && t.tagName !== 'SELECT') { UI.draft[t.dataset.d] = t.value; if (t.dataset.d === 'body' || t.dataset.d === 'title') renderSoon(); return; }
   if (t.dataset.u && t.tagName !== 'SELECT') { UI.udraft[t.dataset.u] = t.value; return; }
   if (t.dataset.w) { UI.nwf[t.dataset.w] = t.value; return; }
@@ -461,8 +472,9 @@ document.addEventListener('change', ev => {
     log(k === 'owner' ? 'Owner changed' : 'Asset updated', 'Asset', a, null, { note: ({ name: 'Name', type: 'Material type', channel: 'Channel', audience: 'Audience', disclaimer: 'Local disclaimer', owner: 'Material Owner' })[k] + ' changed', prev: trunc(shown(prev), 60), next: trunc(shown(t.value), 60) }); save(); render(); return;
   }
   const textual = (t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && t.type !== 'date' && t.type !== 'checkbox'));
-  if (textual && (t.dataset.d || t.dataset.u || t.dataset.an || t.dataset.sop || t.dataset.set)) return;
+  if (textual && (t.dataset.dm || t.dataset.d || t.dataset.u || t.dataset.an || t.dataset.sop || t.dataset.set)) return;
   if (t.dataset.d) { UI.draft[t.dataset.d] = t.value; render(); return; }
+  if (t.dataset.actChange === 'd-file') { uploadModuleFile(t.files && t.files[0]); return; }
   if (t.dataset.actChange === 'd-addref' && t.value) { UI.draft.refs.push(t.value); render(); return; }
   if (t.dataset.actChange === 'sign-att') { UI.modal.att = t.checked; UI.modal.err = null; render(); return; }
   if (t.dataset.u) { UI.udraft[t.dataset.u] = t.value; render(); return; }
@@ -490,8 +502,42 @@ document.addEventListener('submit', ev => {
   if (f === 'workflow') saveWorkflowForm();
 });
 
+/* ===== File upload for media & document modules ===== */
+async function fileChecksum(buf) {
+  try { if (crypto && crypto.subtle) { const h = await crypto.subtle.digest('SHA-256', buf); return { algo: 'SHA-256', hex: [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join('') }; } } catch (e) {}
+  let h1 = 0x811c9dc5, h2 = 0x01000193; const a = new Uint8Array(buf); for (let i = 0; i < a.length; i++) { h1 = Math.imul(h1 ^ a[i], 16777619) >>> 0; h2 = Math.imul(h2 ^ a[i], 2246822507) >>> 0; }
+  return { algo: 'FNV-1a', hex: h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0') };
+}
+const withTimeout = (p, ms, fb) => Promise.race([p, new Promise(r => setTimeout(() => r(fb), ms))]);
+// Reads what the file itself says: image size, video duration and size, PDF page count.
+async function probeFile(file, kind, buf) {
+  const url = URL.createObjectURL(file); const ext = (file.name.split('.').pop() || '').toUpperCase();
+  try {
+    if (kind === 'image') { const r = await withTimeout(new Promise(res => { const im = new Image(); im.onload = () => res({ width: im.naturalWidth, height: im.naturalHeight }); im.onerror = () => res({}); im.src = url; }), 8000, {}); return { ...r, format: ext + (r.width ? ' · ' + r.width + '×' + r.height : '') }; }
+    if (kind === 'video') { const r = await withTimeout(new Promise(res => { const v = document.createElement('video'); v.preload = 'metadata'; v.muted = true; v.onloadedmetadata = () => res({ duration: isFinite(v.duration) ? Math.round(v.duration * 10) / 10 : null, width: v.videoWidth || null, height: v.videoHeight || null }); v.onerror = () => res({}); v.src = url; }), 8000, {}); const cont = { 'video/mp4': 'MP4', 'video/webm': 'WebM', 'video/quicktime': 'MOV' }[file.type] || ext; return { duration: r.duration != null ? r.duration : null, width: r.width, height: r.height, format: cont + (r.width ? ' · ' + r.width + '×' + r.height : '') }; }
+    let pages = null; try { const lib = await withTimeout(loadPdfJs(), 6000, null); if (lib) { const doc = await withTimeout(lib.getDocument({ data: buf.slice(0) }).promise, 8000, null); if (doc) pages = doc.numPages; } } catch (e) {}
+    if (!pages) { const txt = new TextDecoder('latin1').decode(new Uint8Array(buf)); pages = (txt.match(/\/Type\s*\/Page(?![a-z])/g) || []).length || null; }
+    return { pages, format: 'PDF' + (pages ? ' · ' + pages + ' page' + (pages > 1 ? 's' : '') : '') };
+  } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
+}
+async function uploadModuleFile(file) {
+  const D = UI.draft; if (!file || !D) return; const kind = kindOfType(D.type);
+  if (!MEDIA_ACCEPT[kind] || !MEDIA_ACCEPT[kind].includes(file.type)) { toast('This ' + kindLabel(kind) + ' module accepts ' + (MEDIA_ACCEPT[kind] || []).map(x => x.split('/')[1]).join(', ') + ' files'); return; }
+  if (file.size > MEDIA_MAX_MB * 1048576) { toast('The file is larger than ' + MEDIA_MAX_MB + ' MB'); return; }
+  D.mediaBusy = true; render();
+  try {
+    const buf = await file.arrayBuffer(); const sum = await fileChecksum(buf); const meta = await probeFile(file, kind, buf);
+    const id = 'f-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); const stored = await mediaPut(id, file);
+    const prev = D.media || {};
+    D.media = { fileId: id, name: file.name, mime: file.type, size: file.size, checksum: sum.hex, algo: sum.algo, width: null, height: null, duration: null, pages: null, ...meta, source: prev.source || '', usage: prev.usage || '', uploadedAt: Date.now(), uploadedBy: me().id };
+    if (prev.fileId && prev.format && kind === 'video' && !meta.format) D.media.format = prev.format;
+    toast(stored ? file.name + ' uploaded' : file.name + ' kept for this session — the browser blocked file storage');
+  } catch (e) { toast('Could not read this file'); }
+  D.mediaBusy = false; render();
+}
+
 function wizDraft(form) { return form === 'user' ? UI.udraft : form === 'workflow' ? UI.nwf : UI.draft; }
-function wizSteps(form) { return form === 'user' ? USTEPS : form === 'workflow' ? WSTEPS : MSTEPS; }
+function wizSteps(form) { return form === 'user' ? USTEPS : form === 'workflow' ? WSTEPS : msteps(UI.draft); }
 function wizErrs(form) { return form === 'user' ? validateUser(UI.udraft, UI.route.p.id) : form === 'workflow' ? validateWf(UI.nwf) : validateDraft(UI.draft); }
 function wizShow(D, i) { D.anim = true; D.step = i; D.maxStep = Math.max(D.maxStep || 0, i); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); const h = document.querySelector('.wiz-head h2'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
 // Returns true when the form is on its last step and fully valid (caller saves); otherwise moves the wizard.
@@ -512,6 +558,9 @@ function logModuleDiff(m, before, D, v) {
   if (!sameSet(before.markets, D.markets)) log('Country changed', 'Module', m, v, { prev: marketsTxt(before.markets), next: marketsTxt(D.markets) });
   add.forEach(r => log('Reference added', 'Module', m, v, { next: refById(r).title }));
   rem.forEach(r => log('Reference removed', 'Module', m, v, { prev: refById(r).title }));
+  const bm = before.media || {}, dm = D.media || {};
+  if (dm.fileId && bm.fileId !== dm.fileId) log(bm.fileId ? 'Media replaced' : 'Media uploaded', 'Module', m, v, { prev: bm.name ? bm.name + ' · ' + String(bm.checksum).slice(0, 12) : '', next: dm.name + ' · ' + String(dm.checksum).slice(0, 12), note: (dm.algo || '') + ' ' + dm.checksum });
+  [['source', 'Source'], ['usage', 'Usage rules'], ['format', 'Format']].forEach(([k, lbl]) => { if (dm.fileId && (bm[k] || '') !== (dm[k] || '')) log('Module edited', 'Module', m, v, { note: lbl + ' changed', prev: trunc(bm[k] || ''), next: trunc(dm[k] || '') }); });
   if (before.owner !== D.owner) log('Owner changed', 'Module', m, v, { prev: user(before.owner).name, next: user(D.owner).name });
   if (before.body !== D.body.trim()) log('Content edited', 'Module', m, v, { prev: trunc(before.body), next: trunc(D.body.trim()) });
   const meta = [['title', 'Name'], ['type', 'Type'], ['audience', 'Audience']].filter(([k]) => before[k] !== (k === 'title' ? D.title.trim() : D[k]));
@@ -526,20 +575,21 @@ function saveModuleForm() {
   const D = UI.draft; const p = UI.route.p; const now = Date.now();
   const base = { title: D.title.trim(), type: D.type, owner: D.owner, products: [...D.products], indications: [...D.indications], audience: D.audience, markets: [...D.markets], channels: [...D.channels], reviewDate: fromISO(D.reviewDate), expiry: fromISO(D.expiry), updatedAt: now };
   if (p.id) {
-    const m = modById(p.id); const l = latest(m); const before = { ...m, body: l.body, refs: [...l.refs] };
+    const m = modById(p.id); const l = latest(m); const before = { ...m, body: l.body, refs: [...l.refs], media: l.media ? { ...l.media } : null };
     if (p.newVersion) {
-      const nv = newVersion(m, 'Module', D.reason.trim()); Object.assign(m, base); const v = latest(m); v.body = D.body.trim(); v.refs = [...D.refs];
+      const nv = newVersion(m, 'Module', D.reason.trim()); Object.assign(m, base); const v = latest(m); v.body = D.body.trim(); v.refs = [...D.refs]; if (D.media) v.media = { ...D.media };
       logModuleDiff(m, before, D, nv); save(); UI.draft = null; go('module', { id: m.id });
       toast('Version ' + nv + ' created' + (live(m) ? ' — v' + live(m).v + ' stays live until v' + nv + ' is approved' : ' — submitting it restarts the full approval cycle')); return;
     }
-    Object.assign(m, base); l.body = D.body.trim(); l.refs = [...D.refs];
+    Object.assign(m, base); l.body = D.body.trim(); l.refs = [...D.refs]; if (D.media) l.media = { ...D.media };
     logModuleDiff(m, before, D, l.v);
     if (statusOf(m) === 'Amendment Requested') { m.amendNote = D.reason.trim(); log('Amended', 'Module', m, l.v, { note: D.reason.trim() }); }
     save(); UI.draft = null; go('module', { id: m.id }); toast(statusOf(m) === 'Amendment Requested' ? 'Changes saved — resubmit to resume approval' : 'Changes saved'); return;
   }
   const id = nextModuleId(D.products);
-  const m = { id, ...base, versions: [{ v: 1, body: D.body.trim(), refs: [...D.refs], createdAt: now, createdBy: me().id, reason: 'Initial version', status: 'Draft', cycles: [], approvedAt: null, approvedBy: null }], createdAt: now, review: null, resume: null, archived: false };
-  S.modules.push(m); log('Module created', 'Module', m, 1, { next: 'Draft', note: mtype(m.type).name + ' · ' + productsTxt(m.products) + ' · ' + m.markets.join(', ') + ' · owner ' + user(m.owner).name }); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
+  const m = { id, ...base, versions: [{ v: 1, body: D.body.trim(), refs: [...D.refs], media: D.media ? { ...D.media } : undefined, createdAt: now, createdBy: me().id, reason: 'Initial version', status: 'Draft', cycles: [], approvedAt: null, approvedBy: null }], createdAt: now, review: null, resume: null, archived: false };
+  S.modules.push(m); if (D.media && D.media.fileId) log('Media uploaded', 'Module', m, 1, { next: D.media.name + ' · ' + fmtSize(D.media.size), note: (D.media.algo || '') + ' ' + D.media.checksum });
+  log('Module created', 'Module', m, 1, { next: 'Draft', note: mtype(m.type).name + ' · ' + productsTxt(m.products) + ' · ' + m.markets.join(', ') + ' · owner ' + user(m.owner).name }); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
 }
 function saveWorkflowForm() {
   if (!wizAdvance('workflow')) return;

@@ -9,7 +9,17 @@ root = pathlib.Path(__file__).parent
 src = root / 'src'
 logo = 'data:image/png;base64,' + base64.b64encode((root / 'assets' / 'saja-logo.png').read_bytes()).decode()
 css = (src / 'styles.css').read_text()
-js = '\n'.join((src / f).read_text() for f in ['data.js', 'icons.js', 'core.js', 'pages.js', 'admin.js', 'config.js', 'workflows.js', 'main.js']).replace("'__LOGO__'", repr(logo))
+js = '\n'.join((src / f).read_text() for f in ['data.js', 'icons.js', 'core.js', 'media.js', 'pages.js', 'admin.js', 'config.js', 'workflows.js', 'main.js']).replace("'__LOGO__'", repr(logo))
+import hashlib, json
+def media(fn, mime, **meta):
+    b = (root / 'assets' / 'seed-media' / fn).read_bytes()
+    return {'url': 'data:%s;base64,%s' % (mime, base64.b64encode(b).decode()), 'meta': {'name': fn, 'mime': mime, 'size': len(b), 'checksum': hashlib.sha256(b).hexdigest(), 'algo': 'SHA-256', **meta}}
+def alt(fn, mime): return 'data:%s;base64,%s' % (mime, base64.b64encode((root / 'assets' / 'seed-media' / fn).read_bytes()).decode())
+seed_media = {'img': media('infographic.jpg', 'image/jpeg', width=960, height=600, format='JPEG · 960×600'),
+              'vid': media('inhaler.mp4', 'video/mp4', width=640, height=360, duration=6, format='MP4 (H.264) · 640×360'),
+              'pdf': media('prescribing-info.pdf', 'application/pdf', pages=2, format='PDF · 2 pages')}
+seed_media['vid']['alt'] = alt('inhaler.webm', 'video/webm')  # WebM fallback for browsers without H.264
+js = js.replace("'__SEED_MEDIA__'", json.dumps(seed_media))
 stamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
 body = f'''<!-- SAJA MedLR build {stamp} -->
 <title>SAJA MedLR</title>

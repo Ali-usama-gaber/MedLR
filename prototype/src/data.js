@@ -1,6 +1,8 @@
 /* ---------- SAJA MedLR — reference data and initial workspace ---------- */
 const DAY = 86400000, HOUR = 3600000;
 const NOW0 = Date.now();
+// Sample files for the initial workspace (injected by build.py with real size, dimensions and SHA-256).
+const SEED_MEDIA = '__SEED_MEDIA__';
 const d = (offsetDays, h = 10, m = 0) => { const t = new Date(NOW0 + offsetDays * DAY); t.setHours(h, m, 0, 0); return t.getTime(); };
 
 // Organisation model: every person belongs to a function and holds a level within it.
@@ -10,7 +12,12 @@ const LEVELS = ['Member', 'Lead'];
 // Reference kinds are part of the validation engine (the evidence rule counts study, registry and publication).
 const REF_KINDS = [['study', 'Clinical study'], ['registry', 'Registry'], ['publication', 'Publication'], ['label', 'Label / SmPC'], ['other', 'Other']];
 const EVIDENCE_KINDS = ['study', 'registry', 'publication'];
-const TONES = [['claim', 'Green'], ['safety', 'Amber'], ['headline', 'Blue'], ['evidence', 'Purple'], ['cta', 'Teal'], ['ref', 'Grey']];
+const TONES = [['claim', 'Green'], ['safety', 'Amber'], ['headline', 'Blue'], ['evidence', 'Purple'], ['cta', 'Teal'], ['ref', 'Grey'], ['image', 'Rose'], ['video', 'Indigo'], ['doc', 'Slate']];
+// A module type's kind decides its form, preview, storage and validation. Content modules carry approved text;
+// media & document modules carry an approved file with its source and usage rules.
+const MODULE_KINDS = [['content', 'Content module', 'Approved text with references'], ['image', 'Image', 'Upload an image (PNG, JPG, GIF, WebP, SVG)'], ['video', 'Video', 'Upload a video (MP4, WebM, MOV)'], ['document', 'PDF / Document', 'Upload a PDF document']];
+const MEDIA_ACCEPT = { image: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'], video: ['video/mp4', 'video/webm', 'video/quicktime'], document: ['application/pdf'] };
+const MEDIA_MAX_MB = 50;
 // Version metadata snapshot: each version keeps the scope it was approved for.
 const MOD_META = ['title', 'type', 'products', 'indications', 'audience', 'markets', 'channels', 'expiry', 'reviewDate'];
 const ASSET_META = ['name', 'type', 'products', 'markets', 'channel', 'audience', 'disclaimer'];
@@ -18,7 +25,7 @@ const metaSnap = o => { const keys = o.blocks ? ASSET_META : MOD_META; const out
 
 // [key, label, group, what it controls] — every permission is checked by the application.
 const PERMS = [
-  ['view', 'View content', 'Content', 'Open Modules, Assets, Approvals and the Approved Library'], ['create', 'Create modules & assets', 'Content', 'Create new modules and assets'], ['edit', 'Edit drafts', 'Content', 'Edit drafts owned by them or their team'], ['submit', 'Submit for review', 'Content', 'Start an approval cycle; otherwise drafts go to a Team Lead'], ['amend', 'Amend & resubmit', 'Content', 'Resubmit after an amendment request'],
+  ['view', 'View content', 'Content', 'Open Modules, Assets, Approvals and the Approved Library'], ['create', 'Create modules & assets', 'Content', 'Create new modules and assets'], ['edit', 'Edit drafts', 'Content', 'Edit drafts owned by them or their team'], ['submit', 'Submit for review', 'Content', 'Start an approval cycle; otherwise drafts go to a Lead'], ['amend', 'Amend & resubmit', 'Content', 'Resubmit after an amendment request'],
   ['review', 'Complete review steps', 'Approval', 'Act on review steps assigned to their role'], ['request_amend', 'Request amendment', 'Approval', 'Return to the owner and resume at the same step'], ['approve', 'Approve intermediate steps', 'Approval', 'Sign approval steps that are not the last step'], ['final_approve', 'Final approval', 'Approval', 'Sign the last approval step of a workflow'], ['reject', 'Reject', 'Approval', 'Reject and end the approval cycle'],
   ['manage_users', 'Manage users, teams & roles', 'Administration', 'Users, teams, functions, roles and permissions'], ['manage_workflows', 'Manage workflows', 'Administration', 'Create and edit approval workflows'], ['manage_sops', 'Manage Validation SOPs', 'Administration', 'Create and edit Validation SOPs'], ['manage_library', 'Manage the Approved Library', 'Administration', 'Withdraw (archive) and reinstate approved content, manage references'], ['manage_settings', 'Manage configuration', 'Administration', 'Products, countries, types, channels, audiences and settings'],
   ['view_reports', 'View reports', 'Insight', 'Open Reports'], ['view_audit', 'View audit trail', 'Insight', 'Open the Audit Trail and Lifecycle']
@@ -45,7 +52,9 @@ const SOP_RULES = {
   safety: 'Safety statement included',
   disclaimer: 'Local disclaimer included',
   metadata: 'Mandatory metadata complete',
-  review_window: 'Review date within the allowed period'
+  review_window: 'Review date within the allowed period',
+  media_file: 'Media file attached',
+  media_rights: 'Source and usage rules documented'
 };
 
 const PEOPLE = { 'Content-Lead': 'u-omar', 'Content-Member': 'u-hana', 'Medical-Member': 'u-ahmed', 'Medical-Lead': 'u-sara', 'Legal-Member': 'u-mona', 'Legal-Lead': 'u-rania', 'Regulatory-Member': 'u-tarek', 'Regulatory-Lead': 'u-layla', 'Marketing-Lead': 'u-karim', 'Marketing-Member': 'u-youssef' };
@@ -138,8 +147,11 @@ const SEED = () => {
     moduleTypes: [
       ['TY-CLAIM', 'Clinical Claim', 'A single efficacy or outcome claim with a reference', 'quote', 'claim'], ['TY-SAFETY', 'Safety Statement', 'Fair-balance or safety information', 'alert', 'safety', true],
       ['TY-HEAD', 'Headline', 'Short promotional headline', 'type', 'headline'], ['TY-EVID', 'Supporting Evidence', 'Data that supports a claim', 'evidence', 'evidence'],
-      ['TY-CTA', 'CTA', 'Call to action', 'pointer', 'cta'], ['TY-REF', 'Reference', 'Citation block', 'book', 'ref']
-    ].map(([id, name, desc, icon, tone, safety]) => ({ id, name, desc, icon, tone, safety: !!safety, active: true })),
+      ['TY-CTA', 'CTA', 'Call to action', 'pointer', 'cta'], ['TY-REF', 'Reference', 'Citation block', 'book', 'ref'],
+      ['TY-IMAGE', 'Image', 'Approved image, chart or visual with its source and usage rules', 'image', 'image', false, 'image'],
+      ['TY-VIDEO', 'Video', 'Approved video with duration, format, source and usage rules', 'video', 'video', false, 'video'],
+      ['TY-DOC', 'PDF / Document', 'Approved PDF such as prescribing information or a leave piece', 'file', 'doc', false, 'document']
+    ].map(([id, name, desc, icon, tone, safety, kind]) => ({ id, name, desc, icon, tone, safety: !!safety, kind: kind || 'content', workflow: '', active: true })),
     functions: SEED_FUNCS.map(([id, desc, reviews]) => ({ id, desc, reviews, active: true })),
     teams: [
       { id: 'T-CON', name: 'Content — Cardiology', fn: 'Content' }, { id: 'T-CON2', name: 'Content — Respiratory & Diabetes', fn: 'Content' },
@@ -155,8 +167,8 @@ const SEED = () => {
       ['u-ali', 'Ali Usama', 'Administrator', null, 'T-ADM'], ['u-dina', 'Dina Mostafa', 'Regulatory', 'Member', 'T-REG', 'Inactive']
     ].map(([id, name, fn, level, team, status]) => ({ id, name, email: name.toLowerCase().replace(' ', '.') + '@saja.com', fn, level, team, status: status || 'Active' })),
     workflows: [
-      { id: 'WF-STD', name: 'Promotional content — Standard', desc: 'Medical, Legal and Regulatory review with Team Member review and Team Lead approval.', active: true },
-      { id: 'WF-LOW', name: 'Low-risk updates — Team Lead only', desc: 'Reference and formatting updates with no new claims.', active: true },
+      { id: 'WF-STD', name: 'Promotional content — Standard', desc: 'Medical, Legal and Regulatory review with Member review and Lead approval.', active: true },
+      { id: 'WF-LOW', name: 'Low-risk updates — Lead only', desc: 'Reference and formatting updates with no new claims.', active: true },
       { id: 'WF-ASSET-FULL', name: 'Assets — new content', desc: 'Assets that contain text that is not an approved module.', active: true, system: true },
       { id: 'WF-ASSET-STREAM', name: 'Assets — approved modules only', desc: 'Streamlined: every block is an approved, eligible module.', active: true, system: true }
     ].map(w => ({ ...w, appliesTo: w.system ? 'Asset' : 'Module', steps: WF_SEED[w.id].map(([fn, level, req], i) => ({ id: w.id + '-s' + i, fn, level, req })) })),
@@ -178,7 +190,9 @@ const SEED = () => {
       { id: 'SOP-05', name: 'Safety statement in promotional materials', rule: 'safety', appliesTo: 'Asset', scope: { types: [], products: [], markets: [] }, guidance: 'Add an approved Safety Statement module for each product in the material.', active: true },
       { id: 'SOP-06', name: 'Local disclaimer — Kuwait and Egypt', rule: 'disclaimer', appliesTo: 'Asset', scope: { types: [], products: [], markets: ['KW', 'EG'] }, guidance: 'Add the local regulatory disclaimer in the material properties.', active: true },
       { id: 'SOP-07', name: 'Mandatory metadata', rule: 'metadata', appliesTo: 'Both', scope: { types: [], products: [], markets: [] }, guidance: 'Complete audience, channels, review date and expiry.', active: true },
-      { id: 'SOP-08', name: 'Product B — annual review', rule: 'review_window', months: 12, appliesTo: 'Module', scope: { types: [], products: ['P-B'], markets: [] }, guidance: 'Set the periodic review date within 12 months.', active: true }
+      { id: 'SOP-08', name: 'Product B — annual review', rule: 'review_window', months: 12, appliesTo: 'Module', scope: { types: [], products: ['P-B'], markets: [] }, guidance: 'Set the periodic review date within 12 months.', active: true },
+      { id: 'SOP-09', name: 'Media file attached', rule: 'media_file', appliesTo: 'Module', scope: { types: ['TY-IMAGE', 'TY-VIDEO', 'TY-DOC'], products: [], markets: [] }, guidance: 'Upload the approved file. Reviewers approve exactly this file.', active: true },
+      { id: 'SOP-10', name: 'Source and usage rules for media', rule: 'media_rights', appliesTo: 'Module', scope: { types: ['TY-IMAGE', 'TY-VIDEO', 'TY-DOC'], products: [], markets: [] }, guidance: 'State where the file comes from (owner, licence or study) and how it may be used.', active: true }
     ],
     notifSeen: 0,
     outbox: []
@@ -226,8 +240,20 @@ const SEED = () => {
     mod('MOD-C-003', 'Clinical Claim C — HbA1c reduction', 'Clinical Claim', ['P-C'], ['Type 2 diabetes'], 'HCP – Endocrinologists', ['EG', 'KW'], ['Email', 'Detail aid'], 'u-hana', [
       P(1, 'Product C delivers the strongest HbA1c reduction in its class.¹', ['REF-C-01'], d(-20), 'u-hana', 'Initial version', [cy('WF-STD', d(-19, 9), { owner: 'u-hana', rejectAt: 3, note: 'Comparative superiority claim is not supported by a head-to-head study. Rewrite against the study endpoint.' })])], { expiry: d(345) }),
     mod('MOD-X-001', 'Safety Statement — Adverse event reporting', 'Safety Statement', ['P-A', 'P-B', 'P-C'], ['Chronic heart failure', 'Persistent asthma', 'Type 2 diabetes'], 'HCP – General practitioners', ['SA', 'AE', 'KW', 'EG'], ['Email', 'Detail aid', 'Print', 'Web', 'Social'], 'u-omar', [
-      P(1, 'Report suspected adverse events to SAJA Pharmacovigilance and to your national reporting system.', [], d(-240), 'u-omar', 'Initial version', [cy('WF-LOW', d(-238, 9))])], { expiry: d(125) })
+      P(1, 'Report suspected adverse events to SAJA Pharmacovigilance and to your national reporting system.', [], d(-240), 'u-omar', 'Initial version', [cy('WF-LOW', d(-238, 9))])], { expiry: d(125) }),
+    // Media & document modules: the approved file lives on each version.
+    mod('MOD-A-050', 'Image — ALPHA-HF hospitalisation chart', 'Image', ['P-A'], ['Chronic heart failure'], 'HCP – Cardiologists', ['SA', 'AE', 'KW'], ['Email', 'Detail aid', 'Print', 'Web'], 'u-omar', [
+      P(1, 'Bar chart: heart-failure hospitalisation at 12 months — standard care 100%, Product A 79% (21% relative reduction).', ['REF-A-01'], d(-90), 'u-omar', 'Initial version', [cy('WF-STD', d(-88, 9))])], { expiry: d(270), reviewDate: d(180) }),
+    mod('MOD-B-020', 'Video — Inhaler technique in three steps', 'Video', ['P-B'], ['Persistent asthma'], 'HCP – Pulmonologists', ['SA', 'AE', 'KW'], ['Web', 'Social', 'Email'], 'u-hana', [
+      P(1, 'Six-second animation showing the three inhaler steps, ending with “rinse your mouth after each inhalation”.', ['REF-B-02'], d(-3), 'u-hana', 'Initial version', [cy('WF-STD', d(-2, 10), { owner: 'u-hana', stopAt: 2 })])], { expiry: d(360), reviewDate: d(300) }),
+    mod('MOD-C-010', 'PDF — Product C prescribing information summary', 'PDF / Document', ['P-C'], ['Type 2 diabetes'], 'HCP – Endocrinologists', ['SA', 'AE', 'EG'], ['Print', 'Email', 'Web', 'Detail aid'], 'u-hana', [
+      P(1, 'Two-page summary of the Product C prescribing information with adverse event reporting details.', ['REF-C-02'], d(-60), 'u-hana', 'Initial version', [cy('WF-LOW', d(-58, 9))])], { expiry: d(305), reviewDate: d(240) })
   ];
+  const SM = id => ({ fileId: 'seed:' + id, ...SEED_MEDIA[id].meta });
+  [['MOD-A-050', 'img', 'SAJA Medical Affairs — chart drawn from CSR-ALPHA-01 (owned by SAJA Pharma)', 'Use only next to Clinical Claim MOD-A-014 and its reference. Do not crop or remove the footnote.'],
+   ['MOD-B-020', 'vid', 'SAJA Medical Education — studio animation, 2026 (owned by SAJA Pharma)', 'Captions on when played without sound. Do not shorten or re-edit the steps.'],
+   ['MOD-C-010', 'pdf', 'SAJA Regulatory Affairs — PI-C-2026-03', 'Distribute in full; do not excerpt individual pages. Replace when the label changes.']
+  ].forEach(([id, f, source, usage]) => S.modules.find(m => m.id === id).versions.forEach(v => { v.media = { ...SM(f), source, usage }; }));
   S.modules.forEach(m => { m.updatedAt = Math.max(...m.versions.flatMap(v => [v.createdAt, ...v.cycles.flatMap(c => c.decisions.map(x => x.at))])); });
 
   const A = (v, created, by, reason, cycles, status) => ver(v, '', [], created, by, reason, cycles, status);
@@ -251,9 +277,9 @@ const SEED = () => {
 
 /* Build the audit trail for the initial workspace from the recorded versions and cycles. */
 function seedAudit(S) {
-  const out = []; const roleOf = id => { const u = S.users.find(x => x.id === id); return u.fn === 'Administrator' ? 'Administrator' : u.fn + ' Team ' + u.level; };
+  const out = []; const roleOf = id => { const u = S.users.find(x => x.id === id); return u.fn === 'Administrator' ? 'Administrator' : u.fn + ' ' + u.level; };
   const push = (ts, user, action, objType, obj, version, extra = {}) => out.push({ id: 'a' + out.length, ts, user, role: roleOf(user), action, objType, objId: obj.id, version, products: [...(obj.products || [])], markets: [...(obj.markets || [])], note: '', prev: '', next: '', ...extra });
-  const stepName = x => x.fn + ' Team ' + x.level;
+  const stepName = x => x.fn + ' ' + x.level;
   const cycleEvents = (obj, kind, v, c) => {
     push(c.start, obj.owner, v.v > 1 && kind === 'Module' ? 'Submitted for re-approval' : 'Submitted for review', kind, obj, v.v, { note: (S.workflows.find(w => w.id === c.wf) || {}).name });
     c.decisions.forEach(x => {
