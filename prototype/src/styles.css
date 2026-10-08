@@ -1817,3 +1817,49 @@ mark.an.an-focus { box-shadow: 0 0 0 2px #3b6fc4; }
 .an-panel .panel-head { flex-wrap: wrap; row-gap: 8px; }
 .an-panel .panel-head .seg { flex: 1 0 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
 .an-panel .panel-head .seg button { white-space: nowrap; }
+/* column charts */
+.vcols { display: flex; align-items: stretch; gap: 10px; height: 190px; padding-top: 6px; }
+.vc { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.vc-bars { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 3px; border-bottom: 1px solid var(--line-strong, #c9d1cd); }
+.vc-bar { position: relative; flex: 1; max-width: 22px; border-radius: 4px 4px 0 0; background: var(--mk-s1); }
+.vc-bar b { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-size: 10.5px; color: var(--ink-2); padding-bottom: 2px; }
+.vc-bar.ok { background: var(--mk-ok); } .vc-bar.bad { background: var(--mk-bad); } .vc-bar.warn { background: var(--mk-warn); } .vc-bar.o1 { background: var(--mk-o1); } .vc-bar.o2 { background: var(--mk-o2); } .vc-bar.dim { background: var(--mk-dim); }
+.vc-l { font-size: 11px; color: var(--ink-3); text-align: center; white-space: nowrap; }
+.ch-legend { margin-bottom: 10px; }
+.legend i.ok { background: var(--mk-ok); } .legend i.bad { background: var(--mk-bad); } .legend i.warn { background: var(--mk-warn); } .legend i.s1 { background: var(--mk-s1); } .legend i.dim { background: var(--mk-dim); }
+.sbar.big { height: 18px; }
+/* Roles & Permissions */
+.roles-intro { align-items: start; }
+.hier-flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hier-step.ok { background: var(--st-ok-bg); color: var(--st-ok); font-weight: 700; font-size: 12.5px; }
+.hier-pats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.hier-pats > div { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; font-size: 12px; }
+.hier-pats b { font-size: 12.5px; }
+.hier-pats span { color: var(--ink-3); }
+.hier-wf { display: flex; flex-direction: column; gap: 6px; }
+.hw-row { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 12.5px; }
+.hw-row > span { display: flex; flex-wrap: wrap; gap: 6px; }
+.hw-p { display: inline-flex; align-items: center; padding: 2px 8px 2px 4px; border-radius: 7px; background: var(--surface-2); font-size: 12px; }
+.how-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.how-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; }
+.how-list li > span:last-child { display: flex; flex-direction: column; }
+.how-list li > span:last-child span { color: var(--ink-3); }
+.how-n { width: 20px; height: 20px; flex: none; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+.how-i { color: var(--ink-3); margin-top: 1px; }
+.role-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.role-card { padding: 16px 18px; }
+.rc-head { display: flex; align-items: flex-start; gap: 12px; }
+.rc-t h3 { display: flex; align-items: center; gap: 8px; font-size: 16px; margin: 0; }
+.rc-t p { font-size: 12.5px; color: var(--ink-3); margin: 2px 0 0; }
+.rc-kv { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 10px 14px; margin: 14px 0 0; font-size: 12.5px; }
+.rc-kv dt { color: var(--ink-3); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding-top: 3px; }
+.rc-kv dd { margin: 0; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.rc-scope { font-weight: 600; }
+.rc-steps { display: block; width: 100%; font-size: 12px; }
+.perm-grp { margin-bottom: 14px; }
+.perm-grp .section-title { margin-bottom: 6px; }
+.perm-tg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+.perm-tg .set-row { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.perm-tg .set-row b { font-size: 13px; }
+.perm-tg .set-row .muted { display: block; font-size: 11.5px; }
+@media (max-width: 900px) { .role-grid, .perm-tg, .hier-pats { grid-template-columns: 1fr; } .rc-kv { grid-template-columns: 1fr; } }

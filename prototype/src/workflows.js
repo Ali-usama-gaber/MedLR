@@ -66,8 +66,8 @@ function validateWf(D) {
 function notifyFields(s, scope, i) {
   const at = scope === 'wf' ? '' : ` data-i="${i}"`; const act = scope === 'wf' ? 'wf-rcpt' : 'nwf-rcpt'; const inp = scope === 'wf' ? 'data-wfn' : 'data-nwfn';
   const people = S.users.filter(u => u.status === 'Active');
-  return `<div class="field"><span class="label">Send to</span><div class="rcpts">${people.map(u => { const on = (s.recipients || []).includes(u.id); return `<button type="button" class="rcpt ${on ? 'on' : ''}" data-act="${act}"${at} data-v="${u.id}" aria-pressed="${on}">${avatar(u, 'sm')}<span><b>${esc(u.name)}</b><span>${esc(roleLabel(u))}</span></span>${on ? icon('check', 'sm') : ''}</button>`; }).join('')}</div></div>
-    <div class="field"><label>Other email addresses <span class="muted" style="font-weight:500">(optional, comma separated)</span></label><input class="input" ${inp}="emails"${at} id="${scope}-emails-${i == null ? 0 : i}" value="${esc(s.emails || '')}" placeholder="e.g. brand.team@saja.com"></div>
+  const ids = (s.recipients || []).filter(id => S.users.some(u => u.id === id));
+  return `<div class="field"><span class="label">Send to</span>${chipSelect('rcpt-' + scope + '-' + (i == null ? 0 : i), act, 'rcpt', people.map(u => [u.id, u.name, roleLabel(u) + ' · ' + u.email]), ids, { ph: 'Search and add people', noun: 'people', extra: at })}<span class="hint">Recipients come from active users. Each person is added once.</span></div>
     <div class="field"><label>Subject</label><input class="input" ${inp}="subject"${at} id="${scope}-subject-${i == null ? 0 : i}" value="${esc(s.subject || '')}"></div>
     <div class="field"><label>Message</label><textarea class="textarea" ${inp}="message"${at} id="${scope}-message-${i == null ? 0 : i}" rows="3">${esc(s.message || '')}</textarea></div>
     <div class="mail-preview"><div class="mp-head">${icon('mail', 'sm')}<b>${esc(s.subject || 'No subject')}</b></div><div class="mp-to">To: ${esc(notifyTo(s).join(', ') || '—')}</div><p>${esc(s.message || '')}</p><div class="mp-btn">Open in SAJA MedLR</div></div>`;

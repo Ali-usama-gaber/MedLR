@@ -26,7 +26,7 @@ function renderNow() {
   if (!S.signedIn || r === 'login' || r === 'forgot') html = viewLogin();
   else {
     const u = me(); const C0 = CONFIG[(UI.route.p || {}).k] || {}; const perm = r === 'item' ? C0.viewPerm || [C0.perm, ADMIN_VIEW] : ROUTE_PERM[r];
-    const inner = perm && !can(u, perm) ? `<div class="empty"><h4>You do not have access to this page</h4><p>Your role (${esc(roleLabel(u))}) does not include the “${esc((PERMS.find(p => p[0] === perm) || [perm, perm])[1])}” permission. Ask an administrator if you need it.</p><br>${goBtn('Go home', 'home', null, 'primary')}</div>` : (ROUTES[r] || viewHome)();
+    const inner = perm && !can(u, perm) ? `<div class="empty"><h4>You do not have access to this page</h4><p>Your role (${esc(roleLabel(u))}) does not include the “${esc((PERMS.find(p => p[0] === [].concat(perm)[0]) || [perm, perm])[1])}” permission. Ask an administrator if you need it.</p><br>${goBtn('Go home', 'home', null, 'primary')}</div>` : (ROUTES[r] || viewHome)();
     html = viewShell(inner);
   }
   html += UI.modal ? viewModal() : '';
@@ -98,6 +98,7 @@ function viewModal() {
   if (M.type === 'cfg') return cfgModal(M);
   if (M.type === 'step') return stepDetailModal(M);
   if (M.type === 'filters') return filterModal(M);
+  if (M.type === 'role') return roleModal(M);
   if (M.type === 'version') {
     const obj = objById(M.kind, M.id); const v = verOf(obj, +M.v);
     return modalShell('history', '', `Version ${v.v} · approval history`, `${esc(nameOf(obj))} · <span class="mono">${obj.id}</span>`, versionModalBody(obj, M.kind, v), `${v.approvedAt ? goBtn('Cover letter', 'cover', obj.id, '', 'award', ` data-k="${M.kind}" data-v="${v.v}"`) : ''}${btn('Close', 'modal-close', 'primary')}`, true);
@@ -223,6 +224,8 @@ function newVersion(obj, kind, reason) {
 }
 
 const ACT = {
+  'role-edit': el => { UI.modal = { type: 'role', id: el.dataset.role }; render(); },
+  'role-matrix': () => { UI.f.rmatrix = UI.f.rmatrix ? '' : '1'; render(); },
   ...ANN_ACT,
   'flt-open': el => { const id = el.dataset.id; const d = {}; (FILTERS[id] || []).forEach(x => { d[x.k] = F(x.k); }); UI.modal = { type: 'filters', id, d }; render(); setTimeout(() => { const f = document.querySelector('.flt-grid input, .flt-grid select'); if (f) f.focus(); }, 30); },
   'flt-reset': () => { (FILTERS[UI.modal.id] || []).forEach(x => { UI.modal.d[x.k] = x.def || ''; }); render(); },

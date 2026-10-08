@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- SAJA MedLR build 2026-10-08 13:47 UTC -->
+<!-- SAJA MedLR build 2026-10-08 14:19 UTC -->
 <title>SAJA MedLR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1828,6 +1828,52 @@ mark.an.an-focus { box-shadow: 0 0 0 2px #3b6fc4; }
 .an-panel .panel-head { flex-wrap: wrap; row-gap: 8px; }
 .an-panel .panel-head .seg { flex: 1 0 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
 .an-panel .panel-head .seg button { white-space: nowrap; }
+/* column charts */
+.vcols { display: flex; align-items: stretch; gap: 10px; height: 190px; padding-top: 6px; }
+.vc { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.vc-bars { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 3px; border-bottom: 1px solid var(--line-strong, #c9d1cd); }
+.vc-bar { position: relative; flex: 1; max-width: 22px; border-radius: 4px 4px 0 0; background: var(--mk-s1); }
+.vc-bar b { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-size: 10.5px; color: var(--ink-2); padding-bottom: 2px; }
+.vc-bar.ok { background: var(--mk-ok); } .vc-bar.bad { background: var(--mk-bad); } .vc-bar.warn { background: var(--mk-warn); } .vc-bar.o1 { background: var(--mk-o1); } .vc-bar.o2 { background: var(--mk-o2); } .vc-bar.dim { background: var(--mk-dim); }
+.vc-l { font-size: 11px; color: var(--ink-3); text-align: center; white-space: nowrap; }
+.ch-legend { margin-bottom: 10px; }
+.legend i.ok { background: var(--mk-ok); } .legend i.bad { background: var(--mk-bad); } .legend i.warn { background: var(--mk-warn); } .legend i.s1 { background: var(--mk-s1); } .legend i.dim { background: var(--mk-dim); }
+.sbar.big { height: 18px; }
+/* Roles & Permissions */
+.roles-intro { align-items: start; }
+.hier-flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hier-step.ok { background: var(--st-ok-bg); color: var(--st-ok); font-weight: 700; font-size: 12.5px; }
+.hier-pats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.hier-pats > div { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; font-size: 12px; }
+.hier-pats b { font-size: 12.5px; }
+.hier-pats span { color: var(--ink-3); }
+.hier-wf { display: flex; flex-direction: column; gap: 6px; }
+.hw-row { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 12.5px; }
+.hw-row > span { display: flex; flex-wrap: wrap; gap: 6px; }
+.hw-p { display: inline-flex; align-items: center; padding: 2px 8px 2px 4px; border-radius: 7px; background: var(--surface-2); font-size: 12px; }
+.how-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.how-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; }
+.how-list li > span:last-child { display: flex; flex-direction: column; }
+.how-list li > span:last-child span { color: var(--ink-3); }
+.how-n { width: 20px; height: 20px; flex: none; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+.how-i { color: var(--ink-3); margin-top: 1px; }
+.role-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.role-card { padding: 16px 18px; }
+.rc-head { display: flex; align-items: flex-start; gap: 12px; }
+.rc-t h3 { display: flex; align-items: center; gap: 8px; font-size: 16px; margin: 0; }
+.rc-t p { font-size: 12.5px; color: var(--ink-3); margin: 2px 0 0; }
+.rc-kv { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 10px 14px; margin: 14px 0 0; font-size: 12.5px; }
+.rc-kv dt { color: var(--ink-3); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding-top: 3px; }
+.rc-kv dd { margin: 0; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.rc-scope { font-weight: 600; }
+.rc-steps { display: block; width: 100%; font-size: 12px; }
+.perm-grp { margin-bottom: 14px; }
+.perm-grp .section-title { margin-bottom: 6px; }
+.perm-tg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+.perm-tg .set-row { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.perm-tg .set-row b { font-size: 13px; }
+.perm-tg .set-row .muted { display: block; font-size: 11.5px; }
+@media (max-width: 900px) { .role-grid, .perm-tg, .hier-pats { grid-template-columns: 1fr; } .rc-kv { grid-template-columns: 1fr; } }
 
 </style>
 </head>
@@ -3809,14 +3855,25 @@ function hbars(rows, max, cls, fmt) { if (!rows.length) return '<p class="muted"
 const dd = ms => durDays(ms) + 'd';
 const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
 const median = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); const k = Math.floor(s.length / 2); return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2; };
-const RTABS = [['perf', 'Approval performance'], ['content', 'Content'], ['materials', 'Materials'], ['workflow', 'Workflow'], ['usage', 'Usage']];
+const RTABS = [['perf', 'Approval performance'], ['content', 'Content'], ['workflow', 'Workflow'], ['assets', 'Assets']];
 function reportCycles() {
   const days = +F('rrange', '180'); const since = days ? Date.now() - days * DAY : 0;
   return allCycles().filter(c => c.start >= since && (!F('rprod') || c.products.includes(F('rprod'))) && (!F('rmkt') || c.markets.includes(F('rmkt'))) && (!F('rtype') || c.type === F('rtype')) && (!F('rwf') || c.wf === F('rwf')));
 }
 function objFilter(o) { return (!F('rprod') || o.products.includes(F('rprod'))) && (!F('rmkt') || o.markets.includes(F('rmkt'))) && (!F('rtype') || o.type === F('rtype')); }
+// Grouped column chart over months or categories. series: [[name, tone class, values[]]].
+function vcols(labels, series) {
+  const mx = Math.max(1, ...series.flatMap(x => x[2]));
+  return `<div class="vcols" role="img" aria-label="${esc(series.map(x => x[0] + ': ' + x[2].join(', ')).join('; '))}">${labels.map((l, i) => `<div class="vc"><div class="vc-bars">${series.map(x => `<span class="vc-bar ${x[1]}" style="height:${Math.max(x[2][i] ? 2 : 0, 100 * x[2][i] / mx)}%" data-tip="${esc(l)} · ${esc(x[0])}: ${x[2][i]}"><b>${x[2][i] || ''}</b></span>`).join('')}</div><span class="vc-l">${esc(l)}</span></div>`).join('')}</div>`;
+}
+const vcolsStack = (labels, series) => { const tot = labels.map((_, i) => series.reduce((s, x) => s + x[2][i], 0)); const mx = Math.max(1, ...tot);
+  return `<div class="vcols">${labels.map((l, i) => `<div class="vc"><span class="vc-v">${tot[i]}</span><div class="vc-bars stack" style="height:${100 * tot[i] / mx}%">${series.filter(x => x[2][i]).map(x => `<span class="vc-bar ${x[1]}" style="flex:${x[2][i]}" data-tip="${esc(l)} · ${esc(x[0])}: ${x[2][i]}"></span>`).join('')}</div><span class="vc-l">${esc(l)}</span></div>`).join('')}</div>`; };
+const chartLegend = series => `<div class="legend ch-legend">${series.map(x => `<span><i class="${x[1]}"></i>${esc(x[0])}</span>`).join('')}</div>`;
+function lastMonths(n) { const out = []; for (let i = n - 1; i >= 0; i--) { const s = new Date(); s.setDate(1); s.setHours(0, 0, 0, 0); s.setMonth(s.getMonth() - i); const e = new Date(s); e.setMonth(e.getMonth() + 1); out.push({ l: MON[s.getMonth()] + ' ' + String(s.getFullYear()).slice(2), s: s.getTime(), e: e.getTime() }); } return out; }
+const inM = (t, M) => t >= M.s && t < M.e;
+
 function viewReports() {
-  const tab = UI.route.p.tab || F('rtab', 'perf'); const keys = ['rprod', 'rmkt', 'rtype', 'rwf', 'rstep', 'rrange'];
+  const tab0 = UI.route.p.tab || F('rtab', 'perf'); const tab = ['materials', 'usage'].includes(tab0) ? 'assets' : tab0; const keys = ['rprod', 'rmkt', 'rtype', 'rwf', 'rstep', 'rrange'];
   const kpi = (v, l, s, tone) => `<div class="kpi static"><span class="k-label">${tone ? `<span class="k-dot ${tone}"></span>` : ''}${l}</span><b>${v}</b><span class="k-sub">${s}</span></div>`;
   const filters = filterBar('reports', `${fsel('rprod', F('rprod'), S.products.map(p => [p.id, p.name]), 'All products', 'Product')}${fsel('rmkt', F('rmkt'), S.markets.map(m => [m.id, m.name]), 'All countries', 'Country')}${fsel('rtype', F('rtype'), [...S.moduleTypes.map(t => [t.id, t.name + ' (module)']), ...S.materialTypes.map(t => [t.id, t.name + ' (material)'])], 'All types', 'Module / material type')}${fsel('rwf', F('rwf'), S.workflows.filter(w => !w.hidden).map(w => [w.id, w.name]), 'All workflows', 'Workflow')}${fsel('rstep', F('rstep'), reviewFuncs(true), 'All review steps', 'Review step')}${fsel('rrange', F('rrange', '180'), [['30', 'Last 30 days'], ['90', 'Last 90 days'], ['180', 'Last 6 months'], ['365', 'Last 12 months'], ['0', 'All time']], null, 'Date range', '180')}`, '');
   const cycles = reportCycles(); const done = cycles.filter(c => c.outcome === 'Approved');
@@ -3832,10 +3889,12 @@ function viewReports() {
     const buckets = [['Under 7 days', 0, 7], ['7–14 days', 7, 14], ['14–30 days', 14, 30], ['Over 30 days', 30, 1e9]].map(([l, lo, hi]) => [l, done.filter(c => { const x = (c.end - c.start) / DAY; return x >= lo && x < hi; }).length]);
     const pendBy = reviewFuncs(true).map(fn => [fn, pend.filter(o => curStep(o).fn === fn)]).filter(x => !F('rstep') || x[0] === F('rstep'));
     const mxF = Math.max(1, ...fnAvg.map(x => x[1])); const mxS = Math.max(1, ...stepRows.map(r => r.avg));
-    body = `<div class="kpis" style="margin-bottom:18px">${kpi(dd(avg(done.map(c => c.end - c.start))), 'Average approval time', 'Submission to final approval · ' + done.length + ' cycles', '')}${kpi(dd(avg(times.map(x => x.ms))), 'Average time per step', times.length + ' completed steps', '')}${kpi(pend.length, 'Pending approvals', pend.length ? 'Oldest waiting ' + fmtDur(Date.now() - Math.min(...pend.map(o => o.review.stepStartedAt))) : 'Nothing waiting', pend.length ? 'warn' : 'ok')}${kpi(slow ? slow.fn : '—', 'Slowest step', slow ? levelName(slow.level) + ' ' + (slow.level === 'Lead' ? 'approval' : 'review') + ' · ' + dd(slow.avg) + ' on average' : 'No data', slow ? 'bad' : '')}</div>
+    const AS = approvalStats(cycles); const months = lastMonths(6);
+    body = `<div class="kpis six" style="margin-bottom:18px">${kpi(dd(AS.avgApproval), 'Average approval time', 'Submission to final approval · ' + done.length + ' approved', '')}${kpi(cycles.length, 'Approval cycles', AS.closed + ' closed · ' + (cycles.length - AS.closed) + ' open', '')}${kpi(pct(AS.amendCycles, cycles.length) + '%', 'Amendment rate', AS.amendCycles + ' cycles had an amendment', 'warn')}${kpi(pct(AS.rej.length, AS.closed) + '%', 'Rejection rate', AS.rej.length + ' of ' + AS.closed + ' closed cycles', 'bad')}${kpi(pend.length, 'Pending approvals', pend.length ? 'Oldest waiting ' + fmtDur(Date.now() - Math.min(...pend.map(o => o.review.stepStartedAt))) : 'Nothing waiting', pend.length ? 'warn' : 'ok')}${kpi(slow ? dd(slow.avg) : '—', 'Slowest step', slow ? slow.fn + ' ' + levelName(slow.level) + ' ' + (slow.level === 'Lead' ? 'approval' : 'review') : 'No data', slow ? 'bad' : '')}</div>
     ${slow && totalStep ? `<div class="banner warn" style="margin-bottom:18px">${icon('alert')}<div class="txt"><b>Bottleneck: ${esc(slow.fn)} ${esc(levelName(slow.level))} ${slow.level === 'Lead' ? 'approval' : 'review'}</b><p>Averages ${fmtDur(slow.avg)} per item (median ${fmtDur(slow.med)}, longest ${fmtDur(slow.max)}) and accounts for ${pct(slow.avg * slow.n, totalStep)}% of all review time in this period.</p></div></div>` : ''}
     <div class="reports-grid">
-    ${chartCard('fnavg', 'Average approval time per review step', 'Medical, Legal and Regulatory · days', hbars(fnAvg.map(([fn, ms]) => [`${fnBadge(fn, 'sm')}${fn}`, ms, slow && slow.fn === fn ? 'o2' : 's1']), mxF, '', dd), fnAvg.map(([fn, ms]) => [fn, dd(ms), times.filter(x => x.fn === fn).length]), ['Review step', 'Average', 'Steps'])}
+    ${(() => { const ser = [['Approved', 'ok', months.map(M => cycles.filter(c => c.outcome === 'Approved' && inM(c.end, M)).length)], ['Rejected', 'bad', months.map(M => cycles.filter(c => c.outcome === 'Rejected' && inM(c.end, M)).length)], ['Started', 's1', months.map(M => cycles.filter(c => inM(c.start, M)).length)]]; return chartCard('cycm', 'Cycles per month', 'Started, approved and rejected · last 6 months', vcols(months.map(M => M.l), ser), months.map((M, i) => [M.l, ser[2][2][i], ser[0][2][i], ser[1][2][i]]), ['Month', 'Started', 'Approved', 'Rejected'], chartLegend(ser)); })()}
+    ${chartCard('fnavg', 'Average approval time per review step', esc(reviewFuncs(true).join(', ')) + ' · days', hbars(fnAvg.map(([fn, ms]) => [`${fnBadge(fn, 'sm')}${fn}`, ms, slow && slow.fn === fn ? 'o2' : 's1']), mxF, '', dd), fnAvg.map(([fn, ms]) => [fn, dd(ms), times.filter(x => x.fn === fn).length]), ['Review step', 'Average', 'Steps'])}
     ${chartCard('steplvl', 'Time per step by level', 'Member review and Lead approval', `<div class="hb grouped">${reviewFuncs(true).filter(fn => stepRows.some(r => r.fn === fn)).map(fn => `<div class="hb-group"><span class="hb-gl">${fnBadge(fn, 'sm')}${fn}</span>${hbars(stepRows.filter(r => r.fn === fn).map(r => [r.level === 'Lead' ? 'Lead' : 'Member', r.avg, r.level === 'Lead' ? 'o2' : 'o1']), mxS, '', dd)}</div>`).join('') || '<p class="muted">No data for these filters.</p>'}</div>`, stepRows.map(r => [r.fn + ' ' + levelName(r.level), r.n, dd(r.avg), dd(r.med), dd(r.max)]), ['Step', 'Items', 'Average', 'Median', 'Longest'], `<div class="legend"><span><i class="o1"></i>Member review</span><span><i class="o2"></i>Lead approval</span></div>`)}
     ${chartCard('cycdur', 'Approval cycle duration', 'Completed cycles by total duration', hbars(buckets, Math.max(1, ...buckets.map(b => b[1])), 's1'), buckets, ['Duration', 'Cycles'])}
     ${chartCard('pending', 'Pending approvals by step', 'Items waiting now and how long', hbars(pendBy.map(([fn, l]) => [`${fnBadge(fn, 'sm')}${fn}`, l.length]), Math.max(1, ...pendBy.map(x => x[1].length)), 's1'), pend.map(o => [`<button class="linklike" ${goAttr(kindOf(o) === 'Asset' ? 'asset' : 'module', o.id)}>${esc(o.id)}</button> ${esc(stepLabel(curStep(o)))}`, fmtDur(Date.now() - o.review.stepStartedAt)]), ['Item · step', 'Waiting'])}
@@ -3850,19 +3909,10 @@ function viewReports() {
     <div class="reports-grid">
     ${chartCard('stage', 'Modules by lifecycle stage', 'Current stage of every module', hbars(stages, Math.max(1, ...stages.map(x => x[1])), 's1'), stages, ['Stage', 'Modules'])}
     ${chartCard('mtype', 'Modules by type', 'Content modules and media & document modules', `<div class="hb grouped">${[['Content modules', false], ['Media & document modules', true]].map(([g, med]) => { const rows = S.moduleTypes.filter(t => isMediaType(t.id) === med).map(t => [esc(t.name), mods.filter(m => m.type === t.id).length, med ? 'o2' : 's1']); return `<div class="hb-group"><span class="hb-gl">${g} · ${rows.reduce((n, r) => n + r[1], 0)}</span>${hbars(rows, Math.max(1, ...types.map(x => x[1])))}</div>`; }).join('')}</div>`, S.moduleTypes.map(t => [esc(t.name), esc(modCategory(t.id)), mods.filter(m => m.type === t.id).length]), ['Module type', 'Category', 'Modules'])}
+    ${(() => { const ms = lastMonths(6); const ser = [['Modules created', 's1', ms.map(M => mods.filter(m => inM(m.createdAt || m.versions[0].createdAt || 0, M)).length)], ['Versions approved', 'ok', ms.map(M => mods.reduce((n, m) => n + m.versions.filter(v => inM(v.approvedAt || 0, M)).length, 0))]]; return chartCard('crm', 'Content created over time', 'Modules created and versions approved per month', vcols(ms.map(M => M.l), ser), ms.map((M, i) => [M.l, ser[0][2][i], ser[1][2][i]]), ['Month', 'Created', 'Approved'], chartLegend(ser)); })()}
+    ${(() => { const parts = [['Approved', c.approved, 'ok'], ['In review', c.review, 'warn'], ['Draft', c.draft, 'dim']]; return chartCard('avr', 'Approved vs in review vs draft', 'Share of all modules', `<div class="sbar big" role="img" aria-label="${parts.map(x => x[0] + ' ' + x[1]).join(', ')}">${parts.filter(x => x[1]).map(x => `<span class="${x[2]}" style="flex:${x[1]}" data-tip="${x[0]} · ${x[1]} (${pct(x[1], c.total)}%)"></span>`).join('')}</div><div class="sb-legend">${parts.map(x => `<div><span class="lg-key ${x[2]}"></span><span>${x[0]}</span><b>${x[1]}</b><span class="pct mono">${pct(x[1], c.total)}%</span></div>`).join('')}</div>`, parts.map(x => [x[0], x[1], pct(x[1], c.total) + '%']), ['Status', 'Modules', 'Share']); })()}
     ${chartCard('apm', 'Versions approved per month', 'Last 6 months', `<div class="vbars">${approvedPerMonth.map(([l, n]) => `<div class="vb"><span class="vb-v">${n}</span><span class="vb-bar" style="height:${4 + 120 * n / Math.max(1, ...approvedPerMonth.map(x => x[1]))}px" data-tip="${l}: ${n}"></span><span class="vb-l">${l}</span></div>`).join('')}</div>`, approvedPerMonth, ['Month', 'Versions approved'])}
     ${chartCard('exp', 'Expiring and review due', 'Approved modules · next 90 days', hbars([['Expires ≤ 30 days', mods.filter(m => live(m) && m.expiry && daysTo(m.expiry) >= 0 && daysTo(m.expiry) <= 30).length, 'o2'], ['Expires 31–90 days', mods.filter(m => live(m) && m.expiry && daysTo(m.expiry) > 30 && daysTo(m.expiry) <= 90).length, 'o1'], ['Review due ≤ 90 days', mods.filter(m => live(m) && m.reviewDate && daysTo(m.reviewDate) <= 90).length, 's1'], ['Expired · review required', mods.filter(m => ls(m) === 'Review Required').length, 'o2']], Math.max(1, mods.length / 3)), [], ['', ''])}
-    </div>`;
-  } else if (tab === 'materials') {
-    const mods = S.modules.filter(objFilter), as = S.assets.filter(objFilter);
-    const grp = (label, fn) => { const rows = fn(); const mx = Math.max(1, ...rows.flatMap(r => [r[1], r[2]])); return chartCard('mat-' + label, 'By ' + label, 'Modules and materials', `<div class="hb grouped">${rows.map(r => `<div class="hb-group"><span class="hb-gl">${esc(r[0])}</span>${hbars([['Modules', r[1], 'o1'], ['Materials', r[2], 'o2']], mx)}</div>`).join('')}</div>`, rows.map(r => [esc(r[0]), r[1], r[2]]), [label[0].toUpperCase() + label.slice(1), 'Modules', 'Materials'], `<div class="legend"><span><i class="o1"></i>Modules</span><span><i class="o2"></i>Materials</span></div>`); };
-    const sts = ['Draft', 'In Review', 'Amendment Requested', 'Rejected', 'Approved'];
-    body = `<div class="kpis" style="margin-bottom:18px">${kpi(mods.length, 'Modules', 'Matching the filters', '')}${kpi(as.length, 'Materials', 'Assets matching the filters', '')}${kpi(as.filter(a => live(a)).length, 'Approved materials', 'Have a live version', 'ok')}${kpi(as.filter(isOutdated).length, 'Need update', 'Use an older module version', as.filter(isOutdated).length ? 'bad' : 'ok')}</div>
-    <div class="reports-grid">
-    ${grp('product', () => S.products.map(p => [p.name, mods.filter(m => m.products.includes(p.id)).length, as.filter(a => a.products.includes(p.id)).length]))}
-    ${grp('country', () => S.markets.map(x => [x.name, mods.filter(m => m.markets.includes(x.id)).length, as.filter(a => a.markets.includes(x.id)).length]))}
-    ${chartCard('mat-type', 'Materials by type', '', hbars(S.materialTypes.map(t => [esc(t.name), as.filter(a => a.type === t.id).length]), Math.max(1, ...S.materialTypes.map(t => as.filter(a => a.type === t.id).length)), 'o2'), S.materialTypes.map(t => [esc(t.name), as.filter(a => a.type === t.id).length]), ['Material type', 'Materials'])}
-    ${grp('status', () => sts.map(s => [s, mods.filter(m => statusOf(m) === s).length, as.filter(a => statusOf(a) === s).length]))}
     </div>`;
   } else if (tab === 'workflow') {
     const wfs = S.workflows.filter(w => !w.hidden && (!F('rwf') || w.id === F('rwf'))).map(w => { const cs = cycles.filter(c => c.wf === w.id || c.wf.startsWith(w.id + '@')); const closed = cs.filter(c => c.outcome !== 'In progress' && c.outcome !== 'Amendment requested'); const ap = cs.filter(c => c.outcome === 'Approved'); return { w, n: cs.length, closed: closed.length, ap: ap.length, rej: cs.filter(c => c.outcome === 'Rejected').length, am: cs.filter(c => c.amendments || c.outcome === 'Amendment requested').length, t: avg(ap.map(c => c.end - c.start)) }; }).filter(x => x.n);
@@ -3871,28 +3921,37 @@ function viewReports() {
     body = `<div class="kpis" style="margin-bottom:18px">${kpi(pct(tot.ap, tot.closed) + '%', 'Success rate', tot.ap + ' of ' + tot.closed + ' closed cycles approved', 'ok')}${kpi(pct(tot.am, tot.n) + '%', 'Amendment rate', tot.am + ' of ' + tot.n + ' cycles had an amendment', 'warn')}${kpi(pct(tot.rej, tot.closed) + '%', 'Rejection rate', tot.rej + ' rejected cycles', 'bad')}${kpi(dd(avg(done.map(c => c.end - c.start))), 'Average cycle time', 'Approved cycles', '')}</div>
     <div class="reports-grid">
     ${chartCard('wfout', 'Cycle outcomes', 'All cycles in the period', `<div class="sbar" role="img" aria-label="${outcomes.map(o => o[0] + ' ' + o[1]).join(', ')}">${outcomes.filter(o => o[1]).map(o => `<span class="${o[2]}" style="flex:${o[1]}" data-tip="${o[0]} · ${o[1]} (${pct(o[1], tot.n)}%)"></span>`).join('')}</div><div class="sb-legend">${outcomes.map(o => `<div><span class="lg-key ${o[2]}">${icon(o[3], 'sm')}</span><span>${o[0]}</span><b>${o[1]}</b><span class="pct mono">${pct(o[1], tot.n)}%</span></div>`).join('')}</div>`, outcomes.map(o => [o[0], o[1], pct(o[1], tot.n) + '%']), ['Outcome', 'Cycles', 'Share'])}
+    ${chartCard('wfvol', 'Workflow volume', 'Cycles started per workflow in the period', hbars(wfs.map(x => [esc(x.w.name), x.n]), Math.max(1, ...wfs.map(x => x.n)), 's1'), wfs.map(x => [esc(x.w.name), x.n, x.ap, x.rej]), ['Workflow', 'Cycles', 'Approved', 'Rejected'])}
+    ${(() => { const st = approvalStats(cycles).steps.sort((a, b) => b.avg - a.avg); const mx = Math.max(1, ...st.map(x => x.avg)); return chartCard('wfbn', 'Bottlenecks by step', 'Average time an item waits at each step · days', hbars(st.map((x, i) => [`${fnBadge(x.fn, 'sm')}${esc(x.fn)} <span class="muted">· ${esc(levelName(x.level))}</span>`, x.avg, i === 0 ? 'o2' : 'o1']), mx, '', dd), st.map(x => [esc(x.fn + ' · ' + levelName(x.level)), dd(x.avg), x.n]), ['Step', 'Average', 'Completed']); })()}
+    ${(() => { const pend = [...S.modules, ...S.assets].filter(o => o.review && objFilter(o) && (!F('rwf') || o.review.wf === F('rwf'))); const keys = uniq(pend.map(o => curStep(o).fn + '|' + curStep(o).level)); const rows = keys.map(k => { const [fn, lv] = k.split('|'); return [`${fnBadge(fn, 'sm')}${esc(fn)} <span class="muted">· ${esc(levelName(lv))}</span>`, pend.filter(o => curStep(o).fn === fn && curStep(o).level === lv).length]; }); return chartCard('wfpend', 'Pending by step', 'Items waiting at each step now', rows.length ? hbars(rows, Math.max(1, ...rows.map(r => r[1])), 'warn') : '<p class="muted">Nothing is waiting.</p>', rows.map(r => [r[0].replace(/<[^>]+>/g, ''), r[1]]), ['Step', 'Items']); })()}
+    ${(() => { const days = +F('rrange', '180'); const since = days ? Date.now() - days * DAY : 0; const ev = S.audit.filter(e => e.ts >= since && !e.auto);
+      const byUser = Object.entries(ev.reduce((o, e) => (o[e.user] = (o[e.user] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const byTeam = S.teams.map(t => [t.name, ev.filter(e => user(e.user).team === t.id).length]).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
+      return chartCard('users', 'Most active users', 'Actions recorded in the audit trail', hbars(byUser.map(([id, n]) => [`${esc(user(id).name)} <span class="muted">· ${esc(roleLabel(user(id)))}</span>`, n]), Math.max(1, ...byUser.map(x => x[1])), 's1'), byUser.map(([id, n]) => [esc(user(id).name), esc(roleLabel(user(id))), n]), ['User', 'Role', 'Actions'])
+        + chartCard('teams', 'Most active teams', 'Actions recorded in the audit trail', hbars(byTeam.map(([t, n]) => [esc(t), n]), Math.max(1, ...byTeam.map(x => x[1])), 'o1'), byTeam.map(([t, n]) => [esc(t), n]), ['Team', 'Actions']); })()}
     ${chartCard('wfct', 'Average cycle time by workflow', 'Approved cycles · days', hbars(wfs.map(x => [esc(x.w.name), x.t]), Math.max(1, ...wfs.map(x => x.t)), 's1', dd), wfs.map(x => [esc(x.w.name), dd(x.t)]), ['Workflow', 'Average'])}
     </div>
     <section class="panel table-wrap" style="margin-top:18px"><div class="panel-head"><h3>Workflow performance</h3></div><table class="tbl no-pg"><thead><tr><th>Workflow</th><th>Cycles</th><th>Approved</th><th>Success rate</th><th>Amendment rate</th><th>Rejection rate</th><th>Avg cycle time</th></tr></thead><tbody>${wfs.map(x => `<tr><td class="title">${esc(x.w.name)}</td><td class="num">${x.n}</td><td class="num">${x.ap}</td><td class="num">${pct(x.ap, x.closed)}%</td><td class="num">${pct(x.am, x.n)}%</td><td class="num">${pct(x.rej, x.closed)}%</td><td class="num">${dd(x.t)}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">No cycles for these filters.</td></tr>'}</tbody></table></section>`;
   } else {
-    const days = +F('rrange', '180'); const since = days ? Date.now() - days * DAY : 0;
-    const as = S.assets.filter(a => (!F('rprod') || a.products.includes(F('rprod'))) && (!F('rmkt') || a.markets.includes(F('rmkt'))));
+    const mods = S.modules.filter(objFilter), as = S.assets.filter(objFilter); const days = +F('rrange', '180'); const since = days ? Date.now() - days * DAY : 0;
+    const grp = (label, fn) => { const rows = fn(); const mx = Math.max(1, ...rows.flatMap(r => [r[1], r[2]])); return chartCard('mat-' + label, 'By ' + label, 'Modules and assets', `<div class="hb grouped">${rows.map(r => `<div class="hb-group"><span class="hb-gl">${esc(r[0])}</span>${hbars([['Modules', r[1], 'o1'], ['Assets', r[2], 'o2']], mx)}</div>`).join('')}</div>`, rows.map(r => [esc(r[0]), r[1], r[2]]), [label[0].toUpperCase() + label.slice(1), 'Modules', 'Assets'], `<div class="legend"><span><i class="o1"></i>Modules</span><span><i class="o2"></i>Assets</span></div>`); };
     const reuse = {}; as.forEach(a => uniq(a.blocks.filter(b => b.kind === 'module').map(b => b.moduleId)).forEach(id => { reuse[id] = (reuse[id] || 0) + 1; }));
-    const top = Object.entries(reuse).filter(([id]) => modById(id) && (!F('rtype') || modById(id).type === F('rtype'))).sort((a, b) => b[1] - a[1]);
-    const multiAsset = top.filter(x => x[1] > 1);
-    const ev = S.audit.filter(e => e.ts >= since && !e.auto);
-    const byUser = Object.entries(ev.reduce((o, e) => (o[e.user] = (o[e.user] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    const byTeam = S.teams.map(t => [t.name, ev.filter(e => user(e.user).team === t.id).length]).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
+    const top = Object.entries(reuse).filter(([id]) => modById(id)).sort((a, b) => b[1] - a[1]); const multiAsset = top.filter(x => x[1] > 1);
     const blocks = as.reduce((n, a) => n + a.blocks.filter(b => b.kind === 'module').length, 0); const newB = as.reduce((n, a) => n + a.blocks.filter(b => b.kind === 'new').length, 0);
-    body = `<div class="kpis" style="margin-bottom:18px">${kpi(blocks, 'Module placements', 'Approved modules placed in materials', '')}${kpi(pct(blocks, blocks + newB) + '%', 'Reuse rate', 'Content from approved modules', 'ok')}${kpi(multiAsset.length, 'Modules in 2+ materials', 'Approved once, reused many times', '')}${kpi(byUser.length ? user(byUser[0][0]).name.split(' ')[0] : '—', 'Most active user', byUser.length ? byUser[0][1] + ' actions' : 'No activity', '')}</div>
+    const ms = lastMonths(6); const ser = [['Created', 's1', ms.map(M => as.filter(a => inM(a.createdAt || 0, M)).length)], ['Submitted', 'warn', ms.map(M => as.reduce((n, a) => n + a.versions.reduce((k, v) => k + v.cycles.filter(c => inM(c.start, M)).length, 0), 0))], ['Approved', 'ok', ms.map(M => as.reduce((n, a) => n + a.versions.filter(v => inM(v.approvedAt || 0, M)).length, 0))]];
+    const sts = ['Draft', 'In Review', 'Amendment Requested', 'Rejected', 'Approved'];
+    body = `<div class="kpis six" style="margin-bottom:18px">${kpi(as.length, 'Assets', 'Matching the filters', '')}${kpi(as.filter(a => statusOf(a) === 'In Review').length, 'In review', 'With MLR reviewers', 'warn')}${kpi(as.filter(a => live(a)).length, 'Approved', 'Have a live version', 'ok')}${kpi(as.filter(isOutdated).length, 'Need update', 'Use an older module version', as.filter(isOutdated).length ? 'bad' : 'ok')}${kpi(Object.keys(reuse).length, 'Modules reused', blocks + ' placements in assets', '')}${kpi(pct(blocks, blocks + newB) + '%', 'Reuse rate', 'Content from approved modules', 'ok')}</div>
     <div class="reports-grid">
-    ${chartCard('reuse', 'Most reused modules', 'Number of materials using each module', hbars(top.slice(0, 8).map(([id, n]) => [`<button class="linklike" ${goAttr('module', id)}>${esc(modById(id).title)}</button>`, n]), Math.max(1, ...top.map(x => x[1])), 's1'), top.map(([id, n]) => [esc(id + ' · ' + modById(id).title), n]), ['Module', 'Materials'])}
-    ${chartCard('multi', 'Modules used across multiple materials', 'Module → materials', multiAsset.length ? `<div class="stack" style="gap:10px">${multiAsset.map(([id]) => `<div><b style="font-size:13px">${esc(modById(id).title)}</b> <span class="mono muted">${id}</span><div class="tags" style="margin-top:4px">${as.filter(a => a.blocks.some(b => b.moduleId === id)).map(a => `<span class="tag">${esc(a.id)}</span>`).join('')}</div></div>`).join('')}</div>` : '<p class="muted">No module is used in more than one material.</p>', multiAsset.map(([id, n]) => [esc(id), n]), ['Module', 'Materials'])}
-    ${chartCard('users', 'Most active users', 'Actions recorded in the audit trail', hbars(byUser.map(([id, n]) => [`${esc(user(id).name)} <span class="muted">· ${esc(roleLabel(user(id)))}</span>`, n]), Math.max(1, ...byUser.map(x => x[1])), 's1'), byUser.map(([id, n]) => [esc(user(id).name), esc(roleLabel(user(id))), n]), ['User', 'Role', 'Actions'])}
-    ${chartCard('teams', 'Most active teams', '', hbars(byTeam.map(([t, n]) => [esc(t), n]), Math.max(1, ...byTeam.map(x => x[1])), 'o1'), byTeam.map(([t, n]) => [esc(t), n]), ['Team', 'Actions'])}
+    ${chartCard('asm', 'Assets created, submitted and approved', 'Per month · last 6 months', vcols(ms.map(M => M.l), ser), ms.map((M, i) => [M.l, ser[0][2][i], ser[1][2][i], ser[2][2][i]]), ['Month', 'Created', 'Submitted', 'Approved'], chartLegend(ser))}
+    ${chartCard('ast', 'Assets by status', '', hbars(sts.map(x => [x, as.filter(a => statusOf(a) === x).length, toneOf(x) === 'dim' ? 'dim' : toneOf(x)]), Math.max(1, ...sts.map(x => as.filter(a => statusOf(a) === x).length)), ''), sts.map(x => [x, as.filter(a => statusOf(a) === x).length]), ['Status', 'Assets'])}
+    ${chartCard('reuse', 'Most reused modules', 'Number of assets using each module', hbars(top.slice(0, 8).map(([id, n]) => [`<button class="linklike" ${goAttr('module', id)}>${esc(modById(id).title)}</button>`, n]), Math.max(1, ...top.map(x => x[1])), 's1'), top.map(([id, n]) => [esc(id + ' · ' + modById(id).title), n]), ['Module', 'Assets'])}
+    ${chartCard('mat-type', 'Assets by material type', '', hbars(S.materialTypes.map(t => [esc(t.name), as.filter(a => a.type === t.id).length, 'o2']), Math.max(1, ...S.materialTypes.map(t => as.filter(a => a.type === t.id).length)), ''), S.materialTypes.map(t => [esc(t.name), as.filter(a => a.type === t.id).length]), ['Material type', 'Assets'])}
+    ${grp('product', () => S.products.map(p => [p.name, mods.filter(m => m.products.includes(p.id)).length, as.filter(a => a.products.includes(p.id)).length]))}
+    ${grp('country', () => S.markets.map(x => [x.name, mods.filter(m => m.markets.includes(x.id)).length, as.filter(a => a.markets.includes(x.id)).length]))}
+    ${chartCard('multi', 'Modules used across multiple assets', 'Module → assets', multiAsset.length ? `<div class="stack" style="gap:10px">${multiAsset.map(([id]) => `<div><b style="font-size:13px">${esc(modById(id).title)}</b> <span class="mono muted">${id}</span><div class="tags" style="margin-top:4px">${as.filter(a => a.blocks.some(b => b.moduleId === id)).map(a => `<span class="tag">${esc(a.id)}</span>`).join('')}</div></div>`).join('')}</div>` : '<p class="muted">No module is used in more than one asset yet.</p>', multiAsset.map(([id, n]) => [esc(id), n]), ['Module', 'Assets'])}
     </div>`;
   }
-  return pageHead('Reports', 'Approval performance, content, materials, workflow and usage. Use the filters to find bottlenecks by product, country, type, workflow, review step and period.') +
+  return pageHead('Reports', 'Approval performance, content, workflow and assets — every chart is computed from the live records. Use the filter to find bottlenecks by product, country, type, workflow, review step and period.') +
   `<div class="tabs" role="tablist" style="margin-bottom:14px">${RTABS.map(t => `<button class="tab ${tab === t[0] ? 'active' : ''}" role="tab" aria-selected="${tab === t[0]}" ${goAttr('reports', null, ` data-tab="${t[0]}"`)}>${t[1]}</button>`).join('')}</div>` + filters + body;
 }
 
@@ -3965,14 +4024,54 @@ function validateUser(D, editId) {
 }
 
 /* ===== Roles & permissions ===== */
+/* ===== Roles & Permissions: how the hierarchy and permissions work, then one card per role (function + level) ===== */
+// How a workflow uses each function: the Member/Lead pattern of its steps.
+function wfPattern(w, fn) { const st = w.steps.filter(s => !isNotify(s) && s.fn === fn); const m = st.some(s => s.level === 'Member'), l = st.some(s => s.level === 'Lead'); return m && l ? 'Member → Lead' : l ? 'Lead only' : m ? 'Member only' : null; }
+function roleSummary(rid) {
+  const has = S.roles[rid] || []; const lab = g => PERMS.filter(p => p[2] === g && (rid === 'Administrator' || has.includes(p[0]))).map(p => p[1]);
+  const [fn, level] = rid === 'Administrator' ? ['Administrator', null] : rid.split('-');
+  const teams = S.teams.filter(t => t.fn === fn && t.active !== false).map(t => t.name);
+  const steps = S.workflows.filter(w => !w.hidden && w.active !== false).flatMap(w => w.steps.filter(s => !isNotify(s) && s.fn === fn && s.level === level).map(s => w.name + ' · ' + (s.req === 'approve' ? 'approval' : 'review')));
+  return { pages: lab('Access'), actions: lab('Actions'), auth: lab('Approval authority'), admin: lab('Administration'), teams, steps, people: S.users.filter(u => roleId(u) === rid && u.status === 'Active') };
+}
+function roleCard(rid) {
+  const R = roleSummary(rid); const admin = rid === 'Administrator'; const lvlTag = admin ? '<span class="chip plain">Full control</span>' : lvl(rid.split('-')[1]);
+  const list = (items, empty) => items.length ? items.map(x => `<span class="tag">${esc(x)}</span>`).join(' ') : `<span class="muted">${empty}</span>`;
+  return `<section class="panel role-card"><div class="rc-head">${fnBadge(admin ? 'Admin' : rid.split('-')[0], 'lg')}<div class="rc-t"><h3>${esc(roleName(rid))} ${lvlTag}</h3><p>Controls what this role can access and what actions it can perform.</p></div><span class="grow"></span>${admin ? '<span class="chip plain">' + icon('lock', 'sm') + ' Always all permissions</span>' : can(me(), 'manage_users') ? btn('Edit', 'role-edit', '', `data-role="${rid}"`, 'edit') : ''}</div>
+    <dl class="rc-kv"><dt>Pages</dt><dd>${list(R.pages, 'No pages')}</dd><dt>Actions</dt><dd>${list(R.actions, 'View only')}</dd><dt>Approval authority</dt><dd>${list(R.auth, 'None — cannot act on workflow steps')}</dd>${R.admin.length ? `<dt>Administration</dt><dd>${list(R.admin, '')}</dd>` : ''}
+    <dt>Scope</dt><dd><span class="rc-scope">${R.people.length} active ${R.people.length === 1 ? 'person' : 'people'}${R.teams.length ? ' · ' + esc(R.teams.join(', ')) : ''}</span>${R.steps.length ? `<span class="muted rc-steps">Acts on: ${esc(uniq(R.steps).join(' · '))}</span>` : admin ? '<span class="muted rc-steps">Can act on any step when Settings allow it</span>' : ''}</dd></dl></section>`;
+}
 function viewRoles() {
-  const ids = [...funcIds().flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator']; const groups = uniq(PERMS.map(p => p[2])); const n = rid => S.users.filter(x => roleId(x) === rid && x.status === 'Active').length;
-  return pageHead('Roles & Permissions', 'A role is a function plus a level. Tick a box to grant that permission to everyone in the role. The Administrator role always has every permission.', btn('Restore defaults', 'roles-reset', '', '', 'undo')) +
-  `<section class="panel table-wrap perm-wrap"><table class="tbl no-pg perm-tbl"><thead><tr><th>Permission</th>${ids.map(r => `<th><div class="perm-h">${fnBadge(r === 'Administrator' ? 'Admin' : r.split('-')[0], 'sm')}<b>${esc(r === 'Administrator' ? 'Administrator' : r.split('-')[0])}</b><span>${esc(r === 'Administrator' ? 'Full control' : levelName(r.split('-')[1]))}</span><span class="muted">${n(r)} ${n(r) === 1 ? 'person' : 'people'}</span></div></th>`).join('')}</tr></thead><tbody>
-  ${groups.map(g => `<tr class="perm-group"><td colspan="${ids.length + 1}">${esc(g)}</td></tr>` + PERMS.filter(p => p[2] === g).map(p => `<tr><td class="perm-name" title="${esc(p[3])}">${esc(p[1])}<span class="perm-desc">${esc(p[3])}</span></td>${ids.map(r => { const on = (S.roles[r] || []).includes(p[0]); const locked = r === 'Administrator'; return `<td class="perm-cell"><button type="button" class="pbox ${on ? 'on' : ''}" ${locked ? 'disabled title="Administrators always have every permission"' : `data-act="perm-toggle" data-role="${r}" data-perm="${p[0]}"`} role="checkbox" aria-checked="${on}" aria-label="${esc(p[1])} for ${esc(roleName(r))}">${on ? icon('check', 'sm') : ''}</button></td>`; }).join('')}</tr>`).join('')).join('')}
-  </tbody></table></section>
-  <div class="grid cols-2" style="margin-top:18px"><section class="panel"><div class="panel-head"><h3>Review hierarchy</h3></div><div class="panel-body stack" style="gap:10px">${reviewFuncs().map(fn => `<div class="hier">${fnBadge(fn, 'sm')}<b>${fn}</b><span class="hier-step">${lvl('Member')} Initial ${fn} review</span>${icon('arrow', 'sm')}<span class="hier-step">${lvl('Lead')} Final ${fn} approval</span></div>`).join('')}<p class="muted" style="font-size:12.5px">Members do the initial review and pass items to their Lead. Leads can return items to the Member and give the final approval for their function with an e-signature.</p></div></section>
-  <section class="panel"><div class="panel-head"><h3>How permissions work</h3></div><div class="panel-body stack" style="gap:8px"><div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Permissions apply to every person in the role, immediately.</div><div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Approval steps are assigned by workflow to a function and level.</div><div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Every change is recorded in the audit trail with the previous and new value.</div><div class="check-row"><span class="ok">${icon('key', 'sm')}</span>Administrators are not limited by functional restrictions.</div><div class="check-row"><span class="ok">${icon('team', 'sm')}</span><span>Add a function (for example Pharmacovigilance) in <button class="linklike" ${goAttr('functions')}>Functions</button>; its Member and Lead roles appear here.</span></div></div></section></div>`;
+  const fns = S.functions.filter(f => f.active !== false).map(f => f.id); const tabs = [...fns, 'Administration'];
+  const tab = tabs.includes(UI.route.p.tab) ? UI.route.p.tab : tabs[0];
+  const wfs = S.workflows.filter(w => !w.hidden && w.active !== false);
+  const patterns = [['Member only', 'A Member reviews and passes the item on; no Lead step for that function.'], ['Lead only', 'A Lead reviews and approves directly — used for low-risk updates.'], ['Member → Lead', 'A Member does the initial review, the Lead gives the final approval and can return it to the Member.'], ['Lead only for escalated content', 'Routine content uses Member review; a separate workflow sends escalated content straight to the Lead.']];
+  const hier = `<section class="panel"><div class="panel-head"><h3>${icon('workflow', 'sm')} Review hierarchy</h3></div><div class="panel-body stack" style="gap:12px">
+    <div class="hier-flow"><span class="hier-step">${lvl('Member')} Member review</span>${icon('arrow', 'sm')}<span class="hier-step">${lvl('Lead')} Lead review</span>${icon('arrow', 'sm')}<span class="hier-step ok">${icon('award', 'sm')} Approval</span></div>
+    <p class="muted" style="font-size:12.5px">Each workflow decides, per function, which levels take part:</p>
+    <div class="hier-pats">${patterns.map(p => `<div><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>
+    <div class="section-title" style="margin-top:4px">How your active workflows use it</div>
+    <div class="hier-wf">${wfs.map(w => `<div class="hw-row"><b>${esc(w.name)}</b><span>${uniq(w.steps.filter(s => !isNotify(s)).map(s => s.fn)).map(fn => `<span class="hw-p">${fnBadge(fn, 'sm')}${esc(fn)} · ${esc(wfPattern(w, fn))}</span>`).join('')}</span></div>`).join('')}</div></div></section>`;
+  const how = [['user', 'User type', 'Administrator or a business user. Administrators always hold every permission.'], ['shieldcheck', 'Position', 'Member or Lead within a function. Workflows assign steps to a level.'], ['team', 'Team', 'People belong to one team; a workflow step can be limited to a team.'], ['key', 'Role', 'Function + position, e.g. Medical Lead. Permissions are set per role.'], ['check', 'Permissions', 'Pages a role can open and actions it can perform.'], ['workflow', 'Workflow authority', 'Member review / Lead review: which workflow steps the role may act on.'], ['award', 'Approval authority', 'Approve signs an approval step; Final approval signs the last one.']];
+  const howP = `<section class="panel"><div class="panel-head"><h3>${icon('key', 'sm')} How permissions work</h3></div><div class="panel-body"><ol class="how-list">${how.map((h, i) => `<li><span class="how-n">${i + 1}</span><span class="how-i">${icon(h[0], 'sm')}</span><span><b>${esc(h[1])}</b><span>${esc(h[2])}</span></span></li>`).join('')}</ol><p class="muted" style="font-size:12.5px;margin-top:10px">A person can act on a workflow step only when their function, position, team, workflow authority and approval permission all match the step. Every change is recorded in the audit trail.</p></div></section>`;
+  const cards = tab === 'Administration' ? roleCard('Administrator') : `<div class="role-grid">${LEVELS.map(l => roleCard(tab + '-' + l)).join('')}</div>`;
+  const matrix = F('rmatrix') ? viewRoleMatrix() : '';
+  return pageHead('Roles & Permissions', 'A role is a function plus a position (Member or Lead). Permissions apply to everyone in the role immediately.', `${btn(F('rmatrix') ? 'Hide comparison' : 'Compare all roles', 'role-matrix', 'ghost', '', 'layers')}${can(me(), 'manage_users') ? btn('Restore defaults', 'roles-reset', '', '', 'undo') : ''}`) +
+  `<div class="grid cols-2 roles-intro">${hier}${howP}</div>
+  <div class="tabs" role="tablist" style="margin:18px 0 14px">${tabs.map(t => `<button class="tab ${tab === t ? 'active' : ''}" role="tab" aria-selected="${tab === t}" ${goAttr('roles', null, ` data-tab="${esc(t)}"`)}>${t === 'Administration' ? '' : fnBadge(t, 'sm')}${esc(t)}<span class="n">${S.users.filter(u => u.status === 'Active' && (t === 'Administration' ? isAdmin(u) : u.fn === t)).length}</span></button>`).join('')}</div>
+  ${cards}${matrix}`;
+}
+// Optional comparison of every role side by side (read-only).
+function viewRoleMatrix() {
+  const ids = [...funcIds().flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator']; const groups = uniq(PERMS.map(p => p[2]));
+  return `<section class="panel table-wrap perm-wrap" style="margin-top:18px"><div class="panel-head"><h3>All roles compared</h3><span class="muted" style="font-size:12px">Read-only · edit a role from its card</span></div><table class="tbl no-pg perm-tbl"><thead><tr><th>Permission</th>${ids.map(r => `<th><div class="perm-h">${fnBadge(r === 'Administrator' ? 'Admin' : r.split('-')[0], 'sm')}<b>${esc(r === 'Administrator' ? 'Admin' : r.split('-')[0])}</b><span>${esc(r === 'Administrator' ? 'All' : levelName(r.split('-')[1]))}</span></div></th>`).join('')}</tr></thead><tbody>
+  ${groups.map(g => `<tr class="perm-group"><td colspan="${ids.length + 1}">${esc(g)}</td></tr>` + PERMS.filter(p => p[2] === g).map(p => `<tr><td class="perm-name">${esc(p[1])}</td>${ids.map(r => { const on = r === 'Administrator' || (S.roles[r] || []).includes(p[0]); return `<td class="perm-cell"><span class="pbox ${on ? 'on' : ''}" aria-label="${on ? 'Granted' : 'Not granted'}">${on ? icon('check', 'sm') : ''}</span></td>`; }).join('')}</tr>`).join('')).join('')}</tbody></table></section>`;
+}
+function roleModal(M) {
+  const rid = M.id; const has = S.roles[rid] || []; const groups = uniq(PERMS.map(p => p[2]));
+  return modalShell('key', '', 'Edit ' + esc(roleName(rid)), 'Changes apply immediately to the ' + S.users.filter(u => roleId(u) === rid && u.status === 'Active').length + ' active people in this role and are recorded in the audit trail.',
+    groups.map(g => `<div class="perm-grp"><div class="section-title">${esc(g)}</div><div class="perm-tg">${PERMS.filter(p => p[2] === g).map(p => { const on = has.includes(p[0]); return `<div class="set-row"><div><b>${esc(p[1])}</b><span class="muted">${esc(p[3])}</span></div>${toggleBtn(on, 'perm-toggle', `data-role="${rid}" data-perm="${p[0]}"`, p[1])}</div>`; }).join('')}</div></div>`).join(''),
+    btn('Done', 'modal-close', 'primary', '', 'check'), true);
 }
 
 /* ===== Organisation & configuration: generated from CONFIG (config.js) ===== */
@@ -4222,8 +4321,8 @@ function validateWf(D) {
 function notifyFields(s, scope, i) {
   const at = scope === 'wf' ? '' : ` data-i="${i}"`; const act = scope === 'wf' ? 'wf-rcpt' : 'nwf-rcpt'; const inp = scope === 'wf' ? 'data-wfn' : 'data-nwfn';
   const people = S.users.filter(u => u.status === 'Active');
-  return `<div class="field"><span class="label">Send to</span><div class="rcpts">${people.map(u => { const on = (s.recipients || []).includes(u.id); return `<button type="button" class="rcpt ${on ? 'on' : ''}" data-act="${act}"${at} data-v="${u.id}" aria-pressed="${on}">${avatar(u, 'sm')}<span><b>${esc(u.name)}</b><span>${esc(roleLabel(u))}</span></span>${on ? icon('check', 'sm') : ''}</button>`; }).join('')}</div></div>
-    <div class="field"><label>Other email addresses <span class="muted" style="font-weight:500">(optional, comma separated)</span></label><input class="input" ${inp}="emails"${at} id="${scope}-emails-${i == null ? 0 : i}" value="${esc(s.emails || '')}" placeholder="e.g. brand.team@saja.com"></div>
+  const ids = (s.recipients || []).filter(id => S.users.some(u => u.id === id));
+  return `<div class="field"><span class="label">Send to</span>${chipSelect('rcpt-' + scope + '-' + (i == null ? 0 : i), act, 'rcpt', people.map(u => [u.id, u.name, roleLabel(u) + ' · ' + u.email]), ids, { ph: 'Search and add people', noun: 'people', extra: at })}<span class="hint">Recipients come from active users. Each person is added once.</span></div>
     <div class="field"><label>Subject</label><input class="input" ${inp}="subject"${at} id="${scope}-subject-${i == null ? 0 : i}" value="${esc(s.subject || '')}"></div>
     <div class="field"><label>Message</label><textarea class="textarea" ${inp}="message"${at} id="${scope}-message-${i == null ? 0 : i}" rows="3">${esc(s.message || '')}</textarea></div>
     <div class="mail-preview"><div class="mp-head">${icon('mail', 'sm')}<b>${esc(s.subject || 'No subject')}</b></div><div class="mp-to">To: ${esc(notifyTo(s).join(', ') || '—')}</div><p>${esc(s.message || '')}</p><div class="mp-btn">Open in SAJA MedLR</div></div>`;
@@ -4310,7 +4409,7 @@ function renderNow() {
   if (!S.signedIn || r === 'login' || r === 'forgot') html = viewLogin();
   else {
     const u = me(); const C0 = CONFIG[(UI.route.p || {}).k] || {}; const perm = r === 'item' ? C0.viewPerm || [C0.perm, ADMIN_VIEW] : ROUTE_PERM[r];
-    const inner = perm && !can(u, perm) ? `<div class="empty"><h4>You do not have access to this page</h4><p>Your role (${esc(roleLabel(u))}) does not include the “${esc((PERMS.find(p => p[0] === perm) || [perm, perm])[1])}” permission. Ask an administrator if you need it.</p><br>${goBtn('Go home', 'home', null, 'primary')}</div>` : (ROUTES[r] || viewHome)();
+    const inner = perm && !can(u, perm) ? `<div class="empty"><h4>You do not have access to this page</h4><p>Your role (${esc(roleLabel(u))}) does not include the “${esc((PERMS.find(p => p[0] === [].concat(perm)[0]) || [perm, perm])[1])}” permission. Ask an administrator if you need it.</p><br>${goBtn('Go home', 'home', null, 'primary')}</div>` : (ROUTES[r] || viewHome)();
     html = viewShell(inner);
   }
   html += UI.modal ? viewModal() : '';
@@ -4382,6 +4481,7 @@ function viewModal() {
   if (M.type === 'cfg') return cfgModal(M);
   if (M.type === 'step') return stepDetailModal(M);
   if (M.type === 'filters') return filterModal(M);
+  if (M.type === 'role') return roleModal(M);
   if (M.type === 'version') {
     const obj = objById(M.kind, M.id); const v = verOf(obj, +M.v);
     return modalShell('history', '', `Version ${v.v} · approval history`, `${esc(nameOf(obj))} · <span class="mono">${obj.id}</span>`, versionModalBody(obj, M.kind, v), `${v.approvedAt ? goBtn('Cover letter', 'cover', obj.id, '', 'award', ` data-k="${M.kind}" data-v="${v.v}"`) : ''}${btn('Close', 'modal-close', 'primary')}`, true);
@@ -4507,6 +4607,8 @@ function newVersion(obj, kind, reason) {
 }
 
 const ACT = {
+  'role-edit': el => { UI.modal = { type: 'role', id: el.dataset.role }; render(); },
+  'role-matrix': () => { UI.f.rmatrix = UI.f.rmatrix ? '' : '1'; render(); },
   ...ANN_ACT,
   'flt-open': el => { const id = el.dataset.id; const d = {}; (FILTERS[id] || []).forEach(x => { d[x.k] = F(x.k); }); UI.modal = { type: 'filters', id, d }; render(); setTimeout(() => { const f = document.querySelector('.flt-grid input, .flt-grid select'); if (f) f.focus(); }, 30); },
   'flt-reset': () => { (FILTERS[UI.modal.id] || []).forEach(x => { UI.modal.d[x.k] = x.def || ''; }); render(); },
