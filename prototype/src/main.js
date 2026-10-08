@@ -97,6 +97,7 @@ function viewModal() {
   }
   if (M.type === 'cfg') return cfgModal(M);
   if (M.type === 'step') return stepDetailModal(M);
+  if (M.type === 'filters') return filterModal(M);
   if (M.type === 'version') {
     const obj = objById(M.kind, M.id); const v = verOf(obj, +M.v);
     return modalShell('history', '', `Version ${v.v} · approval history`, `${esc(nameOf(obj))} · <span class="mono">${obj.id}</span>`, versionModalBody(obj, M.kind, v), `${v.approvedAt ? goBtn('Cover letter', 'cover', obj.id, '', 'award', ` data-k="${M.kind}" data-v="${v.v}"`) : ''}${btn('Close', 'modal-close', 'primary')}`, true);
@@ -222,6 +223,11 @@ function newVersion(obj, kind, reason) {
 }
 
 const ACT = {
+  'flt-open': el => { const id = el.dataset.id; const d = {}; (FILTERS[id] || []).forEach(x => { d[x.k] = F(x.k); }); UI.modal = { type: 'filters', id, d }; render(); setTimeout(() => { const f = document.querySelector('.flt-grid input, .flt-grid select'); if (f) f.focus(); }, 30); },
+  'flt-reset': () => { (FILTERS[UI.modal.id] || []).forEach(x => { UI.modal.d[x.k] = x.def || ''; }); render(); },
+  'flt-apply': () => { const M = UI.modal; document.querySelectorAll('[data-fd]').forEach(el => { M.d[el.dataset.fd] = el.value; }); (FILTERS[M.id] || []).forEach(x => { UI.f[x.k] = M.d[x.k] || x.def || ''; }); UI.modal = null; render(); },
+  'flt-rm': el => { UI.f[el.dataset.k] = el.dataset.def || ''; render(); },
+  'flt-clear': el => { (FILTERS[el.dataset.id] || []).forEach(x => { UI.f[x.k] = x.def || ''; }); render(); },
   'tl-step': el => { UI.modal = { type: 'step', kind: el.dataset.kind, id: el.dataset.id, v: el.dataset.v, c: el.dataset.c, i: el.dataset.i }; render(); },
   pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') S.notifSeen = Date.now(); render(); },
   logout: () => { log('Signed out', 'User', me(), 1); S.signedIn = false; save(); UI.modal = null; go('login'); },
@@ -454,11 +460,13 @@ document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape' && UI.msel) { UI.msel = null; UI.mselq = ''; render(); return; }
   if (ev.key === 'Escape') { if (UI.modal) { UI.modal = null; render(); } else if (UI.pop || UI.search) { UI.pop = null; UI.search = ''; render(); } }
   if (ev.key === 'Enter' && ev.target.matches && ev.target.matches('tr.click')) ev.target.click();
+  if (ev.key === 'Enter' && UI.modal && UI.modal.type === 'filters' && ev.target.dataset && ev.target.dataset.fd) { ev.preventDefault(); ACT['flt-apply'](); }
 });
 document.addEventListener('input', ev => {
   const t = ev.target;
   if (t.id === 'global-search') { UI.search = t.value; render(); return; }
   if (t.id === 'rv-comment') { UI.f.rvc = t.value; return; }
+  if (t.dataset.fd && UI.modal && UI.modal.d) { UI.modal.d[t.dataset.fd] = t.value; return; }
   if (t.dataset.mselq) { UI.mselq = t.value; render(); return; }
   if (t.dataset.filter && t.tagName === 'INPUT') { UI.f[t.dataset.filter] = t.value; if (t.type === 'date') return; render(); return; }
   if (t.dataset.dm) { const D = UI.draft; D.media = D.media || {}; D.media[t.dataset.dm] = t.dataset.dm === 'duration' ? (+t.value || null) : t.value; renderSoon(); return; }
@@ -476,6 +484,7 @@ let rsT = null; function renderSoon() { clearTimeout(rsT); rsT = setTimeout(rend
 document.addEventListener('change', ev => {
   const t = ev.target;
   if (t.dataset.filter) { UI.f[t.dataset.filter] = t.value; render(); return; }
+  if (t.dataset.fd && UI.modal && UI.modal.d) { UI.modal.d[t.dataset.fd] = t.value; if (t.tagName === 'SELECT') render(); return; }
   if (t.dataset.assetProp) {
     const a = assetById(t.dataset.id); const k = t.dataset.assetProp; const prev = a[k] || ''; if (prev === t.value) return; a[k] = t.value; a.updatedAt = Date.now();
     if (k === 'type') { const mt = mat(t.value); if (mt && !a.blocks.length) a.channel = mt.channel; }
