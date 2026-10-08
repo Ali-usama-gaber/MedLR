@@ -31,7 +31,7 @@ function renderNow() {
   }
   html += UI.modal ? viewModal() : '';
   app.innerHTML = html;
-  paginateTables(); hydratePdfs();
+  paginateTables(); hydratePdfs(); hydrateReview();
   const rk = UI.route.name + JSON.stringify(UI.route.p || {}) + (S.signedIn ? 1 : 0);
   if (rk !== UI._rk) { UI._rk = rk; const c = document.getElementById('content'); if (c) { c.classList.add('enter'); countUp(c); } }
   app.querySelectorAll('table.tbl').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (hs[i]) td.setAttribute('data-label', hs[i]); })); });
@@ -223,6 +223,7 @@ function newVersion(obj, kind, reason) {
 }
 
 const ACT = {
+  ...ANN_ACT,
   'flt-open': el => { const id = el.dataset.id; const d = {}; (FILTERS[id] || []).forEach(x => { d[x.k] = F(x.k); }); UI.modal = { type: 'filters', id, d }; render(); setTimeout(() => { const f = document.querySelector('.flt-grid input, .flt-grid select'); if (f) f.focus(); }, 30); },
   'flt-reset': () => { (FILTERS[UI.modal.id] || []).forEach(x => { UI.modal.d[x.k] = x.def || ''; }); render(); },
   'flt-apply': () => { const M = UI.modal; document.querySelectorAll('[data-fd]').forEach(el => { M.d[el.dataset.fd] = el.value; }); (FILTERS[M.id] || []).forEach(x => { UI.f[x.k] = M.d[x.k] || x.def || ''; }); UI.modal = null; render(); },

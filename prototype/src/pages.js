@@ -431,12 +431,13 @@ function viewModule() {
   if (lv && lv !== l && JSON.stringify([lv.meta && lv.meta.products, lv.meta && lv.meta.markets, lv.meta && lv.meta.channels]) !== JSON.stringify([m.products, m.markets, m.channels])) banners += `<div class="banner info">${icon('globe')}<div class="txt"><b>Version ${l.v} changes the scope</b><p>Approved v${lv.v}: ${esc(productsTxt(lv.meta.products))} · ${esc(lv.meta.markets.join(', '))} · ${esc(channelsTxt(lv.meta.channels))}. Proposed v${l.v}: ${esc(productsTxt(m.products))} · ${esc(m.markets.join(', '))} · ${esc(channelsTxt(m.channels))}. The library and materials use the approved scope until v${l.v} is approved.</p></div></div>`;
   if (ls === 'Expiring') banners += `<div class="banner warn">${icon('clock')}<div class="txt"><b>Expires in ${daysTo(m.expiry)} days (${fmtD(m.expiry)})</b><p>Create a new version or confirm the content is still valid before it expires.</p></div></div>`;
   if (ls === 'Review Required') banners += `<div class="banner bad">${icon('clock')}<div class="txt"><b>Expired on ${fmtD(m.expiry)} — review required</b><p>This module can no longer be added to new materials.</p></div></div>`;
-  const tabs = [['overview', 'Overview'], ['approval', 'Approval'], ['versions', 'Version history', m.versions.length], ['lifecycle', 'Lifecycle & impact', imp.length || null], ['audit', 'Audit trail']];
+  const nAnn = annsFor(m, l.v).filter(a => a.status === 'open').length;
+  const tabs = [['overview', 'Overview'], ['comments', 'Comments', nAnn || null], ['approval', 'Approval'], ['versions', 'Version history', m.versions.length], ['lifecycle', 'Lifecycle & impact', imp.length || null], ['audit', 'Audit trail']];
   return pageHead(esc(m.title), `<span class="row" style="gap:8px">${chip(ls)}${vtag(l.v)}<span class="mono">${m.id}</span><span class="muted">·</span>${esc(mtype(m.type).name)}<span class="muted">·</span>Owner ${esc(user(m.owner).name)}</span>`, actions, [['Modules', 'modules'], [m.id]]) +
   approvalTimeline(m) +
   (banners ? `<div class="stack" style="margin-bottom:16px">${banners}</div>` : '') +
   `<div class="tabs" role="tablist" style="margin-bottom:16px">${tabs.map(t => `<button class="tab ${tab === t[0] ? 'active' : ''}" role="tab" aria-selected="${tab === t[0]}" ${goAttr('module', m.id, ` data-tab="${t[0]}"`)}>${t[1]}${t[2] ? `<span class="n">${t[2]}</span>` : ''}</button>`).join('')}</div>` +
-  (tab === 'overview' ? viewModuleOverview(m) : tab === 'approval' ? viewApprovalTab(m, 'Module') : tab === 'versions' ? viewVersions(m, 'Module') : tab === 'lifecycle' ? viewModuleLifecycle(m) : auditTable(S.audit.filter(e => e.objId === m.id), true));
+  (tab === 'overview' ? viewModuleOverview(m) : tab === 'comments' ? commentsTab(m) : tab === 'approval' ? viewApprovalTab(m, 'Module') : tab === 'versions' ? viewVersions(m, 'Module') : tab === 'lifecycle' ? viewModuleLifecycle(m) : auditTable(S.audit.filter(e => e.objId === m.id), true));
 }
 function refsList(ids) { return ids.length ? `<div class="stack" style="gap:8px">${ids.map((r, i) => { const R = refById(r); return `<div class="ref"><span class="n">${i + 1}</span><div><b>${esc(R.title)}</b><br><span class="muted">${esc(R.source)} · ${esc(refKind(R.kind))}</span></div></div>`; }).join('')}</div>` : '<p class="muted">No references.</p>'; }
 const lastWf = o => { const c = o.review || o.resume ? curCycle(o) : latest(o).cycles.slice(-1)[0]; return c ? wfById(c.wf) : null; };
@@ -519,7 +520,6 @@ function stepDetailModal(M) {
     `<div class="section-title" style="margin-bottom:8px">Decision</div>${decisionsList(decs)}<div class="section-title" style="margin:18px 0 8px">Comments & annotations <span class="chip plain">${anns.length}</span></div><div class="stack" style="gap:10px">${annList}</div>`,
     `${btn('Close', 'modal-close')}${obj.review ? goBtn('Open current review', M.kind === 'Asset' ? 'asset-review' : 'review', obj.id, 'primary') : ''}`);
 }
-function annWhere(a) { const x = a.anchor || {}; if (x.kind === 'text') return '“' + (x.quote || '') + '”'; if (x.kind === 'time') return 'At ' + fmtSecs(x.t); if (x.kind === 'region') return (x.page ? 'Page ' + x.page + ' · ' : '') + 'Area'; if (x.kind === 'page') return 'Page ' + x.page; return 'General comment'; }
 function decisionsList(decs) {
   if (!decs || !decs.length) return '<p class="muted">No decisions recorded yet.</p>';
   return `<div class="stack" style="gap:10px">${decs.map(c => { const x = user(c.by); const who = c.fn === 'Owner' || c.req === 'owner' ? 'Material Owner' : c.fn === 'Email' ? 'Email notification' : c.fn + ' ' + levelName(c.level);
@@ -588,7 +588,8 @@ function decisionButtons(obj, kind) {
   if (can(u, 'reject')) h += a('reject', 'Reject', 'danger', 'x');
   if (can(u, 'request_amend')) h += a('amend', 'Request amendment', '', 'undo');
   if (isLead && hasMember) h += a('return', 'Return to Member', '', 'back');
-  const nx = nextStepOf(obj);
+  const nx = nextStepOf(obj); const openN = S.settings.blockOnOpenComments ? blockingAnns(obj).length : 0;
+  if (openN) return h + `<button class="btn primary" disabled title="Resolve the open reviewer comments first">${icon('lock', 'sm')}${openN} open comment${openN > 1 ? 's' : ''} — resolve to ${st.req === 'approve' ? 'approve' : 'complete'}</button>`;
   if (st.req === 'approve') h += issues.length ? `<button class="btn primary" disabled title="Resolve validation issues first">${icon('key', 'sm')}${esc(st.fn)} approval</button>` : btn(st.fn + ' approval' + (nx ? '' : ' (final)'), 'sign', 'primary', `data-kind="${kind}" data-id="${obj.id}"`, 'key');
   else h += a('pass', nx ? 'Complete review — send to ' + stepWho(nx) : 'Complete review', 'primary', 'send');
   return h;
@@ -613,13 +614,13 @@ function viewReview() {
   (mine ? adminNote(m) : `<div class="banner info" style="margin-bottom:14px">${icon('eye')}<div class="txt"><b>View only — this step is assigned to the ${esc(stepWho(st))}</b><p>You are signed in as ${esc(roleLabel(u))}.</p></div></div>`) +
   approvalTimeline(m) + `<div class="stack" style="margin-bottom:16px">${authorityBanner(m)}</div>
   <div class="grid cols-main"><div class="stack">
-    <section class="panel"><div class="panel-head"><h3>Module content</h3><span class="tag">${esc(mtype(m.type).name)}</span></div><div class="panel-body stack" style="gap:18px">${isMediaType(m.type) ? `<div class="media-stage">${mediaView(l.media)}</div><p class="media-desc">${esc(l.body)}</p>${mediaRules(l.media)}${l.media ? mediaFactsKV(l.media) : ''}` : `<p class="claim">${esc(l.body)}</p>`}
+    <section class="panel"><div class="panel-head"><h3>Module content</h3><span class="tag">${esc(mtype(m.type).name)}</span><span class="grow"></span><span class="muted" style="font-size:12px">v${l.v} · cycle ${m.review.cycle}</span></div><div class="panel-body stack" style="gap:18px">${reviewCanvas(m, canAnnotate(m))}${isMediaType(m.type) ? mediaRules(l.media) + (l.media ? mediaFactsKV(l.media) : '') : ''}
       <div class="fgrid meta-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[['Products', productsTxt(m.products)], ['Indication', indsTxt(m.indications)], ['Audience', aud(m.audience).name], ['Countries', marketsTxt(m.markets)], ['Channels', channelsTxt(m.channels)], ['Version', 'v' + l.v + (live(m) && live(m) !== l ? ' (replaces v' + live(m).v + ')' : '')]].map(([k, v]) => `<div><div class="section-title" style="font-size:10.5px">${k}</div><div style="font-weight:700;margin-top:2px">${esc(v)}</div></div>`).join('')}</div></div></section>
     <section class="panel"><div class="panel-head"><h3>References & evidence</h3><span class="chip plain">${l.refs.length}</span></div><div class="panel-body">${refsList(l.refs)}</div></section>
     ${live(m) && live(m) !== l ? `<section class="panel"><div class="panel-head"><h3>What changed from v${live(m).v}</h3></div><div class="panel-body stack"><p class="muted" style="font-size:12.5px">Reason: ${esc(l.reason || '—')}</p>${isMediaType(m.type) ? `<div class="grid cols-2"><div><span class="tag">v${live(m).v} · approved</span><div class="media-stage sm">${mediaView(live(m).media, 'thumb')}</div><p class="muted" style="font-size:12px">${esc(live(m).media ? live(m).media.name : '—')}</p></div><div><span class="tag">v${l.v} · in review</span><div class="media-stage sm">${mediaView(l.media, 'thumb')}</div><p class="muted" style="font-size:12px">${esc(l.media ? l.media.name : '—')}${live(m).media && l.media && live(m).media.checksum === l.media.checksum ? ' · same file' : ' · new file'}</p></div></div>` : ''}<div class="comment prev-ver"><div class="who"><span class="tag">v${live(m).v} · approved</span></div><p style="text-decoration:line-through;color:var(--ink-3)">${esc(live(m).body)}</p></div><div class="comment"><div class="who"><span class="tag">v${l.v} · in review</span></div><p>${esc(l.body)}</p></div></div></section>` : ''}
-    ${mine ? `<section class="panel"><div class="panel-head"><h3>Add a comment</h3></div><div class="panel-body stack"><textarea class="textarea" id="rv-comment" placeholder="Comments are visible to the next reviewer and to the Material Owner." style="min-height:90px">${esc(UI.f.rvc || '')}</textarea><div class="row"><button class="btn" data-act="comment" data-kind="Module" data-id="${m.id}">${icon('send', 'sm')}Add comment</button></div></div></section>` : ''}
   </div>
-  <div class="stack">
+  <div class="stack rv-side">
+    ${commentsPanel(m, canAnnotate(m))}
     ${validationPanel(m, 'Module')}
     ${st.level === 'Lead' && memberNotes.length ? `<section class="panel"><div class="panel-head"><h3>${esc(st.fn)} Member review</h3></div><div class="panel-body">${decisionsList(memberNotes)}</div></section>` : ''}
     <section class="panel"><div class="panel-head"><h3>Decisions in this cycle</h3></div><div class="panel-body">${decisionsList(cyc.decisions)}</div></section>
