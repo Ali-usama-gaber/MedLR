@@ -6,9 +6,10 @@ const asWorkflows = kind => S.workflows.filter(w => !w.hidden && w.appliesTo ===
 const useRow = (route, id, label, extra, k) => ({ route, id, label, extra: extra || '', k });
 const CONFIG = {
   products: { label: 'Product', plural: 'Products', icon: 'pill', perm: 'manage_settings', coll: () => S.products, prefix: 'P',
-    sub: 'Products and their indications. Modules, assets and Validation SOPs reference products by id, so a rename shows everywhere.',
-    fields: [['name', 'Product name', 'text', { req: true, ph: 'e.g. Product D' }], ['area', 'Therapy area', 'text', { req: true, ph: 'e.g. Oncology' }], ['indications', 'Indications', 'list', { req: true, hint: 'Comma separated. Offered when a module selects this product.' }]],
-    cols: [['Therapy area', x => esc(x.area)], ['Indications', x => x.indications.map(i => `<span class="tag">${esc(i)}</span>`).join(' ')]],
+    sub: 'Products and their indication. The indication is its own record linked to the product, so modules reference it by id and a product can carry more than one later without a data change.',
+    fields: [['name', 'Product name', 'text', { req: true, ph: 'e.g. Product D' }], ['code', 'Abbreviation / code', 'text', { ph: 'e.g. PD', hint: 'Short code used in module IDs and exports, if applicable.' }], ['area', 'Therapy area', 'text', { req: true, ph: 'e.g. Oncology' }],
+      ['indication', 'Indication', 'text', { req: true, ph: 'e.g. Chronic heart failure', hint: 'One indication per product. Modules that select this product take it automatically.', get: x => (productInds(x.id)[0] || productInds(x.id, true)[0] || {}).name || '', set: setProductIndication }]],
+    cols: [['Code', x => x.code ? `<span class="tag">${esc(x.code)}</span>` : '<span class="muted">—</span>'], ['Therapy area', x => esc(x.area)], ['Indication', x => esc(indsTxt(productInds(x.id).map(i => i.id)) || '—')]],
     usage: x => [['Modules', S.modules.filter(m => m.products.includes(x.id) || m.versions.some(v => v.meta && v.meta.products.includes(x.id))).map(m => useRow('module', m.id, m.title, m.id))], ['Assets', S.assets.filter(a => a.products.includes(x.id)).map(a => useRow('asset', a.id, a.name, a.id))], ['Validation SOPs', S.sops.filter(s => s.scope.products.includes(x.id)).map(s => useRow('sops', null, s.name, s.id))]] },
   markets: { label: 'Country', plural: 'Countries', icon: 'globe', perm: 'manage_settings', coll: () => S.markets, codeId: true,
     sub: 'Countries content can be approved for. Asset eligibility checks every asset country against each module’s approved countries.',
@@ -35,7 +36,7 @@ const CONFIG = {
     fields: [['name', 'Audience', 'text', { req: true, ph: 'e.g. HCP – Oncologists' }]],
     cols: [],
     usage: x => [['Modules', S.modules.filter(m => m.audience === x.id).map(m => useRow('module', m.id, m.title, m.id))], ['Assets', S.assets.filter(a => a.audience === x.id).map(a => useRow('asset', a.id, a.name, a.id))]] },
-  references: { label: 'Reference', plural: 'References', icon: 'quote', perm: 'manage_library', viewPerm: 'view', coll: () => S.references, prefix: 'REF', nameKey: 'title',
+  references: { label: 'Reference', plural: 'References', icon: 'quote', perm: 'manage_library', viewPerm: ['page_modules', 'page_library'], coll: () => S.references, prefix: 'REF', nameKey: 'title',
     sub: 'The reference library. Modules cite these records; the evidence SOP counts clinical studies, registries and publications.',
     fields: [['title', 'Title', 'text', { req: true, ph: 'e.g. ALPHA-HF study — 36-month extension' }], ['source', 'Source', 'text', { req: true, ph: 'e.g. Clinical study report CSR-ALPHA-03, 2026' }], ['kind', 'Kind', 'select', { req: true, options: () => REF_KINDS }]],
     cols: [['Source', x => esc(x.source)], ['Kind', x => `<span class="tag">${esc(refKind(x.kind))}</span>`]],
@@ -53,6 +54,14 @@ const CONFIG = {
     usage: x => [['Users', S.users.filter(u => u.fn === x.id).map(u => useRow('user', u.id, u.name, roleLabel(u)))], ['Teams', S.teams.filter(t => t.fn === x.id).map(t => useRow('item', t.id, t.name, '', 'teams'))], ['Workflows', S.workflows.filter(w => !w.hidden && w.steps.some(s => s.fn === x.id)).map(w => useRow('workflow', w.id, w.name))]],
     blockDeactivate: x => S.users.some(u => u.fn === x.id && u.status === 'Active') ? 'Change the role of its active users first.' : S.workflows.some(w => !w.hidden && w.active !== false && w.steps.some(s => s.fn === x.id)) ? 'Remove it from active workflows first.' : '' }
 };
+// Product → Indication: the product form edits one indication record (S.indications), keeping its id so modules stay linked.
+function setProductIndication(x, name) {
+  const cur = productInds(x.id)[0] || productInds(x.id, true)[0];
+  if (cur) { cur.name = name; cur.active = true; return; }
+  const base = 'IND-' + x.id.replace(/^P-/, ''); let id = base, n = 2; while (S.indications.some(i => i.id === id)) id = base + '-' + n++;
+  S.indications.push({ id, name, product: x.id, active: true });
+}
+const cfgGet = (f, x) => f[3].get ? f[3].get(x) : x[f[0]];
 const cfgName = (k, x) => x[CONFIG[k].nameKey || 'name'];
 const cfgUsage = (k, x) => CONFIG[k].usage(x);
 const cfgUseCount = (k, x) => cfgUsage(k, x).reduce((n, g) => n + g[1].length, 0);
@@ -67,7 +76,7 @@ function viewConfig(k) {
     return `<tr class="click" ${goAttr('item', x.id, ` data-k="${k}"`)} tabindex="0"><td><div class="title">${esc(cfgName(k, x))}</div>${C.codeId && k !== 'functions' ? '' : `<span class="mono muted">${esc(x.id)}</span>`}</td>${C.cols.map(c => `<td>${c[1](x)}</td>`).join('')}<td class="num">${n ? n + ' item' + (n > 1 ? 's' : '') : '<span class="muted">Not used</span>'}</td><td>${chip(x.active ? 'Active' : 'Inactive')}</td>${manage ? `<td style="text-align:right"><div class="row nowrap" style="justify-content:flex-end;gap:6px"><button class="btn sm ghost" data-act="cfg-edit" data-k="${k}" data-id="${esc(x.id)}">${icon('edit', 'sm')}Edit</button><button class="btn sm" data-act="cfg-toggle" data-k="${k}" data-id="${esc(x.id)}">${x.active ? 'Deactivate' : 'Activate'}</button></div></td>` : ''}</tr>`; }).join('')}</tbody></table>` : `<div class="empty"><h4>No ${C.plural.toLowerCase()} match</h4><p>${manage ? 'Add one with the button above.' : 'Clear the search.'}</p></div>`}</section>`;
 }
 function cfgFieldVal(k, f, x) {
-  const v = x[f[0]];
+  const v = cfgGet(f, x);
   if (f[2] === 'list') return (v || []).map(i => `<span class="tag">${esc(i)}</span>`).join(' ') || '—';
   if (f[2] === 'bool') return v ? 'Yes' : 'No';
   if (f[2] === 'select') { const o = (f[3].options() || []).find(o => o[0] === v); if (k === 'materials' && f[0] === 'channel') return esc(chan(v).name); if (k === 'materials' && f[0] === 'workflow') return esc((wfById(v) || {}).name || v); if (f[0] === 'icon') return typeIco(x.id) + ' ' + esc(v); return esc(o ? o[1] : v); }
@@ -105,13 +114,14 @@ function cfgSave() {
   const show = (f, v) => f[2] === 'list' ? (v || []).join(', ') : f[2] === 'bool' ? (v ? 'Yes' : 'No') : f[2] === 'select' ? cfgFieldVal(M.k, f, { [f[0]]: v, id: '' }).replace(/<[^>]+>/g, '').trim() : String(v == null ? '' : v);
   if (M.id) {
     const x = list.find(i => i.id === M.id); let n = 0;
-    C.fields.forEach(f => { if (f[3].createOnly) return; const a = show(f, x[f[0]]), b = show(f, D[f[0]]); if (a !== b) { log(C.label + ' updated', C.label, { id: x.id }, 1, { note: f[1], prev: a, next: b }); n++; } x[f[0]] = Array.isArray(D[f[0]]) ? [...D[f[0]]] : D[f[0]]; });
+    C.fields.forEach(f => { if (f[3].createOnly) return; const a = show(f, cfgGet(f, x)), b = show(f, D[f[0]]); if (a !== b) { log(C.label + ' updated', C.label, { id: x.id }, 1, { note: f[1], prev: a, next: b }); n++; } if (f[3].set) { if (a !== b) f[3].set(x, D[f[0]]); } else x[f[0]] = Array.isArray(D[f[0]]) ? [...D[f[0]]] : D[f[0]]; });
     UI.modal = null; save(); render(); toast(n ? C.label + ' updated — shown everywhere it is used' : 'No changes');
   } else {
-    const x = { active: true }; C.fields.forEach(f => { x[f[0]] = Array.isArray(D[f[0]]) ? [...D[f[0]]] : f[2] === 'bool' ? !!D[f[0]] : D[f[0]]; });
+    const x = { active: true }; C.fields.forEach(f => { if (f[3].set) return; x[f[0]] = Array.isArray(D[f[0]]) ? [...D[f[0]]] : f[2] === 'bool' ? !!D[f[0]] : D[f[0]]; });
     if (!C.codeId) { const short = M.k === 'products' ? String(x.name).replace(/^product\s+/i, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) : ''; x.id = short && !list.some(i => i.id === C.prefix + '-' + short) ? C.prefix + '-' + short : C.prefix + '-' + Date.now().toString(36).slice(-5).toUpperCase(); }
-    list.push(x);
-    if (M.k === 'functions') LEVELS.forEach(l => { S.roles[x.id + '-' + l] = x.reviews ? ['view', 'review', 'request_amend', ...(l === 'Lead' ? ['approve', 'final_approve', 'reject'] : [])] : ['view']; });
+    list.push(x); C.fields.forEach(f => { if (f[3].set) f[3].set(x, D[f[0]]); });
+    if (M.k === 'products' && !x.code) x.code = x.id.replace(/^P-/, 'P');
+    if (M.k === 'functions') LEVELS.forEach(l => { S.roles[x.id + '-' + l] = defaultFnRole(x.reviews, l === 'Lead'); });
     log(C.label + ' created', C.label, { id: x.id }, 1, { next: cfgName(M.k, x) });
     UI.modal = null; save();
     if (M.then) { M.then(x); return; }

@@ -3,7 +3,26 @@ const STORE_KEY = 'saja-medlr-v7';
 let S = load();
 const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, modal: null, pop: null, search: '', f: {}, draft: null, sel: {}, wfSel: null };
 
-function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 7) return s; } } catch (e) {} return SEED(); }
+function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return s; if (s && s.version === 7) return migrate7to8(s); } } catch (e) {} return SEED(); }
+// v7 → v8 keeps every user-created record: indications become records, permissions gain page access and authority, annotations start empty.
+function migrate7to8(s) {
+  const valid = new Set(PERMS.map(p => p[0]));
+  Object.keys(s.roles).forEach(rid => { if (rid === 'Administrator') { s.roles[rid] = PERMS.map(p => p[0]); return; }
+    const old = s.roles[rid]; const lead = rid.endsWith('-Lead'); const add = [];
+    if (old.includes('view')) add.push('page_modules', 'page_tasks', 'page_library', 'page_assets');
+    if (old.includes('review')) add.push(lead ? 'auth_lead' : 'auth_member');
+    if (old.includes('edit')) add.push('create_version');
+    if (old.includes('manage_library')) add.push('withdraw', 'restore');
+    if (lead && old.includes('view_reports')) add.push('export');
+    s.roles[rid] = uniq([...old.filter(p => valid.has(p)), ...add]); });
+  s.indications = s.indications || [];
+  s.products.forEach(p => { const names = p.indications || []; const used = uniq(s.modules.flatMap(m => m.products.includes(p.id) ? m.indications || [] : [])).filter(n => names.includes(n));
+    uniq([names[0], ...used].filter(Boolean)).forEach((n, i) => s.indications.push({ id: 'IND-' + p.id.replace(/^P-/, '') + (i ? '-' + (i + 1) : ''), name: n, product: p.id, active: true }));
+    delete p.indications; if (p.status) { p.active = p.status === 'Active'; delete p.status; } if (!p.code) p.code = p.id.replace(/^P-/, 'P'); });
+  const ind = n => (s.indications.find(i => i.name === n) || { id: n }).id;
+  s.modules.forEach(m => { m.indications = (m.indications || []).map(ind); m.versions.forEach(v => { if (v.meta && v.meta.indications) v.meta.indications = v.meta.indications.map(ind); }); });
+  s.annotations = s.annotations || []; s.settings = { reviewSlaDays: 3, blockOnOpenComments: true, ...s.settings }; s.version = 8; return s;
+}
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} }
 
 /* helpers */
@@ -37,6 +56,11 @@ const kindOfType = id => mtype(id).kind || 'content';
 const isMediaType = id => kindOfType(id) !== 'content';
 const kindLabel = k => (MODULE_KINDS.find(x => x[0] === k) || [k, k])[1];
 const modCategory = id => isMediaType(id) ? 'Media & documents' : 'Content';
+// Indications are records linked to a product.
+const indication = id => S.indications.find(i => i.id === id) || { id, name: id, product: null };
+const indName = id => indication(id).name;
+const productInds = (pid, all) => S.indications.filter(i => i.product === pid && (all || i.active));
+const indsTxt = ids => (ids || []).map(indName).join(', ');
 const fnInfo = id => S.functions.find(f => f.id === id) || { id, desc: '', reviews: false };
 const funcIds = (all) => S.functions.filter(f => all || f.active).map(f => f.id);
 const reviewFuncs = (all) => S.functions.filter(f => f.reviews && (all || f.active)).map(f => f.id);
@@ -61,13 +85,14 @@ const roleId = u => isAdmin(u) ? 'Administrator' : u.fn + '-' + u.level;
 const roleLabel = u => isAdmin(u) ? 'Administrator' : u.fn + ' ' + levelName(u.level);
 const roleName = id => id === 'Administrator' ? 'Administrator' : id.replace(/-(Member|Lead)$/, ' $1');
 const stepWho = s => s.fn + ' ' + levelName(s.level);
-const can = (u, perm) => isAdmin(u) || ((S.roles[roleId(u)] || []).includes(perm));
+// perm may be one key or a list (any of them).
+const can = (u, perm) => isAdmin(u) || [].concat(perm).some(p => (S.roles[roleId(u)] || []).includes(p));
 const canCreateModule = u => can(u, 'create');
 const canCreateAsset = u => can(u, 'create');
 // Edit rights: the owner or the owner's team, with the Edit permission. Administrators always.
 const sameTeam = (u, o) => !!o && (o.owner === u.id || user(o.owner).team === u.team);
-const canEditObj = (u, o) => isAdmin(u) || (can(u, 'edit') && sameTeam(u, o));
-const canAmendObj = (u, o) => isAdmin(u) || (can(u, 'amend') && sameTeam(u, o));
+const canEditObj = (u, o) => isAdmin(u) || (can(u, 'edit') && (sameTeam(u, o) || can(u, 'manage')));
+const canAmendObj = (u, o) => isAdmin(u) || (can(u, 'amend') && (sameTeam(u, o) || can(u, 'manage')));
 const canSubmit = u => can(u, 'submit');
 const roleIds = () => [...funcIds(true).flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator'];
 
@@ -209,14 +234,16 @@ function stepLabel(st) { if (!st) return ''; if (isNotify(st)) return 'Email not
 function curStep(obj) { if (!obj.review) return null; const wf = wfById(obj.review.wf); return wf.steps[obj.review.step] || null; }
 function curCycle(obj) { const r = obj.review || obj.resume; if (!r) return null; return latest(obj).cycles.find(c => c.n === r.cycle) || null; }
 // Reviewers are the active users holding the step's role (and team, when the step names one).
-function assigneeFor(st) { return S.users.filter(u => u.status === 'Active' && u.fn === st.fn && u.level === st.level && (!st.team || u.team === st.team)); }
+// Authority: Member steps need "Member review", Lead steps need "Lead review" (configured per role in Roles & Permissions).
+const levelAuth = level => level === 'Lead' ? 'auth_lead' : 'auth_member';
+function assigneeFor(st) { return S.users.filter(u => u.status === 'Active' && !isAdmin(u) && u.fn === st.fn && (!st.team || u.team === st.team) && can(u, levelAuth(st.level)) && can(u, st.req === 'approve' ? 'approve' : 'review')); }
 const isFinalStep = (wf, i) => !wf.steps.slice(i + 1).some(s => !isNotify(s));
 // The permission a step needs: review → Review, approval → Approve, last approval → Final approval.
-function stepPerm(wf, i) { const s = wf.steps[i]; return s.req === 'approve' ? (isFinalStep(wf, i) ? 'final_approve' : 'approve') : 'review'; }
 function canActOn(u, obj) {
   const st = curStep(obj); if (!st || isNotify(st)) return false;
   if (isAdmin(u)) return S.settings.adminActsOnAnyStep !== false;
-  return u.status === 'Active' && u.fn === st.fn && u.level === st.level && (!st.team || u.team === st.team) && can(u, stepPerm(wfById(obj.review.wf), obj.review.step));
+  const wf = wfById(obj.review.wf); const fin = st.req === 'approve' && isFinalStep(wf, obj.review.step);
+  return u.status === 'Active' && u.fn === st.fn && (!st.team || u.team === st.team) && can(u, levelAuth(st.level)) && can(u, st.req === 'approve' ? 'approve' : 'review') && (!fin || can(u, 'final_approve'));
 }
 function nextStepOf(obj) { const wf = wfById(obj.review.wf); return wf.steps.slice(obj.review.step + 1).find(s => !isNotify(s)) || null; }
 function memberStepIndex(obj) { const wf = wfById(obj.review.wf); const st = curStep(obj); for (let i = obj.review.step - 1; i >= 0; i--) if (wf.steps[i].fn === st.fn && wf.steps[i].level === 'Member') return i; return -1; }
@@ -354,4 +381,15 @@ function stepTimes(cycles) {
   const out = [];
   cycles.forEach(c => c.decisions.forEach(x => { if (x.startedAt && x.at && ['Reviewed', 'Approved', 'Amendment requested', 'Rejected', 'Returned to Member'].includes(x.decision)) out.push({ fn: x.fn, level: x.level, req: x.req, ms: x.at - x.startedAt, cycle: c, by: x.by, at: x.at, decision: x.decision }); }));
   return out;
+}
+
+/* Approval performance from recorded cycles — shared by Home and Reports. */
+function approvalStats(cycles) {
+  const done = cycles.filter(c => c.outcome === 'Approved'); const rej = cycles.filter(c => c.outcome === 'Rejected');
+  const closed = done.length + rej.length; const times = stepTimes(cycles);
+  const by = {}; times.forEach(x => { const k = x.fn + '|' + x.level; (by[k] = by[k] || []).push(x.ms); });
+  const steps = Object.entries(by).map(([k, a]) => { const [fn, level] = k.split('|'); return { fn, level, n: a.length, avg: avg(a) }; });
+  const fnAvg = reviewFuncs(true).map(fn => { const a = times.filter(x => x.fn === fn).map(x => x.ms); return { fn, n: a.length, avg: avg(a) }; }).filter(x => x.n);
+  return { n: cycles.length, done, rej, closed, avgApproval: avg(done.map(c => c.end - c.start)), fnAvg, steps, slow: [...steps].sort((a, b) => b.avg - a.avg)[0] || null,
+    approvalRate: closed ? done.length / closed : 0, rejectionRate: closed ? rej.length / closed : 0, amendmentRate: cycles.length ? cycles.filter(c => c.amendments).length / cycles.length : 0, amendCycles: cycles.filter(c => c.amendments).length };
 }

@@ -24,23 +24,30 @@ const ASSET_META = ['name', 'type', 'products', 'markets', 'channel', 'audience'
 const metaSnap = o => { const keys = o.blocks ? ASSET_META : MOD_META; const out = {}; keys.forEach(k => { out[k] = Array.isArray(o[k]) ? [...o[k]] : o[k]; }); return out; };
 
 // [key, label, group, what it controls] — every permission is checked by the application.
+// Groups: Access (pages), Actions, Approval authority (which workflow steps a role may act on), Administration.
 const PERMS = [
-  ['view', 'View content', 'Content', 'Open Modules, Assets, Approvals and the Approved Library'], ['create', 'Create modules & assets', 'Content', 'Create new modules and assets'], ['edit', 'Edit drafts', 'Content', 'Edit drafts owned by them or their team'], ['submit', 'Submit for review', 'Content', 'Start an approval cycle; otherwise drafts go to a Lead'], ['amend', 'Amend & resubmit', 'Content', 'Resubmit after an amendment request'],
-  ['review', 'Complete review steps', 'Approval', 'Act on review steps assigned to their role'], ['request_amend', 'Request amendment', 'Approval', 'Return to the owner and resume at the same step'], ['approve', 'Approve intermediate steps', 'Approval', 'Sign approval steps that are not the last step'], ['final_approve', 'Final approval', 'Approval', 'Sign the last approval step of a workflow'], ['reject', 'Reject', 'Approval', 'Reject and end the approval cycle'],
-  ['manage_users', 'Manage users, teams & roles', 'Administration', 'Users, teams, functions, roles and permissions'], ['manage_workflows', 'Manage workflows', 'Administration', 'Create and edit approval workflows'], ['manage_sops', 'Manage Validation SOPs', 'Administration', 'Create and edit Validation SOPs'], ['manage_library', 'Manage the Approved Library', 'Administration', 'Withdraw (archive) and reinstate approved content, manage references'], ['manage_settings', 'Manage configuration', 'Administration', 'Products, countries, types, channels, audiences and settings'],
-  ['view_reports', 'View reports', 'Insight', 'Open Reports'], ['view_audit', 'View audit trail', 'Insight', 'Open the Audit Trail and Lifecycle']
+  ['page_modules', 'Modules', 'Access', 'Open the Modules catalogue'], ['page_tasks', 'My Tasks', 'Access', 'Open the personal task queue'], ['page_assets', 'Assets', 'Access', 'Open Assets and asset assembly'], ['page_library', 'Approved Library', 'Access', 'Browse approved, reusable content'], ['view_reports', 'Reports', 'Access', 'Open Reports'], ['view_audit', 'Governance', 'Access', 'Open Lifecycle, Audit Trail and References'], ['page_admin', 'Administration (view)', 'Access', 'See administration pages read-only; changes need the matching Manage permission'],
+  ['view', 'View', 'Actions', 'Open module and asset details'], ['create', 'Create', 'Actions', 'Create new modules and assets'], ['edit', 'Edit', 'Actions', 'Edit drafts owned by them or their team'], ['submit', 'Submit', 'Actions', 'Start an approval cycle; otherwise drafts go to a Lead'], ['review', 'Review', 'Actions', 'Complete review steps and comment'], ['approve', 'Approve', 'Actions', 'Sign approval steps'], ['request_amend', 'Request amendment', 'Actions', 'Return to the owner and resume at the same step'], ['reject', 'Reject', 'Actions', 'Reject and end the approval cycle'], ['amend', 'Amend & resubmit', 'Actions', 'Resubmit after an amendment request'], ['create_version', 'Create version', 'Actions', 'Start a new version of approved or rejected content'], ['withdraw', 'Withdraw', 'Actions', 'Withdraw approved content from the library'], ['restore', 'Restore', 'Actions', 'Reinstate withdrawn content'], ['export', 'Export', 'Actions', 'Export the audit trail and report data'], ['manage', 'Manage all content', 'Actions', 'Act on content of every team, not only their own'],
+  ['auth_member', 'Member review', 'Approval authority', 'May act on Member steps of a workflow'], ['auth_lead', 'Lead review', 'Approval authority', 'May act on Lead steps of a workflow'], ['final_approve', 'Final approval', 'Approval authority', 'May sign the last approval step of a workflow'],
+  ['manage_users', 'Manage users, teams & roles', 'Administration', 'Users, teams, functions, roles and permissions'], ['manage_workflows', 'Manage workflows', 'Administration', 'Create and edit approval workflows'], ['manage_sops', 'Manage Validation SOPs', 'Administration', 'Create and edit Validation SOPs'], ['manage_library', 'Manage references', 'Administration', 'Maintain the reference library'], ['manage_settings', 'Manage configuration', 'Administration', 'Products, countries, types, channels, audiences and settings'], ['manage_comments', 'Moderate review comments', 'Administration', 'Edit or delete other people’s review comments']
 ];
+// Role templates. Administrators always hold every permission.
+const ROLE_TEMPLATES = {
+  contentMember: ['page_modules', 'page_tasks', 'page_library', 'view', 'create', 'edit', 'amend', 'create_version'],
+  reviewerMember: ['page_modules', 'page_tasks', 'page_assets', 'page_library', 'view_audit', 'view', 'review', 'approve', 'request_amend', 'reject', 'auth_member']
+};
+const defaultFnRole = (reviews, lead) => reviews ? [...ROLE_TEMPLATES.reviewerMember, ...(lead ? ['auth_lead', 'final_approve', 'view_reports', 'export'] : [])] : ['page_modules', 'page_library', 'view'];
 const DEFAULT_ROLES = () => ({
-  'Content-Member': ['view', 'create', 'edit', 'amend'],
-  'Content-Lead': ['view', 'create', 'edit', 'submit', 'amend', 'view_reports'],
-  'Marketing-Member': ['view', 'create', 'edit', 'amend'],
-  'Marketing-Lead': ['view', 'create', 'edit', 'submit', 'amend', 'view_reports'],
-  'Medical-Member': ['view', 'review', 'request_amend', 'approve', 'reject', 'view_audit'],
-  'Medical-Lead': ['view', 'review', 'request_amend', 'approve', 'final_approve', 'reject', 'view_audit', 'view_reports'],
-  'Legal-Member': ['view', 'review', 'request_amend', 'approve', 'reject', 'view_audit'],
-  'Legal-Lead': ['view', 'review', 'request_amend', 'approve', 'final_approve', 'reject', 'view_audit', 'view_reports'],
-  'Regulatory-Member': ['view', 'review', 'request_amend', 'approve', 'reject', 'view_audit'],
-  'Regulatory-Lead': ['view', 'review', 'request_amend', 'approve', 'final_approve', 'reject', 'view_audit', 'view_reports', 'manage_library'],
+  'Content-Member': [...ROLE_TEMPLATES.contentMember],
+  'Content-Lead': [...ROLE_TEMPLATES.contentMember, 'page_assets', 'submit', 'view_reports'],
+  'Marketing-Member': ['page_assets', 'page_tasks', 'page_library', 'view', 'create', 'edit', 'amend', 'create_version'],
+  'Marketing-Lead': ['page_assets', 'page_tasks', 'page_library', 'page_modules', 'view', 'create', 'edit', 'amend', 'create_version', 'submit', 'view_reports'],
+  'Medical-Member': [...ROLE_TEMPLATES.reviewerMember],
+  'Medical-Lead': [...ROLE_TEMPLATES.reviewerMember, 'auth_lead', 'final_approve', 'view_reports', 'export'],
+  'Legal-Member': [...ROLE_TEMPLATES.reviewerMember],
+  'Legal-Lead': [...ROLE_TEMPLATES.reviewerMember, 'auth_lead', 'final_approve', 'view_reports', 'export'],
+  'Regulatory-Member': [...ROLE_TEMPLATES.reviewerMember],
+  'Regulatory-Lead': [...ROLE_TEMPLATES.reviewerMember, 'auth_lead', 'final_approve', 'view_reports', 'export', 'withdraw', 'restore', 'manage_library'],
   'Administrator': PERMS.map(p => p[0])
 });
 
@@ -119,16 +126,23 @@ function asset(id, name, type, products, markets, channel, audience, owner, bloc
 const SEED = () => {
   RS = 7;
   const S = {
-    version: 7,
+    version: 8,
     personaId: 'u-ali',
     signedIn: false,
-    settings: { orgName: 'SAJA Pharma', expiryWarnDays: 45, reviewReminderDays: 30, defaultValidityMonths: 12, libraryShowExpiring: true, requireSignature: true, adminActsOnAnyStep: true, defaultModuleWorkflow: 'WF-STD', assetStreamWorkflow: 'WF-ASSET-STREAM', newVersionWorkflow: 'WF-LOW' },
+    settings: { orgName: 'SAJA Pharma', expiryWarnDays: 45, reviewReminderDays: 30, defaultValidityMonths: 12, libraryShowExpiring: true, requireSignature: true, adminActsOnAnyStep: true, reviewSlaDays: 3, blockOnOpenComments: true, defaultModuleWorkflow: 'WF-STD', assetStreamWorkflow: 'WF-ASSET-STREAM', newVersionWorkflow: 'WF-LOW' },
     roles: DEFAULT_ROLES(),
     products: [
-      { id: 'P-A', name: 'Product A', area: 'Cardiology', indications: ['Chronic heart failure', 'Post-MI care'], active: true },
-      { id: 'P-B', name: 'Product B', area: 'Respiratory', indications: ['Persistent asthma', 'COPD maintenance'], active: true },
-      { id: 'P-C', name: 'Product C', area: 'Diabetes', indications: ['Type 2 diabetes'], active: true }
+      { id: 'P-A', name: 'Product A', code: 'PA', area: 'Cardiology', active: true },
+      { id: 'P-B', name: 'Product B', code: 'PB', area: 'Respiratory', active: true },
+      { id: 'P-C', name: 'Product C', code: 'PC', area: 'Diabetes', active: true }
     ],
+    // Indications are their own records linked to a product (one per product in the current UI; the model allows more).
+    indications: [
+      { id: 'IND-A', name: 'Chronic heart failure', product: 'P-A', active: true },
+      { id: 'IND-B', name: 'Persistent asthma', product: 'P-B', active: true },
+      { id: 'IND-C', name: 'Type 2 diabetes', product: 'P-C', active: true }
+    ],
+    annotations: [],
     markets: [
       { id: 'SA', name: 'Saudi Arabia', authority: 'SFDA', lang: 'Arabic, English', active: true },
       { id: 'AE', name: 'UAE', authority: 'MOHAP', lang: 'Arabic, English', active: true },
@@ -268,12 +282,27 @@ const SEED = () => {
 
   // Configuration is referenced by id everywhere; the seed content is written with names for readability.
   const idOf = (list, n) => (list.find(x => x.name === n) || { id: n }).id;
-  S.modules.forEach(m => { m.type = idOf(S.moduleTypes, m.type); m.audience = idOf(S.audiences, m.audience); m.channels = m.channels.map(c => idOf(S.channels, c)); m.versions.forEach(v => { v.meta = metaSnap(m); }); });
+  S.modules.forEach(m => { m.indications = m.indications.map(n => idOf(S.indications, n)); m.type = idOf(S.moduleTypes, m.type); m.audience = idOf(S.audiences, m.audience); m.channels = m.channels.map(c => idOf(S.channels, c)); m.versions.forEach(v => { v.meta = metaSnap(m); }); });
   S.assets.forEach(a => { a.type = idOf(S.materialTypes, a.type); a.channel = idOf(S.channels, a.channel); a.audience = idOf(S.audiences, a.audience); a.updatedAt = a.createdAt; a.versions.forEach(v => { v.meta = metaSnap(a); }); });
   S.sops.forEach(x => { x.scope.types = x.scope.types.map(n => idOf(S.moduleTypes, n) !== n ? idOf(S.moduleTypes, n) : idOf(S.materialTypes, n)); });
+  S.annotations = seedAnnotations(S);
   S.audit = seedAudit(S);
   return S;
 };
+
+/* Review comments already made in the current cycles of the initial workspace. Anchors point at real text, regions and timestamps. */
+function seedAnnotations(S) {
+  const out = []; const mod = id => S.modules.find(m => m.id === id);
+  const add = (id, by, at, anchor, style, text, extra = {}) => { const m = mod(id); const v = m.versions[m.versions.length - 1]; const c = v.cycles[v.cycles.length - 1]; const u = S.users.find(x => x.id === by);
+    out.push({ id: 'an' + out.length, objType: 'Module', objId: id, version: v.v, cycle: c ? c.n : 1, step: extra.step || '', anchor, style, text, replacement: extra.replacement || '', author: by, role: u.fn + ' ' + u.level, ts: at, status: extra.status || 'open', replies: extra.replies || [] }); };
+  const textAnchor = (id, quote) => { const b = mod(id).versions.slice(-1)[0].body; const i = b.indexOf(quote); return { kind: 'text', target: 'body', start: i, end: i + quote.length, quote }; };
+  add('MOD-A-018', 'u-ahmed', d(-2, 15), textAnchor('MOD-A-018', 'with or without food'), 'highlight', 'Confirm this wording matches section 4.2 of the current SmPC.', { step: 'Medical Member review', status: 'resolved', replies: [{ id: 'r1', author: 'u-omar', role: 'Content Lead', ts: d(-2, 17), text: 'Checked — identical to SmPC 4.2.' }] });
+  add('MOD-A-018', 'u-ahmed', d(-2, 15, 20), textAnchor('MOD-A-018', 'once daily'), 'underline', 'Fine as written.', { step: 'Medical Member review', status: 'resolved' });
+  add('MOD-B-020', 'u-mona', d(0, 9), { kind: 'time', target: 'file', t: 2.5 }, 'comment', 'The on-screen step counter should match the voice-over numbering.', { step: 'Legal Member review' });
+  add('MOD-B-011', 'u-layla', d(-6, 12), textAnchor('MOD-B-011', 'Review inhaler technique at every visit.'), 'comment', 'Add the oral candidiasis warning from section 4.4 after this sentence.', { step: 'Regulatory Lead approval' });
+  add('MOD-B-007', 'u-omar', d(-1, 15), { kind: 'general', target: 'body' }, 'comment', 'Submitted with the BREATHE-2 primary endpoint wording agreed with Medical.', { step: 'Submission' });
+  return out;
+}
 
 /* Build the audit trail for the initial workspace from the recorded versions and cycles. */
 function seedAudit(S) {
@@ -300,5 +329,8 @@ function seedAudit(S) {
     a.blocks.filter(b => b.kind === 'module').forEach((b, k) => push(a.createdAt + (k + 1) * 60000, a.owner, 'Module reused', 'Asset', a, 1, { note: b.moduleId + ' v' + b.v + ' added' }));
     a.versions.forEach(v => v.cycles.forEach(c => cycleEvents(a, 'Asset', v, c)));
   });
+  (S.annotations || []).forEach(an => { const m = S.modules.find(x => x.id === an.objId); push(an.ts, an.author, 'Comment created', 'Module', m, an.version, { note: an.text, cycle: an.cycle, next: an.style });
+    an.replies.forEach(r => push(r.ts, r.author, 'Reply added', 'Module', m, an.version, { note: r.text, cycle: an.cycle }));
+    if (an.status === 'resolved') push((an.replies.slice(-1)[0] || an).ts + 60000, an.author, 'Comment resolved', 'Module', m, an.version, { cycle: an.cycle, prev: 'Open', next: 'Resolved' }); });
   return out.sort((x, y) => x.ts - y.ts);
 }

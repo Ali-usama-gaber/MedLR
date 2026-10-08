@@ -1,5 +1,5 @@
 /* ---------- Controller: routing, modals, actions ---------- */
-const ROUTES = { home: viewHome, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, sops: viewSops, settings: viewSettings, item: viewConfigItem, references: () => viewConfig('references'), moduletypes: () => viewConfig('moduletypes'), channels: () => viewConfig('channels'), audiences: () => viewConfig('audiences'), functions: () => viewConfig('functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
+const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, sops: viewSops, settings: viewSettings, item: viewConfigItem, references: () => viewConfig('references'), moduletypes: () => viewConfig('moduletypes'), channels: () => viewConfig('channels'), audiences: () => viewConfig('audiences'), functions: () => viewConfig('functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
 const app = document.getElementById('app');
 
 function go(name, p = {}) {
@@ -25,7 +25,7 @@ function renderNow() {
   const r = UI.route.name; let html;
   if (!S.signedIn || r === 'login' || r === 'forgot') html = viewLogin();
   else {
-    const u = me(); const perm = r === 'item' ? (CONFIG[UI.route.p.k] || {}).viewPerm || (CONFIG[UI.route.p.k] || {}).perm : r === 'functions' ? 'manage_users' : ROUTE_PERM[r];
+    const u = me(); const C0 = CONFIG[(UI.route.p || {}).k] || {}; const perm = r === 'item' ? C0.viewPerm || [C0.perm, ADMIN_VIEW] : ROUTE_PERM[r];
     const inner = perm && !can(u, perm) ? `<div class="empty"><h4>You do not have access to this page</h4><p>Your role (${esc(roleLabel(u))}) does not include the “${esc((PERMS.find(p => p[0] === perm) || [perm, perm])[1])}” permission. Ask an administrator if you need it.</p><br>${goBtn('Go home', 'home', null, 'primary')}</div>` : (ROUTES[r] || viewHome)();
     html = viewShell(inner);
   }
@@ -96,6 +96,7 @@ function viewModal() {
       `${btn('Close', 'modal-close')}${can(u, 'manage_workflows') ? `<button class="btn primary" data-act="wf-open" data-id="${w.id}">${icon('edit', 'sm')}Open in builder</button>` : ''}`, true);
   }
   if (M.type === 'cfg') return cfgModal(M);
+  if (M.type === 'step') return stepDetailModal(M);
   if (M.type === 'version') {
     const obj = objById(M.kind, M.id); const v = verOf(obj, +M.v);
     return modalShell('history', '', `Version ${v.v} · approval history`, `${esc(nameOf(obj))} · <span class="mono">${obj.id}</span>`, versionModalBody(obj, M.kind, v), `${v.approvedAt ? goBtn('Cover letter', 'cover', obj.id, '', 'award', ` data-k="${M.kind}" data-v="${v.v}"`) : ''}${btn('Close', 'modal-close', 'primary')}`, true);
@@ -209,7 +210,7 @@ function logAdmin(action, objType, id, extra) { log(action, objType, { id }, 1, 
 function afterDecision(obj, kind, r) {
   UI.modal = null; UI.f.rvc = '';
   if (r.done) { UI.modal = { type: 'success', kind, id: obj.id }; go(kind === 'Asset' ? 'asset' : 'module', { id: obj.id }); return; }
-  go('approvals'); toast(r.msg);
+  go('tasks'); toast(r.msg);
 }
 function newVersion(obj, kind, reason) {
   const l = latest(obj); const nv = l.v + 1;
@@ -221,11 +222,12 @@ function newVersion(obj, kind, reason) {
 }
 
 const ACT = {
+  'tl-step': el => { UI.modal = { type: 'step', kind: el.dataset.kind, id: el.dataset.id, v: el.dataset.v, c: el.dataset.c, i: el.dataset.i }; render(); },
   pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') S.notifSeen = Date.now(); render(); },
   logout: () => { log('Signed out', 'User', me(), 1); S.signedIn = false; save(); UI.modal = null; go('login'); },
   'modal-close': () => { UI.modal = null; UI.msel = null; render(); },
   'msel-open': el => { UI.msel = UI.msel === el.dataset.id ? null : el.dataset.id; UI.mselq = ''; render(); setTimeout(() => { const i = document.getElementById('mselq-' + el.dataset.id); i && i.focus(); }, 20); },
-  'ap-stage': el => { UI.f.apfn = UI.f.apfn === el.dataset.v && (UI.route.p.tab || 'review') === 'review' ? '' : el.dataset.v; go('approvals', { tab: 'review' }); },
+  'ap-stage': el => { UI.f.apfn = UI.f.apfn === el.dataset.v && (UI.route.p.tab || 'review') === 'review' ? '' : el.dataset.v; go('tasks', { tab: 'review' }); },
   'msel-close': () => { UI.msel = null; UI.mselq = ''; render(); },
   'modal-bg': (el, ev) => { if (ev.target === el) { UI.modal = null; render(); } },
   'toggle-f': el => { const k = el.dataset.k; UI.f[k] = UI.f[k] === el.dataset.v ? '' : el.dataset.v; render(); },
@@ -245,7 +247,7 @@ const ACT = {
     if (D.type && isMediaType(D.type) && kindOfType(D.type) !== kindOfType(v) && D.media && D.media.fileId) D.media = { source: D.media.source || '', usage: D.media.usage || '' };
     D.type = v; render(); },
   'd-toggle': el => { const D = UI.draft; const arr = D[el.dataset.k]; const i = arr.indexOf(el.dataset.v); i >= 0 ? arr.splice(i, 1) : arr.push(el.dataset.v);
-    if (el.dataset.k === 'products') { const ok = uniq(S.products.filter(p => D.products.includes(p.id)).flatMap(p => p.indications)); D.indications = D.indications.filter(x => ok.includes(x)); }
+    if (el.dataset.k === 'products') D.indications = uniq(D.products.flatMap(pid => productInds(pid).map(i => i.id)));
     render(); },
   'd-unref': el => { UI.draft.refs = UI.draft.refs.filter(r => r !== el.dataset.v); render(); },
   'd-newref': () => {
@@ -332,7 +334,7 @@ const ACT = {
 
   /* audit */
   'audit-user': el => { Object.assign(UI.f, { uuser: el.dataset.id, uq: '', ucat: '', uobj: '' }); go('audit'); },
-  'audit-export': () => {
+  'audit-export': () => { if (!can(me(), 'export')) { toast('Your role cannot export'); return; }
     const rows = auditRows().sort((a, b) => b.ts - a.ts); const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     const csv = [['Date', 'Time', 'User', 'Role', 'Action', 'Object type', 'Object ID', 'Object', 'Version', 'Products', 'Countries', 'Previous value', 'New value', 'Note'].map(q).join(','), ...rows.map(e => [fmtD(e.ts), fmtT(e.ts), user(e.user).name, e.role, e.action, e.objType, e.objId, objName(e), e.version, productsTxt(e.products), (e.markets || []).join(' '), e.prev, e.next, e.note].map(q).join(','))].join('\n');
     const filename = 'saja-medlr-audit-' + toISO(Date.now()) + '.csv';
@@ -357,12 +359,12 @@ const ACT = {
 
   /* configuration (config.js) */
   'cfg-new': el => { const k = el.dataset.k; const d = {}; CONFIG[k].fields.forEach(f => { d[f[0]] = f[2] === 'list' ? [] : f[2] === 'bool' ? false : f[2] === 'select' && f[3].req ? ((f[3].options()[0] || [])[0] || '') : ''; }); const back = UI.modal && UI.modal.type !== 'cfg' ? null : null; UI.modal = { type: 'cfg', k, d }; if (UI.route.name === 'user-new' || UI.route.name === 'user-edit') UI.modal.then = x => { UI.udraft.team = x.id; render(); toast('Team created'); }; render(); },
-  'cfg-edit': el => { const k = el.dataset.k; const x = CONFIG[k].coll().find(i => i.id === el.dataset.id); UI.modal = { type: 'cfg', k, id: x.id, d: JSON.parse(JSON.stringify(x)) }; render(); },
+  'cfg-edit': el => { const k = el.dataset.k; const x = CONFIG[k].coll().find(i => i.id === el.dataset.id); const d = JSON.parse(JSON.stringify(x)); CONFIG[k].fields.forEach(f => { if (f[3].get) d[f[0]] = f[3].get(x); }); UI.modal = { type: 'cfg', k, id: x.id, d }; render(); },
   'cfg-bool': el => { document.querySelectorAll('[data-cfg]').forEach(i => { UI.modal.d[i.dataset.cfg] = i.value; }); UI.modal.d[el.dataset.f] = !UI.modal.d[el.dataset.f]; render(); },
   'cfg-save': () => cfgSave(),
   'cfg-toggle': el => cfgToggle(el.dataset.k, el.dataset.id),
   'cfg-delete': el => cfgDelete(el.dataset.k, el.dataset.id),
-  'mod-archive': el => { const m = modById(el.dataset.id); m.archived = !m.archived; m.archivedAt = m.archived ? Date.now() : null; m.archivedBy = m.archived ? me().id : null; log(m.archived ? 'Module archived' : 'Module reinstated', 'Module', m, live(m) ? live(m).v : null, { prev: m.archived ? 'In library' : 'Archived', next: m.archived ? 'Archived' : 'In library' }); save(); render(); toast(m.archived ? 'Withdrawn from the Approved Library' : 'Reinstated in the Approved Library'); },
+  'mod-archive': el => { const m = modById(el.dataset.id); if (!can(me(), m.archived ? 'restore' : 'withdraw')) return; m.archived = !m.archived; m.archivedAt = m.archived ? Date.now() : null; m.archivedBy = m.archived ? me().id : null; log(m.archived ? 'Module archived' : 'Module reinstated', 'Module', m, live(m) ? live(m).v : null, { prev: m.archived ? 'In library' : 'Archived', next: m.archived ? 'Archived' : 'In library' }); save(); render(); toast(m.archived ? 'Withdrawn from the Approved Library' : 'Reinstated in the Approved Library'); },
   print: () => window.print(),
   'wf-active': () => { UI.wfDraft.active = UI.wfDraft.active === false; render(); },
   'wf-applies': el => { UI.wfDraft.appliesTo = el.dataset.v; render(); },
@@ -427,6 +429,14 @@ const ACT = {
   }
 };
 
+/* Write actions on admin pages need the matching manage permission; Administration view access alone is read-only. */
+const ACT_PERM = { 'user-status': 'manage_users', 'perm-toggle': 'manage_users', 'role-save': 'manage_users', 'sop-new': 'manage_sops', 'sop-edit': 'manage_sops', 'sop-save': 'manage_sops', 'sop-active': 'manage_sops', 'wf-new': 'manage_workflows', 'wf-save': 'manage_workflows', 'wf-del': 'manage_workflows', 'wf-add': 'manage_workflows', 'wf-add-mail': 'manage_workflows', 'wf-active': 'manage_workflows', 'wf-open': 'manage_workflows', 'audit-export': 'export' };
+const ACT_ADMIN = ['cfg-new', 'cfg-edit', 'cfg-toggle', 'cfg-delete', 'cfg-save'];
+function actAllowed(act, el) {
+  if (ACT_PERM[act]) return can(me(), ACT_PERM[act]);
+  if (ACT_ADMIN.includes(act)) { const k = el.dataset.k || (UI.modal && UI.modal.k); return !CONFIG[k] || can(me(), CONFIG[k].perm); }
+  return true;
+}
 /* ===== Event wiring ===== */
 document.addEventListener('click', ev => {
   const actEl = ev.target.closest('[data-act]'); const goEl = ev.target.closest('[data-go]');
@@ -435,9 +445,10 @@ document.addEventListener('click', ev => {
   if (UI.search && !ev.target.closest('.search')) { UI.search = ''; if (!actEl && !goEl) { render(); return; } }
   if (actEl && (!goEl || actEl === goEl || goEl.contains(actEl))) {
     if (actEl.disabled) return;
-    const fn = ACT[actEl.dataset.act]; if (fn) { if (actEl.dataset.act !== 'modal-bg') ev.preventDefault(); fn(actEl, ev); return; }
+    const fn = ACT[actEl.dataset.act]; if (fn && !actAllowed(actEl.dataset.act, actEl)) { ev.preventDefault(); toast('Your role can view this page but not change it'); return; }
+    if (fn) { if (actEl.dataset.act !== 'modal-bg') ev.preventDefault(); fn(actEl, ev); return; }
   }
-  if (goEl) { ev.preventDefault(); const p = {}; ['id', 'tab', 'k', 'v'].forEach(k => { if (goEl.dataset[k]) p[k] = goEl.dataset[k]; }); if (goEl.dataset.go !== 'cover') delete p.v; if (!['cover', 'item'].includes(goEl.dataset.go)) delete p.k; if (goEl.dataset.mstat) UI.f.mstat = goEl.dataset.mstat; UI.modal = null; go(goEl.dataset.go, p); }
+  if (goEl) { ev.preventDefault(); const p = {}; ['id', 'tab', 'k', 'v'].forEach(k => { if (goEl.dataset[k]) p[k] = goEl.dataset[k]; }); if (!['cover', 'module', 'asset'].includes(goEl.dataset.go)) delete p.v; if (!['cover', 'item'].includes(goEl.dataset.go)) delete p.k; if (goEl.dataset.mstat != null) UI.f.mstat = goEl.dataset.mstat; if (goEl.dataset.setf) goEl.dataset.setf.split('&').forEach(kv => { const [k, v] = kv.split('='); UI.f[k] = v; }); UI.modal = null; go(goEl.dataset.go, p); }
 });
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape' && UI.msel) { UI.msel = null; UI.mselq = ''; render(); return; }
@@ -565,7 +576,7 @@ function logModuleDiff(m, before, D, v) {
   if (before.body !== D.body.trim()) log('Content edited', 'Module', m, v, { prev: trunc(before.body), next: trunc(D.body.trim()) });
   const meta = [['title', 'Name'], ['type', 'Type'], ['audience', 'Audience']].filter(([k]) => before[k] !== (k === 'title' ? D.title.trim() : D[k]));
   if (!sameSet(before.channels, D.channels)) meta.push(['channels', 'Channels']);
-  if (!sameSet(before.indications, D.indications)) meta.push(['indications', 'Indications']);
+  if (!sameSet(before.indications, D.indications)) meta.push(['indications', 'Indication']);
   if (toISO(before.expiry || 0) !== D.expiry) meta.push(['expiry', 'Expiry']);
   if (toISO(before.reviewDate || 0) !== D.reviewDate) meta.push(['reviewDate', 'Review date']);
   if (meta.length) log('Module edited', 'Module', m, v, { note: meta.map(x => x[1]).join(', ') + ' changed', prev: meta.length === 1 && meta[0][0] === 'title' ? before.title : '', next: meta.length === 1 && meta[0][0] === 'title' ? D.title.trim() : '' });
