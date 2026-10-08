@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the SAJA MedLR prototype into single self-contained HTML files.
+"""Builds SAJA MedLR into single self-contained HTML files.
 
 dist/index.html        – standalone page (open directly in a browser)
 dist/artifact.html     – same content without the document skeleton (for hosting as a claude.ai Artifact)
@@ -9,9 +9,9 @@ root = pathlib.Path(__file__).parent
 src = root / 'src'
 logo = 'data:image/png;base64,' + base64.b64encode((root / 'assets' / 'saja-logo.png').read_bytes()).decode()
 css = (src / 'styles.css').read_text()
-js = '\n'.join((src / f).read_text() for f in ['data.js', 'core.js', 'pages.js', 'main.js']).replace("'__LOGO__'", repr(logo))
+js = '\n'.join((src / f).read_text() for f in ['data.js', 'icons.js', 'core.js', 'pages.js', 'admin.js', 'workflows.js', 'main.js']).replace("'__LOGO__'", repr(logo))
 stamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
-body = f'''<!-- SAJA MedLR prototype build {stamp} -->
+body = f'''<!-- SAJA MedLR build {stamp} -->
 <title>SAJA MedLR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
