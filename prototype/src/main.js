@@ -324,7 +324,16 @@ const ACT = {
   'audit-export': () => {
     const rows = auditRows().sort((a, b) => b.ts - a.ts); const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     const csv = [['Date', 'Time', 'User', 'Role', 'Action', 'Object type', 'Object ID', 'Object', 'Version', 'Products', 'Countries', 'Previous value', 'New value', 'Note'].map(q).join(','), ...rows.map(e => [fmtD(e.ts), fmtT(e.ts), user(e.user).name, e.role, e.action, e.objType, e.objId, objName(e), e.version, productsTxt(e.products), (e.markets || []).join(' '), e.prev, e.next, e.note].map(q).join(','))].join('\n');
-    try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'saja-medlr-audit-' + toISO(Date.now()) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); toast('Exported ' + rows.length + ' audit events'); } catch (e) { toast('Export is not available in this browser'); }
+    const filename = 'saja-medlr-audit-' + toISO(Date.now()) + '.csv';
+    // Inside the claude.ai viewer, files go through the downloads capability; elsewhere a normal browser download.
+    if (window.claude && typeof window.claude.use === 'function') {
+      window.claude.use('downloads').then(dl => {
+        if (!dl) { toast('Export is not available in this view'); return; }
+        dl.save({ filename, data: csv }).then(() => toast('Exported ' + rows.length + ' audit events'), e => { if (e && e.code !== 'declined') toast('Export is not available in this view'); });
+      });
+      return;
+    }
+    try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); toast('Exported ' + rows.length + ' audit events'); } catch (e) { toast('Export is not available in this browser'); }
   },
 
   /* users and roles */
