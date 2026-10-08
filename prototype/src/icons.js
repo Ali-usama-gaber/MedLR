@@ -64,5 +64,7 @@ const IC = {
 const icon = (n, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n] || ''}</svg>`;
 const FN_ICON = { Medical: 'stethoscope', Legal: 'scale', Regulatory: 'filecheck', Email: 'mail', Content: 'file', Marketing: 'layers', Admin: 'key' };
 function fnBadge(fn, cls = '') { return `<span class="fn-badge fn-${String(fn).toLowerCase()} ${cls}" title="${fn}">${icon(FN_ICON[fn] || 'shieldcheck', 'sm')}</span>`; }
-const TYPE_ICON = { 'Clinical Claim': 'quote', 'Safety Statement': 'alert', 'Headline': 'type', 'Supporting Evidence': 'evidence', 'CTA': 'pointer', 'Reference': 'book', 'new': 'edit' };
-const typeIco = t => `<span class="type-ico t-${String(t || 'file').toLowerCase().replace(/[^a-z]+/g, '-')}" aria-hidden="true">${icon(TYPE_ICON[t] || 'file', 'sm')}</span>`;
+// Icons an administrator can pick for a module type.
+const TYPE_ICONS = ['quote', 'alert', 'type', 'evidence', 'pointer', 'book', 'file', 'flag', 'sparkle', 'link', 'shield', 'pill'];
+// Module type icon and colour come from the Module Types configuration.
+const typeIco = id => { const t = id === 'new' ? { icon: 'edit', tone: 'safety' } : mtype(id); return `<span class="type-ico t-${t.tone || 'ref'}" aria-hidden="true">${icon(t.icon || 'file', 'sm')}</span>`; };

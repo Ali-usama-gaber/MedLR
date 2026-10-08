@@ -9,7 +9,7 @@ root = pathlib.Path(__file__).parent
 src = root / 'src'
 logo = 'data:image/png;base64,' + base64.b64encode((root / 'assets' / 'saja-logo.png').read_bytes()).decode()
 css = (src / 'styles.css').read_text()
-js = '\n'.join((src / f).read_text() for f in ['data.js', 'icons.js', 'core.js', 'pages.js', 'admin.js', 'workflows.js', 'main.js']).replace("'__LOGO__'", repr(logo))
+js = '\n'.join((src / f).read_text() for f in ['data.js', 'icons.js', 'core.js', 'pages.js', 'admin.js', 'config.js', 'workflows.js', 'main.js']).replace("'__LOGO__'", repr(logo))
 stamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
 body = f'''<!-- SAJA MedLR build {stamp} -->
 <title>SAJA MedLR</title>

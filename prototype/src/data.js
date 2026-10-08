@@ -4,16 +4,24 @@ const NOW0 = Date.now();
 const d = (offsetDays, h = 10, m = 0) => { const t = new Date(NOW0 + offsetDays * DAY); t.setHours(h, m, 0, 0); return t.getTime(); };
 
 // Organisation model: every person belongs to a function and holds a level within it.
-const FUNCS = ['Content', 'Medical', 'Legal', 'Regulatory', 'Marketing'];
-const REVIEW_FUNCS = ['Medical', 'Legal', 'Regulatory'];
+// Seed functions. At runtime functions are data (S.functions) managed in Roles & Permissions.
+const SEED_FUNCS = [['Content', 'Creates and owns modules', false], ['Medical', 'Medical review and approval', true], ['Legal', 'Legal review and approval', true], ['Regulatory', 'Regulatory review and approval', true], ['Marketing', 'Assembles assets from approved modules', false]];
 const LEVELS = ['Member', 'Lead'];
-const FUNC_DESC = { Content: 'Creates and owns modules', Medical: 'Medical review and approval', Legal: 'Legal review and approval', Regulatory: 'Regulatory review and approval', Marketing: 'Assembles assets', Administrator: 'Configures and governs the system' };
+// Reference kinds are part of the validation engine (the evidence rule counts study, registry and publication).
+const REF_KINDS = [['study', 'Clinical study'], ['registry', 'Registry'], ['publication', 'Publication'], ['label', 'Label / SmPC'], ['other', 'Other']];
+const EVIDENCE_KINDS = ['study', 'registry', 'publication'];
+const TONES = [['claim', 'Green'], ['safety', 'Amber'], ['headline', 'Blue'], ['evidence', 'Purple'], ['cta', 'Teal'], ['ref', 'Grey']];
+// Version metadata snapshot: each version keeps the scope it was approved for.
+const MOD_META = ['title', 'type', 'products', 'indications', 'audience', 'markets', 'channels', 'expiry', 'reviewDate'];
+const ASSET_META = ['name', 'type', 'products', 'markets', 'channel', 'audience', 'disclaimer'];
+const metaSnap = o => { const keys = o.blocks ? ASSET_META : MOD_META; const out = {}; keys.forEach(k => { out[k] = Array.isArray(o[k]) ? [...o[k]] : o[k]; }); return out; };
 
+// [key, label, group, what it controls] — every permission is checked by the application.
 const PERMS = [
-  ['view', 'View content', 'Content'], ['create', 'Create', 'Content'], ['edit', 'Edit', 'Content'], ['submit', 'Submit for review', 'Content'], ['amend', 'Amend & resubmit', 'Content'],
-  ['review', 'Review', 'Approval'], ['request_amend', 'Request amendment', 'Approval'], ['approve', 'Approve step', 'Approval'], ['final_approve', 'Final approve', 'Approval'], ['reject', 'Reject', 'Approval'],
-  ['manage_users', 'Manage users', 'Administration'], ['manage_workflows', 'Manage workflows', 'Administration'], ['manage_sops', 'Manage SOPs', 'Administration'], ['manage_library', 'Manage library', 'Administration'], ['manage_settings', 'Manage settings', 'Administration'],
-  ['view_reports', 'View reports', 'Insight'], ['view_audit', 'View audit trail', 'Insight']
+  ['view', 'View content', 'Content', 'Open Modules, Assets, Approvals and the Approved Library'], ['create', 'Create modules & assets', 'Content', 'Create new modules and assets'], ['edit', 'Edit drafts', 'Content', 'Edit drafts owned by them or their team'], ['submit', 'Submit for review', 'Content', 'Start an approval cycle; otherwise drafts go to a Team Lead'], ['amend', 'Amend & resubmit', 'Content', 'Resubmit after an amendment request'],
+  ['review', 'Complete review steps', 'Approval', 'Act on review steps assigned to their role'], ['request_amend', 'Request amendment', 'Approval', 'Return to the owner and resume at the same step'], ['approve', 'Approve intermediate steps', 'Approval', 'Sign approval steps that are not the last step'], ['final_approve', 'Final approval', 'Approval', 'Sign the last approval step of a workflow'], ['reject', 'Reject', 'Approval', 'Reject and end the approval cycle'],
+  ['manage_users', 'Manage users, teams & roles', 'Administration', 'Users, teams, functions, roles and permissions'], ['manage_workflows', 'Manage workflows', 'Administration', 'Create and edit approval workflows'], ['manage_sops', 'Manage Validation SOPs', 'Administration', 'Create and edit Validation SOPs'], ['manage_library', 'Manage the Approved Library', 'Administration', 'Withdraw (archive) and reinstate approved content, manage references'], ['manage_settings', 'Manage configuration', 'Administration', 'Products, countries, types, channels, audiences and settings'],
+  ['view_reports', 'View reports', 'Insight', 'Open Reports'], ['view_audit', 'View audit trail', 'Insight', 'Open the Audit Trail and Lifecycle']
 ];
 const DEFAULT_ROLES = () => ({
   'Content-Member': ['view', 'create', 'edit', 'amend'],
@@ -102,15 +110,15 @@ function asset(id, name, type, products, markets, channel, audience, owner, bloc
 const SEED = () => {
   RS = 7;
   const S = {
-    version: 6,
+    version: 7,
     personaId: 'u-ali',
     signedIn: false,
-    settings: { orgName: 'SAJA Pharma', expiryWarnDays: 45, reviewReminderDays: 30, defaultValidityMonths: 12, libraryShowExpiring: true, requireSignature: true, adminActsOnAnyStep: true, defaultModuleWorkflow: 'WF-STD', newVersionWorkflow: 'WF-LOW' },
+    settings: { orgName: 'SAJA Pharma', expiryWarnDays: 45, reviewReminderDays: 30, defaultValidityMonths: 12, libraryShowExpiring: true, requireSignature: true, adminActsOnAnyStep: true, defaultModuleWorkflow: 'WF-STD', assetStreamWorkflow: 'WF-ASSET-STREAM', newVersionWorkflow: 'WF-LOW' },
     roles: DEFAULT_ROLES(),
     products: [
-      { id: 'P-A', name: 'Product A', area: 'Cardiology', indications: ['Chronic heart failure', 'Post-MI care'], status: 'Active' },
-      { id: 'P-B', name: 'Product B', area: 'Respiratory', indications: ['Persistent asthma', 'COPD maintenance'], status: 'Active' },
-      { id: 'P-C', name: 'Product C', area: 'Diabetes', indications: ['Type 2 diabetes'], status: 'Active' }
+      { id: 'P-A', name: 'Product A', area: 'Cardiology', indications: ['Chronic heart failure', 'Post-MI care'], active: true },
+      { id: 'P-B', name: 'Product B', area: 'Respiratory', indications: ['Persistent asthma', 'COPD maintenance'], active: true },
+      { id: 'P-C', name: 'Product C', area: 'Diabetes', indications: ['Type 2 diabetes'], active: true }
     ],
     markets: [
       { id: 'SA', name: 'Saudi Arabia', authority: 'SFDA', lang: 'Arabic, English', active: true },
@@ -119,15 +127,20 @@ const SEED = () => {
       { id: 'EG', name: 'Egypt', authority: 'EDA', lang: 'Arabic', active: true }
     ],
     materialTypes: [
-      { id: 'MT-1', name: 'HCP Email', channel: 'Email', workflow: 'WF-ASSET-FULL' },
-      { id: 'MT-2', name: 'Detail Aid', channel: 'Detail aid', workflow: 'WF-ASSET-FULL' },
-      { id: 'MT-3', name: 'Leave-behind', channel: 'Print', workflow: 'WF-ASSET-FULL' },
-      { id: 'MT-4', name: 'Web Banner', channel: 'Web', workflow: 'WF-ASSET-FULL' },
-      { id: 'MT-5', name: 'Social Post', channel: 'Social', workflow: 'WF-ASSET-FULL' }
+      { id: 'MT-1', name: 'HCP Email', channel: 'CH-EMAIL', workflow: 'WF-ASSET-FULL', active: true },
+      { id: 'MT-2', name: 'Detail Aid', channel: 'CH-DETAIL', workflow: 'WF-ASSET-FULL', active: true },
+      { id: 'MT-3', name: 'Leave-behind', channel: 'CH-PRINT', workflow: 'WF-ASSET-FULL', active: true },
+      { id: 'MT-4', name: 'Web Banner', channel: 'CH-WEB', workflow: 'WF-ASSET-FULL', active: true },
+      { id: 'MT-5', name: 'Social Post', channel: 'CH-SOCIAL', workflow: 'WF-ASSET-FULL', active: true }
     ],
-    audiences: ['HCP – Cardiologists', 'HCP – General practitioners', 'HCP – Pulmonologists', 'HCP – Endocrinologists', 'Pharmacists'],
-    channels: ['Email', 'Detail aid', 'Print', 'Web', 'Social'],
-    moduleTypes: ['Clinical Claim', 'Safety Statement', 'Headline', 'Supporting Evidence', 'CTA', 'Reference'],
+    audiences: [['AU-CARD', 'HCP – Cardiologists'], ['AU-GP', 'HCP – General practitioners'], ['AU-PULM', 'HCP – Pulmonologists'], ['AU-ENDO', 'HCP – Endocrinologists'], ['AU-PHARM', 'Pharmacists']].map(([id, name]) => ({ id, name, active: true })),
+    channels: [['CH-EMAIL', 'Email'], ['CH-DETAIL', 'Detail aid'], ['CH-PRINT', 'Print'], ['CH-WEB', 'Web'], ['CH-SOCIAL', 'Social']].map(([id, name]) => ({ id, name, active: true })),
+    moduleTypes: [
+      ['TY-CLAIM', 'Clinical Claim', 'A single efficacy or outcome claim with a reference', 'quote', 'claim'], ['TY-SAFETY', 'Safety Statement', 'Fair-balance or safety information', 'alert', 'safety', true],
+      ['TY-HEAD', 'Headline', 'Short promotional headline', 'type', 'headline'], ['TY-EVID', 'Supporting Evidence', 'Data that supports a claim', 'evidence', 'evidence'],
+      ['TY-CTA', 'CTA', 'Call to action', 'pointer', 'cta'], ['TY-REF', 'Reference', 'Citation block', 'book', 'ref']
+    ].map(([id, name, desc, icon, tone, safety]) => ({ id, name, desc, icon, tone, safety: !!safety, active: true })),
+    functions: SEED_FUNCS.map(([id, desc, reviews]) => ({ id, desc, reviews, active: true })),
     teams: [
       { id: 'T-CON', name: 'Content — Cardiology', fn: 'Content' }, { id: 'T-CON2', name: 'Content — Respiratory & Diabetes', fn: 'Content' },
       { id: 'T-MED', name: 'Medical Affairs', fn: 'Medical' }, { id: 'T-LEG', name: 'Legal', fn: 'Legal' }, { id: 'T-REG', name: 'Regulatory Affairs', fn: 'Regulatory' },
@@ -146,16 +159,16 @@ const SEED = () => {
       { id: 'WF-LOW', name: 'Low-risk updates — Team Lead only', desc: 'Reference and formatting updates with no new claims.', active: true },
       { id: 'WF-ASSET-FULL', name: 'Assets — new content', desc: 'Assets that contain text that is not an approved module.', active: true, system: true },
       { id: 'WF-ASSET-STREAM', name: 'Assets — approved modules only', desc: 'Streamlined: every block is an approved, eligible module.', active: true, system: true }
-    ].map(w => ({ ...w, steps: WF_SEED[w.id].map(([fn, level, req], i) => ({ id: w.id + '-s' + i, fn, level, req })) })),
+    ].map(w => ({ ...w, appliesTo: w.system ? 'Asset' : 'Module', steps: WF_SEED[w.id].map(([fn, level, req], i) => ({ id: w.id + '-s' + i, fn, level, req })) })),
     references: [
-      { id: 'REF-A-01', kind: 'study', title: 'ALPHA-HF study — primary results', source: 'Clinical study report CSR-ALPHA-01, 2025' },
-      { id: 'REF-A-02', kind: 'study', title: 'ALPHA-HF study — 24-month extension', source: 'Clinical study report CSR-ALPHA-02, 2026' },
-      { id: 'REF-A-03', kind: 'label', title: 'Product A — Summary of Product Characteristics', source: 'SAJA Pharma, 2026' },
-      { id: 'REF-A-04', kind: 'registry', title: 'HEART-QOL registry', source: 'Registry report HQ-2025' },
-      { id: 'REF-B-01', kind: 'study', title: 'BREATHE-2 study', source: 'Clinical study report CSR-BR2, 2025' },
-      { id: 'REF-B-02', kind: 'label', title: 'Product B — Summary of Product Characteristics', source: 'SAJA Pharma, 2026' },
-      { id: 'REF-C-01', kind: 'study', title: 'GLUCO-ONE study', source: 'Clinical study report CSR-G1, 2026' },
-      { id: 'REF-C-02', kind: 'label', title: 'Product C — Summary of Product Characteristics', source: 'SAJA Pharma, 2026' }
+      { id: 'REF-A-01', kind: 'study', title: 'ALPHA-HF study — primary results', source: 'Clinical study report CSR-ALPHA-01, 2025', active: true },
+      { id: 'REF-A-02', kind: 'study', title: 'ALPHA-HF study — 24-month extension', source: 'Clinical study report CSR-ALPHA-02, 2026', active: true },
+      { id: 'REF-A-03', kind: 'label', title: 'Product A — Summary of Product Characteristics', source: 'SAJA Pharma, 2026', active: true },
+      { id: 'REF-A-04', kind: 'registry', title: 'HEART-QOL registry', source: 'Registry report HQ-2025', active: true },
+      { id: 'REF-B-01', kind: 'study', title: 'BREATHE-2 study', source: 'Clinical study report CSR-BR2, 2025', active: true },
+      { id: 'REF-B-02', kind: 'label', title: 'Product B — Summary of Product Characteristics', source: 'SAJA Pharma, 2026', active: true },
+      { id: 'REF-C-01', kind: 'study', title: 'GLUCO-ONE study', source: 'Clinical study report CSR-G1, 2026', active: true },
+      { id: 'REF-C-02', kind: 'label', title: 'Product C — Summary of Product Characteristics', source: 'SAJA Pharma, 2026', active: true }
     ],
     sops: [
       { id: 'SOP-01', name: 'Product selected', rule: 'product', appliesTo: 'Both', scope: { types: [], products: [], markets: [] }, guidance: 'Select every product the content refers to.', active: true },
@@ -227,6 +240,11 @@ const SEED = () => {
     asset('AST-106', 'Detail Aid — Product C launch', 'Detail Aid', ['P-C'], ['EG', 'KW'], 'Detail aid', 'HCP – Endocrinologists', 'u-karim', [['MOD-C-001', 1], ['new', 'Meet the SAJA diabetes team at the regional congress in November.'], ['MOD-C-002', 1], ['MOD-X-001', 1]], [A(1, d(-3), 'u-karim', 'Initial version', [cy('WF-ASSET-FULL', d(-2, 11), { stopAt: 0, owner: 'u-karim' })])], { disclaimer: 'For healthcare professionals only. Local regulatory reference available on request.' })
   ];
 
+  // Configuration is referenced by id everywhere; the seed content is written with names for readability.
+  const idOf = (list, n) => (list.find(x => x.name === n) || { id: n }).id;
+  S.modules.forEach(m => { m.type = idOf(S.moduleTypes, m.type); m.audience = idOf(S.audiences, m.audience); m.channels = m.channels.map(c => idOf(S.channels, c)); m.versions.forEach(v => { v.meta = metaSnap(m); }); });
+  S.assets.forEach(a => { a.type = idOf(S.materialTypes, a.type); a.channel = idOf(S.channels, a.channel); a.audience = idOf(S.audiences, a.audience); a.updatedAt = a.createdAt; a.versions.forEach(v => { v.meta = metaSnap(a); }); });
+  S.sops.forEach(x => { x.scope.types = x.scope.types.map(n => idOf(S.moduleTypes, n) !== n ? idOf(S.moduleTypes, n) : idOf(S.materialTypes, n)); });
   S.audit = seedAudit(S);
   return S;
 };

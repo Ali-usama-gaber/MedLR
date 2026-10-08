@@ -1,9 +1,9 @@
 /* ---------- Core: state, permissions, validation, approval engine ---------- */
-const STORE_KEY = 'saja-medlr-v6';
+const STORE_KEY = 'saja-medlr-v7';
 let S = load();
 const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, modal: null, pop: null, search: '', f: {}, draft: null, sel: {}, wfSel: null };
 
-function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 6) return s; } } catch (e) {} return SEED(); }
+function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 7) return s; } } catch (e) {} return SEED(); }
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} }
 
 /* helpers */
@@ -25,8 +25,18 @@ const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
 
 const me = () => S.users.find(u => u.id === S.personaId) || S.users.find(u => u.fn === 'Administrator');
 const user = id => S.users.find(u => u.id === id) || { id, name: 'Unknown', fn: '', level: null };
-const product = id => S.products.find(p => p.id === id) || { name: id };
-const market = id => S.markets.find(m => m.id === id) || { name: id };
+// Every configurable value is stored by id and resolved here, so a rename shows everywhere.
+const product = id => S.products.find(p => p.id === id) || { id, name: id };
+const market = id => S.markets.find(m => m.id === id) || { id, name: id };
+const mtype = id => S.moduleTypes.find(t => t.id === id) || S.moduleTypes.find(t => t.name === id) || { id, name: id || '—', icon: 'file', tone: 'ref' };
+const mat = id => S.materialTypes.find(t => t.id === id) || { id, name: id || '—' };
+const chan = id => S.channels.find(c => c.id === id) || { id, name: id || '—' };
+const aud = id => S.audiences.find(a => a.id === id) || { id, name: id || '—' };
+const fnInfo = id => S.functions.find(f => f.id === id) || { id, desc: '', reviews: false };
+const funcIds = (all) => S.functions.filter(f => all || f.active).map(f => f.id);
+const reviewFuncs = (all) => S.functions.filter(f => f.reviews && (all || f.active)).map(f => f.id);
+const channelsTxt = ids => (ids || []).map(i => chan(i).name).join(', ');
+const activeOf = (list, keep = []) => list.filter(x => x.active || [].concat(keep).includes(x.id));
 const team = id => S.teams.find(t => t.id === id) || { name: '—' };
 const modById = id => S.modules.find(m => m.id === id);
 const assetById = id => S.assets.find(a => a.id === id);
@@ -34,7 +44,8 @@ const objById = (kind, id) => kind === 'Asset' ? assetById(id) : modById(id);
 const kindOf = o => o.blocks ? 'Asset' : 'Module';
 const nameOf = o => o.title || o.name;
 const wfById = id => S.workflows.find(w => w.id === id);
-const refById = id => S.references.find(r => r.id === id) || { title: id, source: '' };
+const refById = id => S.references.find(r => r.id === id) || { id, title: id, source: '', kind: 'other' };
+const refKind = k => (REF_KINDS.find(x => x[0] === k) || [k, k])[1];
 const productsTxt = ids => (ids || []).map(i => product(i).name).join(', ');
 const marketsTxt = ids => (ids || []).map(i => market(i).name).join(', ');
 
@@ -43,22 +54,25 @@ const levelName = l => l === 'Lead' ? 'Team Lead' : l === 'Member' ? 'Team Membe
 const isAdmin = u => !!u && u.fn === 'Administrator';
 const roleId = u => isAdmin(u) ? 'Administrator' : u.fn + '-' + u.level;
 const roleLabel = u => isAdmin(u) ? 'Administrator' : u.fn + ' ' + levelName(u.level);
-const roleName = id => id === 'Administrator' ? 'Administrator' : id.replace('-', ' Team ');
+const roleName = id => id === 'Administrator' ? 'Administrator' : id.replace(/-(Member|Lead)$/, ' Team $1');
 const stepWho = s => s.fn + ' ' + levelName(s.level);
 const can = (u, perm) => isAdmin(u) || ((S.roles[roleId(u)] || []).includes(perm));
-const canCreateModule = u => can(u, 'create') && (isAdmin(u) || u.fn === 'Content');
-const canCreateAsset = u => can(u, 'create') && (isAdmin(u) || u.fn === 'Marketing' || u.fn === 'Content');
+const canCreateModule = u => can(u, 'create');
+const canCreateAsset = u => can(u, 'create');
+// Edit rights: the owner or the owner's team, with the Edit permission. Administrators always.
+const sameTeam = (u, o) => !!o && (o.owner === u.id || user(o.owner).team === u.team);
+const canEditObj = (u, o) => isAdmin(u) || (can(u, 'edit') && sameTeam(u, o));
+const canAmendObj = (u, o) => isAdmin(u) || (can(u, 'amend') && sameTeam(u, o));
 const canSubmit = u => can(u, 'submit');
-const roleIds = () => [...FUNCS.flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator'];
+const roleIds = () => [...funcIds(true).flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator'];
 
 function authority(fn, level) {
-  if (fn === 'Administrator') return { short: 'Full system control', long: 'Manages users, roles, permissions, workflows, SOPs, products, countries and settings, and can act on any approval step.', final: true };
-  if (REVIEW_FUNCS.includes(fn)) return level === 'Lead'
-    ? { short: 'Final ' + fn + ' approval', long: 'Reviews the Team Member review, can return items to the Team Member and gives the final ' + fn + ' approval with e-signature.', final: true }
+  if (fn === 'Administrator') return { short: 'Full system control', long: 'Manages users, roles, permissions, workflows, SOPs and all configuration, sees every report and the full audit trail, and can act on any approval step.', final: true };
+  const rid = fn + '-' + level; const has = p => (S.roles[rid] || []).includes(p);
+  if (fnInfo(fn).reviews) return level === 'Lead'
+    ? { short: (has('final_approve') ? 'Final ' : '') + fn + ' approval', long: 'Reviews the Team Member review, can return items to the Team Member and gives the ' + fn + ' approval with e-signature.', final: has('final_approve') }
     : { short: 'Initial ' + fn + ' review', long: 'Reviews content, comments, requests amendments and passes the item to the ' + fn + ' Team Lead.', final: false };
-  if (fn === 'Content') return level === 'Lead' ? { short: 'Owns and submits modules', long: 'Creates modules, submits them for MLR review and submits drafts prepared by Content Team Members.', final: true } : { short: 'Prepares modules', long: 'Creates and edits module drafts. Submission is done by a Content Team Lead.', final: false };
-  if (fn === 'Marketing') return level === 'Lead' ? { short: 'Builds and submits assets', long: 'Assembles assets from approved modules and submits them for review.', final: true } : { short: 'Assembles assets', long: 'Assembles assets from approved modules. Submission is done by a Marketing Team Lead.', final: false };
-  return { short: '—', long: '', final: false };
+  return has('submit') ? { short: 'Creates and submits content', long: fnInfo(fn).desc + '. Can submit content for MLR review.', final: true } : { short: 'Prepares content', long: fnInfo(fn).desc + '. Submission is done by a Team Lead of the same team.', final: false };
 }
 
 /* ---------- versions and status ---------- */
@@ -66,7 +80,11 @@ const latest = o => o.versions[o.versions.length - 1];
 const live = o => [...o.versions].reverse().find(v => v.status === 'Approved') || null;
 const verOf = (o, v) => o.versions.find(x => x.v === v);
 const statusOf = o => latest(o).status;
-const usedInApproved = id => S.assets.some(a => statusOf(a) === 'Approved' && a.blocks.some(b => b.moduleId === id));
+// The scope a version was approved for. The module/asset fields are the working copy of the latest version.
+// A version still being worked on reads the live fields; approved and superseded versions read their snapshot.
+const metaOf = (o, v) => (!v || (v === latest(o) && !['Approved', 'Superseded', 'Archived'].includes(v.status))) ? o : (v.meta || o);
+const liveMeta = o => { const lv = live(o); return lv ? metaOf(o, lv) : o; };
+const usedInApproved = id => S.assets.some(a => live(a) && (live(a).blocks || a.blocks).some(b => b.moduleId === id));
 function lifeStatus(m) {
   if (m.archived) return 'Archived';
   const st = statusOf(m);
@@ -77,9 +95,9 @@ function lifeStatus(m) {
 }
 // Library status of the approved version, even while a newer version is being worked on.
 function libraryStatus(m) {
-  if (m.archived || !live(m)) return null;
-  if (m.expiry && m.expiry < Date.now()) return 'Review Required';
-  if (m.expiry && daysTo(m.expiry) <= S.settings.expiryWarnDays) return 'Expiring';
+  if (m.archived || !live(m)) return null; const exp = liveMeta(m).expiry;
+  if (exp && exp < Date.now()) return 'Review Required';
+  if (exp && daysTo(exp) <= S.settings.expiryWarnDays) return 'Expiring';
   return usedInApproved(m.id) ? 'Active' : 'Approved';
 }
 const STATUS_TONE = { 'Draft': 'dim', 'In Review': 'warn', 'Awaiting Lead submission': 'warn', 'Amendment Requested': 'warn', 'Approved': 'ok', 'Active': 'ok', 'Expiring': 'warn', 'Review Required': 'bad', 'Superseded': 'dim', 'Archived': 'dim', 'Rejected': 'bad', 'Inactive': 'dim', 'In progress': 'warn' };
@@ -98,16 +116,17 @@ const avatar = (u, cls = '') => `<span class="avatar ${cls}" aria-hidden="true">
 const tagList = (ids, kind) => `<span class="tags">${(ids || []).map(x => `<span class="tag" title="${esc(kind === 'p' ? product(x).name : market(x).name)}">${esc(kind === 'p' ? product(x).name : x)}</span>`).join('')}</span>`;
 
 function impactedAssets(m) { const lv = live(m); if (!lv) return []; return S.assets.filter(a => a.blocks.some(b => b.moduleId === m.id && b.v < lv.v)); }
+// Eligibility always uses the approved (live) version's scope, never an unapproved draft's.
 function eligibility(m, a) {
-  const lv = live(m);
-  const missingMk = (a.markets || []).filter(x => !m.markets.includes(x));
+  const lv = live(m); const lm = liveMeta(m);
+  const missingMk = (a.markets || []).filter(x => !lm.markets.includes(x));
   const checks = [
     ['Approved', !!lv && !m.archived],
     [missingMk.length ? 'Not approved for ' + missingMk.join(', ') : 'Countries covered', !missingMk.length],
-    [a.channel + ' channel', m.channels.includes(a.channel)],
-    ['Not expired', !(m.expiry && m.expiry < Date.now())]
+    [chan(a.channel).name + ' channel', lm.channels.includes(a.channel)],
+    ['Not expired', !(lm.expiry && lm.expiry < Date.now())]
   ];
-  const prodOk = m.products.some(p => (a.products || []).includes(p));
+  const prodOk = lm.products.some(p => (a.products || []).includes(p));
   return { ok: prodOk && checks.every(c => c[1]), checks, prodOk, reason: !prodOk ? 'Different product' : (checks.find(c => !c[1]) || [''])[0] };
 }
 
@@ -116,7 +135,7 @@ function sopApplies(sop, obj, kind) {
   if (!sop.active) return false;
   if (sop.appliesTo !== 'Both' && sop.appliesTo !== kind) return false;
   const sc = sop.scope || {};
-  if (sc.types && sc.types.length && !sc.types.includes(kind === 'Module' ? obj.type : obj.type)) return false;
+  if (sc.types && sc.types.length && !sc.types.includes(obj.type)) return false;
   if (sc.products && sc.products.length && !(obj.products || []).some(p => sc.products.includes(p))) return false;
   if (sc.markets && sc.markets.length && !(obj.markets || []).some(p => sc.markets.includes(p))) return false;
   return true;
@@ -127,12 +146,12 @@ function sopCheck(sop, obj, kind) {
     case 'product': return (obj.products || []).length > 0 ? null : 'No product selected.';
     case 'country': return (obj.markets || []).length > 0 ? null : 'No country selected.';
     case 'reference': return isM && !v.refs.length ? 'Attach at least one reference.' : null;
-    case 'evidence': return isM && !v.refs.some(r => ['study', 'registry'].includes(refById(r).kind)) ? 'Cite a study or registry reference.' : null;
+    case 'evidence': return isM && !v.refs.some(r => EVIDENCE_KINDS.includes(refById(r).kind)) ? 'Cite a clinical study, registry or publication.' : null;
     case 'safety': {
       if (isM) return null;
-      const covered = uniq(obj.blocks.filter(b => b.kind === 'module').map(b => modById(b.moduleId)).filter(m => m && m.type === 'Safety Statement').flatMap(m => m.products));
+      const covered = uniq(obj.blocks.filter(b => b.kind === 'module').map(b => { const m = modById(b.moduleId); return m && metaOf(m, verOf(m, b.v)); }).filter(x => x && mtype(x.type).safety).flatMap(x => x.products));
       const miss = (obj.products || []).filter(p => !covered.includes(p));
-      return miss.length ? 'Add a Safety Statement module for ' + productsTxt(miss) + '.' : null;
+      return miss.length ? 'Add an approved safety statement module (' + S.moduleTypes.filter(t => t.safety).map(t => t.name).join(' / ') + ') for ' + productsTxt(miss) + '.' : null;
     }
     case 'disclaimer': { if (isM) return null; const mk = (sop.scope.markets || []).filter(x => obj.markets.includes(x)); return (obj.disclaimer || '').trim().length < 10 ? 'Add the local disclaimer required for ' + marketsTxt(mk) + '.' : null; }
     case 'metadata': {
@@ -158,14 +177,19 @@ const reviewPos = (wf, i) => wf.steps.slice(0, i + 1).filter(s => !isNotify(s)).
 function stepLabel(st) { if (!st) return ''; if (isNotify(st)) return 'Email notification'; return st.fn + ' · ' + levelName(st.level) + (st.req === 'approve' ? ' approval' : ' review'); }
 function curStep(obj) { if (!obj.review) return null; const wf = wfById(obj.review.wf); return wf.steps[obj.review.step] || null; }
 function curCycle(obj) { const r = obj.review || obj.resume; if (!r) return null; return latest(obj).cycles.find(c => c.n === r.cycle) || null; }
-function assigneeFor(st) { return S.users.filter(u => u.status === 'Active' && u.fn === st.fn && u.level === st.level); }
+// Reviewers are the active users holding the step's role (and team, when the step names one).
+function assigneeFor(st) { return S.users.filter(u => u.status === 'Active' && u.fn === st.fn && u.level === st.level && (!st.team || u.team === st.team)); }
+const isFinalStep = (wf, i) => !wf.steps.slice(i + 1).some(s => !isNotify(s));
+// The permission a step needs: review → Review, approval → Approve, last approval → Final approval.
+function stepPerm(wf, i) { const s = wf.steps[i]; return s.req === 'approve' ? (isFinalStep(wf, i) ? 'final_approve' : 'approve') : 'review'; }
 function canActOn(u, obj) {
   const st = curStep(obj); if (!st || isNotify(st)) return false;
   if (isAdmin(u)) return S.settings.adminActsOnAnyStep !== false;
-  return u.fn === st.fn && u.level === st.level && can(u, st.req === 'approve' ? 'final_approve' : 'review');
+  return u.status === 'Active' && u.fn === st.fn && u.level === st.level && (!st.team || u.team === st.team) && can(u, stepPerm(wfById(obj.review.wf), obj.review.step));
 }
 function nextStepOf(obj) { const wf = wfById(obj.review.wf); return wf.steps.slice(obj.review.step + 1).find(s => !isNotify(s)) || null; }
 function memberStepIndex(obj) { const wf = wfById(obj.review.wf); const st = curStep(obj); for (let i = obj.review.step - 1; i >= 0; i--) if (wf.steps[i].fn === st.fn && wf.steps[i].level === 'Member') return i; return -1; }
+const stepTeamTxt = s => s.team ? team(s.team).name : 'Any ' + s.fn + ' team';
 
 /* audit */
 function log(action, kind, obj, version, extra = {}) {
@@ -205,7 +229,7 @@ function startCycle(obj, kind, wfId) {
 // Amend & resubmit: resume the same cycle at the step that asked for the amendment.
 function resumeAmended(obj, kind, note) {
   const r = obj.resume; const cyc = latest(obj).cycles.find(c => c.n === r.cycle);
-  cyc.decisions.push({ step: r.step, fn: 'Owner', level: null, req: 'owner', by: me().id, at: Date.now(), decision: 'Amended & resubmitted', note: note || '' });
+  cyc.decisions.push({ step: r.step, fn: 'Owner', level: null, req: 'owner', by: me().id, role: roleLabel(me()), at: Date.now(), decision: 'Amended & resubmitted', note: note || '' });
   obj.review = { wf: r.wf, step: r.step, cycle: r.cycle, stepStartedAt: Date.now() }; obj.resume = null;
   setStatus(obj, 'In Review'); obj.updatedAt = Date.now();
   const st = curStep(obj);
@@ -217,7 +241,7 @@ function finalise(obj, kind) {
   const v = latest(obj); const cyc = curCycle(obj); const now = Date.now();
   cyc.end = now; cyc.outcome = 'Approved';
   const prev = live(obj);
-  v.status = 'Approved'; v.approvedAt = now; v.approvedBy = me().id; obj.review = null; obj.updatedAt = now;
+  v.status = 'Approved'; v.approvedAt = now; v.approvedBy = me().id; v.meta = metaSnap(obj); obj.review = null; obj.updatedAt = now;
   if (kind === 'Module') {
     if (prev && prev !== v) { prev.status = 'Superseded'; log('Module superseded', 'Module', obj, prev.v, { prev: 'v' + prev.v + ' Approved', next: 'v' + v.v + ' Approved', note: 'Replaced by v' + v.v }); }
     log('Module approved', 'Module', obj, v.v, { prev: 'In Review', next: 'Approved', note: 'Available in the Approved Library' });
@@ -235,7 +259,7 @@ function finalise(obj, kind) {
    reject  — Reject: back to the owner; a new version restarts the FULL cycle */
 function decide(obj, kind, decision, note) {
   const st = curStep(obj); const cyc = curCycle(obj); const v = latest(obj).v; const u = me(); const now = Date.now();
-  const rec = { step: obj.review.step, fn: st.fn, level: st.level, req: st.req, by: u.id, startedAt: obj.review.stepStartedAt, at: now, note: note || '', admin: isAdmin(u) };
+  const rec = { step: obj.review.step, fn: st.fn, level: st.level, req: st.req, by: u.id, role: roleLabel(u), startedAt: obj.review.stepStartedAt, at: now, note: note || '', admin: isAdmin(u) };
   const onBehalf = isAdmin(u) ? ' (recorded by Administrator)' : '';
   if (decision === 'pass' || decision === 'approve') {
     rec.decision = decision === 'approve' ? 'Approved' : 'Reviewed'; cyc.decisions.push(rec);
@@ -275,17 +299,17 @@ function tasksFor(u) {
   all.forEach(([kind, o]) => {
     const st = statusOf(o); const title = nameOf(o);
     if (o.review && canActOn(u, o)) out.push({ kind: 'review', obj: o, type: kind, title, id: o.id, step: curStep(o), since: o.review.stepStartedAt });
-    const owns = admin || o.owner === u.id;
-    if (st === 'Amendment Requested' && owns) out.push({ kind: 'amend', obj: o, type: kind, title, id: o.id, since: o.resume ? o.resume.at : o.updatedAt });
-    if (st === 'Awaiting Lead submission' && (admin || (canSubmit(u) && u.fn === (kind === 'Asset' ? 'Marketing' : 'Content')))) out.push({ kind: 'submit', obj: o, type: kind, title, id: o.id, since: o.updatedAt });
-    if (st === 'Rejected' && owns) out.push({ kind: 'rejected', obj: o, type: kind, title, id: o.id, since: o.updatedAt });
-    if (st === 'Draft' && owns && !admin) out.push({ kind: 'draft', obj: o, type: kind, title, id: o.id, since: o.updatedAt || o.createdAt });
+    if (st === 'Amendment Requested' && canAmendObj(u, o)) out.push({ kind: 'amend', obj: o, type: kind, title, id: o.id, since: o.resume ? o.resume.at : o.updatedAt });
+    if (st === 'Awaiting Lead submission' && (admin || (canSubmit(u) && sameTeam(u, o)))) out.push({ kind: 'submit', obj: o, type: kind, title, id: o.id, since: o.updatedAt });
+    if (st === 'Rejected' && canEditObj(u, o)) out.push({ kind: 'rejected', obj: o, type: kind, title, id: o.id, since: o.updatedAt });
+    if (st === 'Draft' && !admin && o.owner === u.id) out.push({ kind: 'draft', obj: o, type: kind, title, id: o.id, since: o.updatedAt || o.createdAt });
   });
   return out.sort((a, b) => a.since - b.since);
 }
 
 /* asset workflow routing */
-function assetWorkflow(a) { return a.blocks.some(b => b.kind === 'new') ? 'WF-ASSET-FULL' : 'WF-ASSET-STREAM'; }
+// New text routes through the Material Type's workflow; approved-modules-only assets use the streamlined workflow from Settings.
+function assetWorkflow(a) { const wf = a.blocks.some(b => b.kind === 'new') ? mat(a.type).workflow : S.settings.assetStreamWorkflow; return wfById(wf) ? wf : (S.workflows.find(w => w.appliesTo === 'Asset' && w.active !== false && !w.hidden) || S.workflows[0]).id; }
 
 /* ---------- approval cycles for reporting ---------- */
 function allCycles() {

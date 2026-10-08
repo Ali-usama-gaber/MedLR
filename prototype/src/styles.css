@@ -1208,12 +1208,12 @@ body { background:
 
 /* ---- content-type colour ---- */
 .type-ico { transition: transform .2s var(--ease); }
-.type-ico.t-clinical-claim { background: var(--t-claim-bg); color: var(--t-claim); }
-.type-ico.t-safety-statement { background: var(--t-safety-bg); color: var(--t-safety); }
+.type-ico.t-claim { background: var(--t-claim-bg); color: var(--t-claim); }
+.type-ico.t-safety { background: var(--t-safety-bg); color: var(--t-safety); }
 .type-ico.t-headline { background: var(--t-headline-bg); color: var(--t-headline); }
-.type-ico.t-supporting-evidence { background: var(--t-evidence-bg); color: var(--t-evidence); }
+.type-ico.t-evidence { background: var(--t-evidence-bg); color: var(--t-evidence); }
 .type-ico.t-cta { background: var(--t-cta-bg); color: var(--t-cta); }
-.type-ico.t-reference { background: var(--t-ref-bg); color: var(--t-ref); }
+.type-ico.t-ref { background: var(--t-ref-bg); color: var(--t-ref); }
 tr.click:hover .type-ico, .task:hover .type-ico { transform: scale(1.08) rotate(-3deg); }
 
 /* ---- surfaces & depth ---- */
@@ -1431,3 +1431,5 @@ td.late { color: #b3261e; font-weight: 700; }
 
 @media (max-width: 760px) { .panel-head { flex-wrap: wrap; } .audit-tbl td:nth-child(6), .audit-tbl td:nth-child(4) { min-width: 0; } .audit-tbl .pn { min-width: 0; } }
 @media (max-width: 760px) { .nav-item .lbl-full { display: none; } }
+.perm-name { white-space: normal; min-width: 230px; }
+.perm-desc { display: block; font-size: 11.5px; font-weight: 500; color: var(--ink-3); margin-top: 2px; max-width: 300px; }

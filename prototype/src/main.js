@@ -1,9 +1,9 @@
 /* ---------- Controller: routing, modals, actions ---------- */
-const ROUTES = { home: viewHome, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, sops: viewSops, settings: viewSettings, workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
+const ROUTES = { home: viewHome, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, sops: viewSops, settings: viewSettings, item: viewConfigItem, references: () => viewConfig('references'), moduletypes: () => viewConfig('moduletypes'), channels: () => viewConfig('channels'), audiences: () => viewConfig('audiences'), functions: () => viewConfig('functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
 const app = document.getElementById('app');
 
 function go(name, p = {}) {
-  if (name === 'login' || name === 'forgot') { UI.f.resetSent = null; UI.f.forgotErr = null; UI.f.loginErr = null; }
+  if (name === 'login' || name === 'forgot') { UI.modal = null; UI.f.resetSent = null; UI.f.forgotErr = null; UI.f.loginErr = null; }
   if ((name === 'module-edit' || name === 'module-new') && (UI.route.name !== name || UI.route.p.id !== p.id)) UI.draft = null;
   if (name === 'user-new' || name === 'user-edit') UI.udraft = null;
   if (name !== 'workflow') UI.wfDraft = null;
@@ -25,7 +25,7 @@ function renderNow() {
   const r = UI.route.name; let html;
   if (!S.signedIn || r === 'login' || r === 'forgot') html = viewLogin();
   else {
-    const u = me(); const perm = ROUTE_PERM[r];
+    const u = me(); const perm = r === 'item' ? (CONFIG[UI.route.p.k] || {}).viewPerm || (CONFIG[UI.route.p.k] || {}).perm : r === 'functions' ? 'manage_users' : ROUTE_PERM[r];
     const inner = perm && !can(u, perm) ? `<div class="empty"><h4>You do not have access to this page</h4><p>Your role (${esc(roleLabel(u))}) does not include the “${esc((PERMS.find(p => p[0] === perm) || [perm, perm])[1])}” permission. Ask an administrator if you need it.</p><br>${goBtn('Go home', 'home', null, 'primary')}</div>` : (ROUTES[r] || viewHome)();
     html = viewShell(inner);
   }
@@ -91,10 +91,11 @@ function viewModal() {
   const M = UI.modal; const u = me();
   if (M.type === 'wf-view') {
     const w = wfById(M.id); const team = fn => S.teams.find(t => t.fn === fn);
-    return modalShell('workflow', '', esc(w.name), esc(w.desc), `${flowPreview(w.steps, w.system ? 'Asset submitted' : 'Submitted', w.system ? 'Asset approved' : 'Approved')}
+    return modalShell('workflow', '', esc(w.name), esc(w.desc), `${flowPreview(w.steps, w.appliesTo === 'Asset' ? 'Asset submitted' : 'Submitted', w.appliesTo === 'Asset' ? 'Asset approved' : 'Approved')}
       <div class="wf" style="margin-top:6px">${w.steps.map((s, i) => { if (isNotify(s)) return `<div class="wf-step notify"><div class="wf-dot">${icon('mail', 'sm')}</div><div><div class="t">${fnBadge('Email', 'sm')}Email notification</div><div class="s">To ${esc(notifyTo(s).join(', ') || 'no one')} · “${esc(s.subject || '')}”</div></div></div>`; const who = assigneeFor(s); return `<div class="wf-step"><div class="wf-dot">${reviewPos(w, i)}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? 'Approval' : 'Review'} ${lvl(s.level)}</div><div class="s">${esc((team(s.fn) || {}).name || s.fn)} · ${who.length ? esc(who.map(x => x.name).join(', ')) : 'No active ' + esc(stepWho(s))}</div></div></div>`; }).join('')}</div>`,
       `${btn('Close', 'modal-close')}${can(u, 'manage_workflows') ? `<button class="btn primary" data-act="wf-open" data-id="${w.id}">${icon('edit', 'sm')}Open in builder</button>` : ''}`, true);
   }
+  if (M.type === 'cfg') return cfgModal(M);
   if (M.type === 'version') {
     const obj = objById(M.kind, M.id); const v = verOf(obj, +M.v);
     return modalShell('history', '', `Version ${v.v} · approval history`, `${esc(nameOf(obj))} · <span class="mono">${obj.id}</span>`, versionModalBody(obj, M.kind, v), `${v.approvedAt ? goBtn('Cover letter', 'cover', obj.id, '', 'award', ` data-k="${M.kind}" data-v="${v.v}"`) : ''}${btn('Close', 'modal-close', 'primary')}`, true);
@@ -102,7 +103,8 @@ function viewModal() {
   if (M.type === 'submit') {
     const m = modById(M.id); const l = latest(m); const issues = validationIssues(m, 'Module');
     if (!canSubmit(u)) return modalShell('send', '', 'Send to Content Team Lead', 'Content Team Members prepare drafts. A Content Team Lead checks and submits them for MLR review.', objCard(m, 'Module') + (issues.length ? issuesBlock(issues) : ''), `${btn('Cancel', 'modal-close')}${btn('Send to Team Lead', 'submit-confirm', 'primary', `data-id="${m.id}" ${issues.length ? 'disabled' : ''}`, 'send')}`);
-    const wfs = S.workflows.filter(w => !w.system && !w.hidden && w.active !== false); const chosen = M.wf || wfs[0].id; const reapp = l.v > 1 && !!live(m);
+    const wfs = S.workflows.filter(w => w.appliesTo === 'Module' && !w.hidden && w.active !== false); const chosen = wfs.some(w => w.id === M.wf) ? M.wf : (wfs[0] || {}).id;
+    if (!wfs.length) return modalShell('alert', 'bad', 'No active module workflow', 'An administrator needs to activate or create a workflow that applies to modules.', '', btn('Close', 'modal-close')); const reapp = l.v > 1 && !!live(m);
     return modalShell('send', '', reapp ? 'Submit version ' + l.v + ' for re-approval' : 'Submit for MLR review', 'A new approval cycle starts at the first step of the chosen workflow.',
       objCard(m, 'Module') + (issues.length ? issuesBlock(issues) + `<div>${goBtn('Fix in the module form', 'module-edit', m.id, '', 'edit')}</div>` : `<div class="banner ok">${icon('check')}<div class="txt"><b>All Validation SOPs pass</b><p>${validate(m, 'Module').map(x => esc(x.label)).join(' · ') || 'No SOP applies.'}</p></div></div>
        <div class="stack" style="gap:10px"><span class="label">Approval workflow</span>${wfs.map(w => `<button type="button" class="type-card ${w.id === chosen ? 'on' : ''}" style="width:100%;flex-direction:column;align-items:stretch;gap:10px" data-act="submit-wf" data-v="${w.id}" aria-pressed="${w.id === chosen}"><span class="row" style="width:100%"><b style="font-size:14px">${esc(w.name)}</b><span class="chip plain" style="margin-left:auto">${reviewSteps(w).length} steps</span></span><span>${esc(w.desc)}</span>${w.id === chosen ? wfVisual(w) : ''}</button>`).join('')}</div>`),
@@ -150,12 +152,12 @@ function viewModal() {
   if (M.type === 'asset-new') {
     const D = M.d;
     return modalShell('layers', '', 'Create asset', 'Choose the material type, products and countries. Only approved modules eligible for every selected country and the channel can be added.',
-      `<div class="fgrid"><div class="field"><label for="an-type">Material type</label><select class="select" id="an-type" data-an="type">${S.materialTypes.map(t => opt(t.name, D.type)).join('')}</select></div>
+      `<div class="fgrid"><div class="field"><label for="an-type">Material type</label><select class="select" id="an-type" data-an="type">${activeOf(S.materialTypes, D.type).map(t => opt(t.id, D.type, t.name)).join('')}</select></div>
       <div class="field"><label for="an-name">Asset name</label><input class="input ${M.err === 'name' ? 'invalid' : ''}" id="an-name" data-an="name" value="${esc(D.name)}">${M.err === 'name' ? '<span class="err">Give the asset a name.</span>' : ''}</div></div>
-      <div class="field"><span class="label">Products</span>${multi('an-toggle', 'products', S.products.filter(p => p.status === 'Active').map(p => [p.id, p.name + ' · ' + p.area]), D.products)}${M.err === 'products' ? '<span class="err">Select at least one product.</span>' : ''}</div>
-      <div class="field"><span class="label">Countries</span>${multi('an-toggle', 'markets', S.markets.filter(x => x.active).map(x => [x.id, x.name]), D.markets)}${M.err === 'markets' ? '<span class="err">Select at least one country.</span>' : ''}</div>
-      <div class="fgrid"><div class="field"><label for="an-ch">Channel</label><select class="select" id="an-ch" data-an="channel">${S.channels.map(c => opt(c, D.channel)).join('')}</select></div>
-      <div class="field"><label for="an-aud">Audience</label><select class="select" id="an-aud" data-an="audience">${S.audiences.map(c => opt(c, D.audience)).join('')}</select></div></div>
+      <div class="field"><span class="label">Products</span>${multi('an-toggle', 'products', activeOf(S.products, D.products).map(p => [p.id, p.name + ' · ' + p.area]), D.products)}${M.err === 'products' ? '<span class="err">Select at least one product.</span>' : ''}</div>
+      <div class="field"><span class="label">Countries</span>${multi('an-toggle', 'markets', activeOf(S.markets, D.markets).map(x => [x.id, x.name]), D.markets)}${M.err === 'markets' ? '<span class="err">Select at least one country.</span>' : ''}</div>
+      <div class="fgrid"><div class="field"><label for="an-ch">Channel</label><select class="select" id="an-ch" data-an="channel">${activeOf(S.channels, D.channel).map(c => opt(c.id, D.channel, c.name)).join('')}</select></div>
+      <div class="field"><label for="an-aud">Audience</label><select class="select" id="an-aud" data-an="audience">${activeOf(S.audiences, D.audience).map(c => opt(c.id, D.audience, c.name)).join('')}</select></div></div>
       ${M.module ? `<div class="banner info">${icon('layers')}<div class="txt"><b>${esc(modById(M.module).title)}</b><p>Added to the asset if it is eligible for the selected products, countries and channel.</p></div></div>` : ''}`,
       `${btn('Cancel', 'modal-close')}${btn('Create & open assembly', 'asset-create', 'primary', '', 'arrow')}`, true);
   }
@@ -178,9 +180,6 @@ function viewModal() {
       objCard(a, 'Asset') + (blocked ? problems : `${V.nNew ? `<div class="stack" style="gap:8px">${a.blocks.filter(b => b.kind === 'new').map(b => `<div class="block new" style="margin:0"><div class="meta">${icon('edit', 'sm')}New content · ${esc(b.label || 'Text')}</div><div class="txt">${esc(b.text)}</div></div>`).join('')}</div>` : ''}<div class="banner ok">${icon('check')}<div class="txt"><b>All checks pass</b><p>${V.mods.length} eligible approved module${V.mods.length === 1 ? '' : 's'} · ${validate(a, 'Asset').length} Validation SOPs passed</p></div></div><div class="row"><span class="label" style="margin:0">Route</span><b>${esc(wf.name)}</b></div>${wfVisual(wf)}`),
       `${btn(blocked ? 'Back to assembly' : 'Keep editing', 'modal-close')}${btn('Submit for review', 'asset-submit-confirm', 'primary', `data-id="${a.id}" ${blocked ? 'disabled' : ''}`, 'send')}`, true);
   }
-  if (M.type === 'simple') {
-    return modalShell(M.ico || 'plus', '', M.title, M.sub || '', M.fields.map(f => `<div class="field"><label for="sf-${f[0]}">${f[1]}</label>${f[2] === 'select' ? `<select class="select" id="sf-${f[0]}">${f[3].map(o => Array.isArray(o) ? opt(o[0], f[4] || '', o[1]) : opt(o, f[4] || '')).join('')}</select>` : `<input class="input ${M.err === f[0] ? 'invalid' : ''}" id="sf-${f[0]}" placeholder="${esc(f[3] || '')}" value="${esc(f[4] || '')}">`}</div>`).join('') + (M.err ? '<span class="err">Fill in the required fields (codes must be unique).</span>' : ''), `${btn('Cancel', 'modal-close')}${btn(M.cta || 'Add', 'simple-confirm', 'primary', '', 'check')}`);
-  }
   if (M.type === 'sop') {
     const D = M.d;
     return modalShell('clipboard', '', M.id ? 'Edit Validation SOP' : 'New Validation SOP', 'Checked before submission and before approval for every item in scope.',
@@ -188,7 +187,7 @@ function viewModal() {
       <div class="fgrid"><div class="field"><label for="sop-rule">Requirement</label><select class="select" id="sop-rule" data-sop="rule">${Object.entries(SOP_RULES).map(([k, l]) => opt(k, D.rule, l)).join('')}</select></div>
       <div class="field"><label for="sop-app">Applies to</label><select class="select" id="sop-app" data-sop="appliesTo">${[['Both', 'Modules & assets'], ['Module', 'Modules'], ['Asset', 'Assets']].map(o => opt(o[0], D.appliesTo, o[1])).join('')}</select></div></div>
       ${D.rule === 'review_window' ? `<div class="field"><label for="sop-m">Maximum months to review date</label><input class="input" id="sop-m" type="number" min="1" data-sop="months" value="${esc(D.months || 12)}"></div>` : ''}
-      <div class="field"><span class="label">Content types <span class="muted">(none = all)</span></span>${multi('sop-toggle', 'types', [...S.moduleTypes, ...S.materialTypes.map(t => t.name)].map(t => [t, t]), D.types)}</div>
+      <div class="field"><span class="label">Content types <span class="muted">(none = all)</span></span>${multi('sop-toggle', 'types', [...S.moduleTypes.map(t => [t.id, t.name + ' (module)']), ...S.materialTypes.map(t => [t.id, t.name + ' (material)'])], D.types)}</div>
       <div class="field"><span class="label">Products <span class="muted">(none = all)</span></span>${multi('sop-toggle', 'products', S.products.map(p => [p.id, p.name]), D.products)}</div>
       <div class="field"><span class="label">Countries <span class="muted">(none = all)</span></span>${multi('sop-toggle', 'markets', S.markets.map(m => [m.id, m.name]), D.markets)}</div>
       <div class="field"><label for="sop-g">Guidance shown when it fails</label><textarea class="textarea" id="sop-g" rows="2" data-sop="guidance">${esc(D.guidance)}</textarea></div>`,
@@ -201,7 +200,7 @@ function viewModal() {
 }
 
 /* ===== Helpers for actions ===== */
-function nextModuleId(products) { const L = products.length > 1 ? 'X' : (products[0] || 'P-A').slice(-1); const pre = 'MOD-' + L + '-'; const n = Math.max(0, ...S.modules.filter(m => m.id.startsWith(pre)).map(m => +m.id.slice(pre.length))) + 1; return pre + String(n).padStart(3, '0'); }
+function nextModuleId(products) { const L = products.length > 1 ? 'X' : (products[0] || 'P-A').replace(/^P-/, ''); const pre = 'MOD-' + L + '-'; const n = Math.max(0, ...S.modules.filter(m => m.id.startsWith(pre)).map(m => +m.id.slice(pre.length))) + 1; return pre + String(n).padStart(3, '0'); }
 function nextAssetId() { return 'AST-' + (Math.max(100, ...S.assets.map(a => +a.id.slice(4))) + 1); }
 const curAsset = () => assetById(UI.route.p.id);
 const trunc = (s, n = 90) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
@@ -242,7 +241,11 @@ const ACT = {
     if (el.dataset.k === 'products') { const ok = uniq(S.products.filter(p => D.products.includes(p.id)).flatMap(p => p.indications)); D.indications = D.indications.filter(x => ok.includes(x)); }
     render(); },
   'd-unref': el => { UI.draft.refs = UI.draft.refs.filter(r => r !== el.dataset.v); render(); },
-  'd-newref': () => { const t = (UI.draft.newRefTitle || '').trim(); if (!t) { toast('Type a reference title first'); return; } const pfx = UI.draft.products.length === 1 ? UI.draft.products[0].slice(-1) : 'X'; const id = 'REF-' + pfx + '-' + String(S.references.length + 1).padStart(2, '0'); S.references.push({ id, kind: 'study', title: t, source: 'Added by ' + me().name + ', ' + fmtD(Date.now()) }); UI.draft.refs.push(id); UI.draft.newRefTitle = ''; save(); render(); },
+  'd-newref': () => {
+    const D = UI.draft; const t = (D.newRefTitle || '').trim(), src = (D.newRefSource || '').trim(); if (!t || !src) { toast('Enter the reference title and source'); return; }
+    const dup = S.references.find(r => r.title.toLowerCase() === t.toLowerCase()); if (dup) { if (!D.refs.includes(dup.id)) D.refs.push(dup.id); D.newRefTitle = ''; D.newRefSource = ''; render(); toast('Already in the library — attached'); return; }
+    const r = { id: 'REF-' + Date.now().toString(36).slice(-5).toUpperCase(), kind: D.newRefKind || 'study', title: t, source: src, active: true }; S.references.push(r);
+    log('Reference created', 'Reference', { id: r.id }, 1, { next: r.title, note: refKind(r.kind) }); D.refs.push(r.id); D.newRefTitle = ''; D.newRefSource = ''; save(); render(); toast('Reference added to the library and attached'); },
 
   /* submission */
   'submit-open': el => { const m = modById(el.dataset.id); const l = latest(m); UI.modal = { type: 'submit', id: m.id, wf: l.v > 1 && live(m) ? S.settings.newVersionWorkflow : S.settings.defaultModuleWorkflow }; render(); },
@@ -287,8 +290,9 @@ const ACT = {
   /* assets */
   'asset-new': el => {
     if (!canCreateAsset(me())) { toast('Your role cannot create assets'); return; }
-    const mod = el.dataset.module ? modById(el.dataset.module) : null; const t = S.materialTypes[0];
-    UI.modal = { type: 'asset-new', module: mod ? mod.id : null, d: { type: t.name, name: t.name + ' — ' + (mod ? mod.title.split('—')[0].trim() : 'New material'), products: mod ? [...mod.products] : ['P-A'], markets: mod ? [mod.markets[0]] : ['SA'], channel: t.channel, audience: mod ? mod.audience : S.audiences[0] } };
+    const mod = el.dataset.module ? modById(el.dataset.module) : null; const lm = mod ? liveMeta(mod) : null; const t = activeOf(S.materialTypes)[0];
+    if (!t) { toast('Add an active Material Type first'); return; }
+    UI.modal = { type: 'asset-new', module: mod ? mod.id : null, d: { type: t.id, name: t.name + ' — ' + (lm ? lm.title.split('—')[0].trim() : 'New material'), products: lm ? [...lm.products] : [], markets: lm ? [lm.markets[0]] : [], channel: lm && lm.channels.includes(t.channel) ? t.channel : (lm ? lm.channels[0] : t.channel), audience: lm ? lm.audience : (activeOf(S.audiences)[0] || {}).id } };
     UI.pop = null; render();
   },
   'an-toggle': el => { const arr = UI.modal.d[el.dataset.k]; const i = arr.indexOf(el.dataset.v); i >= 0 ? arr.splice(i, 1) : arr.push(el.dataset.v); render(); },
@@ -342,24 +346,19 @@ const ACT = {
   'u-status': el => { UI.udraft.status = el.dataset.v; render(); },
   'user-status': el => { const x = S.users.find(u => u.id === el.dataset.id); if (x.id === me().id) { toast('You cannot deactivate your own account'); return; } const prev = x.status; x.status = x.status === 'Active' ? 'Inactive' : 'Active'; logAdmin(x.status === 'Active' ? 'User activated' : 'User deactivated', 'User', x.id, { prev, next: x.status, note: x.name }); save(); render(); toast(x.name + ' is now ' + x.status.toLowerCase()); },
   'perm-toggle': el => { const r = el.dataset.role, p = el.dataset.perm; const list = S.roles[r] || (S.roles[r] = []); const i = list.indexOf(p); const label = PERMS.find(x => x[0] === p)[1]; i >= 0 ? list.splice(i, 1) : list.push(p); logAdmin(i >= 0 ? 'Permission revoked' : 'Permission granted', 'Role', r, { note: roleName(r) + ' · ' + label, prev: i >= 0 ? 'Granted' : 'Not granted', next: i >= 0 ? 'Not granted' : 'Granted' }); save(); render(); toast(label + (i >= 0 ? ' removed from ' : ' granted to ') + roleName(r)); },
-  'roles-reset': () => { S.roles = DEFAULT_ROLES(); logAdmin('Permissions restored to defaults', 'Role', 'All roles', {}); save(); render(); toast('Role permissions restored to defaults'); },
-  'team-new': () => { UI.modal = { type: 'simple', kind: 'team', title: 'Add team', fields: [['name', 'Team name', 'text', 'e.g. Medical Affairs — Respiratory'], ['fn', 'Function', 'select', [...FUNCS, 'Administrator']]] }; render(); },
-  'team-edit': el => { const t = S.teams.find(x => x.id === el.dataset.id); UI.modal = { type: 'simple', kind: 'team-edit', id: t.id, title: 'Rename team', cta: 'Save', ico: 'edit', fields: [['name', 'Team name', 'text', '', t.name]] }; render(); },
-  'product-new': () => { UI.modal = { type: 'simple', kind: 'product', title: 'Add product', fields: [['name', 'Product name', 'text', 'e.g. Product D'], ['area', 'Therapy area', 'text', 'e.g. Oncology'], ['ind', 'Indications (comma separated)', 'text', 'e.g. Breast cancer']] }; render(); },
-  'market-new': () => { UI.modal = { type: 'simple', kind: 'market', title: 'Add country', fields: [['name', 'Country', 'text', 'e.g. Qatar'], ['code', 'Code', 'text', 'e.g. QA'], ['auth', 'Health authority', 'text', 'e.g. MOPH Qatar'], ['lang', 'Languages', 'text', 'e.g. Arabic, English']] }; render(); },
-  'material-new': () => { UI.modal = { type: 'simple', kind: 'material', title: 'Add material type', fields: [['name', 'Material type', 'text', 'e.g. Congress poster'], ['channel', 'Channel', 'select', S.channels], ['wf', 'Workflow', 'select', S.workflows.filter(w => !w.hidden).map(w => [w.id, w.name])]] }; render(); },
-  'simple-confirm': () => {
-    const M = UI.modal; const v = k => { const e = document.getElementById('sf-' + k); return e ? e.value.trim() : ''; };
-    const miss = M.fields.filter(f => f[2] !== 'select').map(f => f[0]).find(k => !v(k)); if (miss) { M.err = miss; render(); return; }
-    if (M.kind === 'team') { const t = { id: uid('T'), name: v('name'), fn: v('fn') }; S.teams.push(t); logAdmin('Team created', 'Team', t.id, { next: t.name, note: t.fn }); toast('Team added'); }
-    if (M.kind === 'team-edit') { const t = S.teams.find(x => x.id === M.id); logAdmin('Team renamed', 'Team', t.id, { prev: t.name, next: v('name') }); t.name = v('name'); toast('Team renamed'); }
-    if (M.kind === 'product') { const id = 'P-' + v('name').replace(/^product\s*/i, '').slice(0, 3).toUpperCase(); const p = { id: S.products.some(x => x.id === id) ? uid('P') : id, name: v('name'), area: v('area'), indications: v('ind').split(',').map(x => x.trim()).filter(Boolean), status: 'Active' }; S.products.push(p); logAdmin('Product created', 'Product', p.id, { next: p.name, note: p.area }); toast('Product added'); }
-    if (M.kind === 'market') { const code = v('code').toUpperCase().slice(0, 3); if (S.markets.some(x => x.id === code)) { M.err = 'code'; render(); return; } S.markets.push({ id: code, name: v('name'), authority: v('auth'), lang: v('lang'), active: true }); logAdmin('Country created', 'Country', code, { next: v('name') }); toast('Country added'); }
-    if (M.kind === 'material') { const t = { id: uid('MT'), name: v('name'), channel: v('channel'), workflow: v('wf') }; S.materialTypes.push(t); logAdmin('Material type created', 'Material type', t.id, { next: t.name }); toast('Material type added'); }
-    UI.modal = null; save(); render();
-  },
-  'toggle-prod': el => { const p = S.products.find(x => x.id === el.dataset.id); const prev = p.status; p.status = p.status === 'Active' ? 'Inactive' : 'Active'; logAdmin('Product status changed', 'Product', p.id, { prev, next: p.status, note: p.name }); save(); render(); toast(p.name + ' ' + p.status.toLowerCase()); },
-  'toggle-mkt': el => { const m = S.markets.find(x => x.id === el.dataset.id); m.active = !m.active; logAdmin('Country status changed', 'Country', m.id, { prev: m.active ? 'Inactive' : 'Active', next: m.active ? 'Active' : 'Inactive', note: m.name }); save(); render(); toast(m.name + (m.active ? ' activated' : ' deactivated')); },
+  'roles-reset': () => { const def = DEFAULT_ROLES(); Object.keys(S.roles).forEach(k => { if (!def[k]) def[k] = ['view']; }); S.roles = def; logAdmin('Permissions restored to defaults', 'Role', 'All roles', {}); save(); render(); toast('Role permissions restored to defaults'); },
+
+  /* configuration (config.js) */
+  'cfg-new': el => { const k = el.dataset.k; const d = {}; CONFIG[k].fields.forEach(f => { d[f[0]] = f[2] === 'list' ? [] : f[2] === 'bool' ? false : f[2] === 'select' && f[3].req ? ((f[3].options()[0] || [])[0] || '') : ''; }); const back = UI.modal && UI.modal.type !== 'cfg' ? null : null; UI.modal = { type: 'cfg', k, d }; if (UI.route.name === 'user-new' || UI.route.name === 'user-edit') UI.modal.then = x => { UI.udraft.team = x.id; render(); toast('Team created'); }; render(); },
+  'cfg-edit': el => { const k = el.dataset.k; const x = CONFIG[k].coll().find(i => i.id === el.dataset.id); UI.modal = { type: 'cfg', k, id: x.id, d: JSON.parse(JSON.stringify(x)) }; render(); },
+  'cfg-bool': el => { document.querySelectorAll('[data-cfg]').forEach(i => { UI.modal.d[i.dataset.cfg] = i.value; }); UI.modal.d[el.dataset.f] = !UI.modal.d[el.dataset.f]; render(); },
+  'cfg-save': () => cfgSave(),
+  'cfg-toggle': el => cfgToggle(el.dataset.k, el.dataset.id),
+  'cfg-delete': el => cfgDelete(el.dataset.k, el.dataset.id),
+  'mod-archive': el => { const m = modById(el.dataset.id); m.archived = !m.archived; m.archivedAt = m.archived ? Date.now() : null; m.archivedBy = m.archived ? me().id : null; log(m.archived ? 'Module archived' : 'Module reinstated', 'Module', m, live(m) ? live(m).v : null, { prev: m.archived ? 'In library' : 'Archived', next: m.archived ? 'Archived' : 'In library' }); save(); render(); toast(m.archived ? 'Withdrawn from the Approved Library' : 'Reinstated in the Approved Library'); },
+  print: () => window.print(),
+  'wf-active': () => { UI.wfDraft.active = UI.wfDraft.active === false; render(); },
+  'wf-applies': el => { UI.wfDraft.appliesTo = el.dataset.v; render(); },
 
   /* Validation SOPs */
   'sop-new': () => { UI.modal = { type: 'sop', d: { name: '', rule: 'reference', appliesTo: 'Module', types: [], products: [], markets: [], guidance: '', months: 12 } }; render(); },
@@ -380,7 +379,7 @@ const ACT = {
   'set-discard': () => { UI.setDraft = null; render(); },
   'set-save': () => {
     const D = UI.setDraft; let n = 0;
-    SETTINGS.forEach(([, fields]) => fields.forEach(([k, label, type]) => { let val = D[k]; if (type === 'number') val = Math.max(1, Math.round(+val || 1)); if (String(val) !== String(S.settings[k])) { const show = x => type === 'bool' ? (x ? 'On' : 'Off') : type === 'wf' ? (wfById(x) || {}).name : String(x); logAdmin('Setting changed', 'Settings', 'settings', { note: label, prev: show(S.settings[k]), next: show(val) }); S.settings[k] = val; n++; } }));
+    SETTINGS.forEach(([, fields]) => fields.forEach(([k, label, type]) => { let val = D[k]; if (type === 'number') val = Math.max(1, Math.round(+val || 1)); if (String(val) !== String(S.settings[k])) { const show = x => type === 'bool' ? (x ? 'On' : 'Off') : type === 'wf' || type === 'wfa' ? (wfById(x) || {}).name : String(x); logAdmin('Setting changed', 'Settings', 'settings', { note: label, prev: show(S.settings[k]), next: show(val) }); S.settings[k] = val; n++; } }));
     UI.setDraft = null; save(); render(); toast(n ? n + ' setting' + (n > 1 ? 's' : '') + ' saved' : 'No changes');
   },
   'reset-open': () => { UI.modal = { type: 'confirm-reset' }; render(); },
@@ -394,8 +393,8 @@ const ACT = {
   'wf-kind': el => { const st = UI.wfDraft.steps; const cur = st[UI.wfSel]; if (el.dataset.v === 'notify' && !isNotify(cur)) st[UI.wfSel] = notifyStep(); if (el.dataset.v === 'review' && isNotify(cur)) st[UI.wfSel] = { id: uid('s'), fn: 'Medical', level: 'Member', req: 'review' }; render(); },
   'wf-rcpt': el => { const s = UI.wfDraft.steps[UI.wfSel]; const r = s.recipients || (s.recipients = []); const k = r.indexOf(el.dataset.v); k < 0 ? r.push(el.dataset.v) : r.splice(k, 1); render(); },
   'nwf-rcpt': el => { const s = UI.nwf.steps[+el.dataset.i]; const r = s.recipients || (s.recipients = []); const k = r.indexOf(el.dataset.v); k < 0 ? r.push(el.dataset.v) : r.splice(k, 1); render(); },
-  'nwf-use': el => { UI.nwf.use = el.dataset.v; render(); },
-  'nwf-tpl': el => { const v = el.dataset.v, mk = (fn, level, req) => ({ id: uid('s'), fn, level, req }); UI.nwf.steps = v === 'std' ? REVIEW_FUNCS.flatMap(fn => [mk(fn, 'Member', 'review'), mk(fn, 'Lead', 'approve')]) : v === 'senior' ? REVIEW_FUNCS.map(fn => mk(fn, 'Lead', 'approve')) : []; render(); },
+  'nwf-use': el => { UI.nwf.appliesTo = el.dataset.v; render(); },
+  'nwf-tpl': el => { const v = el.dataset.v, mk = (fn, level, req) => ({ id: uid('s'), fn, level, req }); UI.nwf.steps = v === 'std' ? reviewFuncs().flatMap(fn => [mk(fn, 'Member', 'review'), mk(fn, 'Lead', 'approve')]) : v === 'senior' ? reviewFuncs().map(fn => mk(fn, 'Lead', 'approve')) : []; render(); },
   'nwf-add': el => { UI.nwf.steps.push(el.dataset.v === 'Email' ? notifyStep() : { id: uid('s'), fn: el.dataset.v, level: 'Lead', req: 'approve' }); render(); toast(el.dataset.v === 'Email' ? 'Email step added — choose who receives it' : el.dataset.v + ' step added'); },
   'nwf-set': el => { const s = UI.nwf.steps[+el.dataset.i]; s[el.dataset.k] = el.dataset.v; if (el.dataset.k === 'req' && el.dataset.v === 'approve') s.level = 'Lead'; if (el.dataset.k === 'level' && el.dataset.v === 'Member') s.req = 'review'; render(); },
   'nwf-move': el => { const st = UI.nwf.steps, i = +el.dataset.i, j = i + +el.dataset.dir; if (j < 0 || j >= st.length) return; [st[i], st[j]] = [st[j], st[i]]; render(); },
@@ -408,6 +407,12 @@ const ACT = {
   'wf-discard': () => { UI.wfDraft = null; render(); },
   'wf-save': () => {
     const D = UI.wfDraft; const w = wfById(D.id); if (wfIssues(D).some(x => x[0] === 'bad')) return;
+    D.name = (D.name || '').trim(); if (!D.name || S.workflows.some(x => x.id !== w.id && !x.hidden && x.name.toLowerCase() === D.name.toLowerCase())) { toast('Give the workflow a unique name'); return; }
+    if (D.active === false && w.active !== false && [...Object.values(S.settings)].includes(w.id)) { toast('This workflow is a default in Settings — choose another default first'); return; }
+    if (D.active === false && S.materialTypes.some(t => t.active && t.workflow === w.id)) { toast('An active Material Type uses this workflow — change it first'); return; }
+    [['name', 'Name'], ['desc', 'Description'], ['appliesTo', 'Applies to']].forEach(([k, l]) => { if ((w[k] || '') !== (D[k] || '')) logAdmin('Workflow updated', 'Workflow', w.id, { note: l, prev: w[k] || '', next: D[k] || '' }); });
+    if ((w.active !== false) !== (D.active !== false)) logAdmin(D.active === false ? 'Workflow deactivated' : 'Workflow activated', 'Workflow', w.id, { prev: w.active !== false ? 'Active' : 'Inactive', next: D.active !== false ? 'Active' : 'Inactive' });
+    Object.assign(w, { desc: D.desc, appliesTo: D.appliesTo, active: D.active !== false });
     const inflight = [...S.modules, ...S.assets].filter(o => (o.review && o.review.wf === w.id) || (o.resume && o.resume.wf === w.id));
     if (inflight.length) { const n = S.workflows.filter(x => x.id.startsWith(w.id + '@')).length + 1; const old = JSON.parse(JSON.stringify(w)); old.id = w.id + '@' + n; old.hidden = true; S.workflows.push(old); inflight.forEach(o => { const c = curCycle(o); if (o.review && o.review.wf === w.id) o.review.wf = old.id; if (o.resume && o.resume.wf === w.id) o.resume.wf = old.id; if (c) c.wf = old.id; }); }
     const prev = w.steps.filter(s => !isNotify(s)).map(stepLabel).join(' → ');
@@ -424,7 +429,7 @@ document.addEventListener('click', ev => {
     if (actEl.disabled) return;
     const fn = ACT[actEl.dataset.act]; if (fn) { if (actEl.dataset.act !== 'modal-bg') ev.preventDefault(); fn(actEl, ev); return; }
   }
-  if (goEl) { ev.preventDefault(); const p = {}; ['id', 'tab', 'k', 'v'].forEach(k => { if (goEl.dataset[k]) p[k] = goEl.dataset[k]; }); if (goEl.dataset.go !== 'cover') { delete p.k; delete p.v; } UI.modal = null; go(goEl.dataset.go, p); }
+  if (goEl) { ev.preventDefault(); const p = {}; ['id', 'tab', 'k', 'v'].forEach(k => { if (goEl.dataset[k]) p[k] = goEl.dataset[k]; }); if (goEl.dataset.go !== 'cover') delete p.v; if (!['cover', 'item'].includes(goEl.dataset.go)) delete p.k; if (goEl.dataset.mstat) UI.f.mstat = goEl.dataset.mstat; UI.modal = null; go(goEl.dataset.go, p); }
 });
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape') { if (UI.modal) { UI.modal = null; render(); } else if (UI.pop || UI.search) { UI.pop = null; UI.search = ''; render(); } }
@@ -438,6 +443,7 @@ document.addEventListener('input', ev => {
   if (t.dataset.d && t.tagName !== 'SELECT') { UI.draft[t.dataset.d] = t.value; if (t.dataset.d === 'body' || t.dataset.d === 'title') renderSoon(); return; }
   if (t.dataset.u && t.tagName !== 'SELECT') { UI.udraft[t.dataset.u] = t.value; return; }
   if (t.dataset.w) { UI.nwf[t.dataset.w] = t.value; return; }
+  if (t.dataset.wfd) { UI.wfDraft[t.dataset.wfd] = t.value; return; }
   if (t.dataset.wfn) { UI.wfDraft.steps[UI.wfSel][t.dataset.wfn] = t.value; renderSoon(); return; }
   if (t.dataset.nwfn) { UI.nwf.steps[+t.dataset.i][t.dataset.nwfn] = t.value; renderSoon(); return; }
   if (t.dataset.an && t.tagName !== 'SELECT') { UI.modal.d[t.dataset.an] = t.value; return; }
@@ -450,8 +456,9 @@ document.addEventListener('change', ev => {
   if (t.dataset.filter) { UI.f[t.dataset.filter] = t.value; render(); return; }
   if (t.dataset.assetProp) {
     const a = assetById(t.dataset.id); const k = t.dataset.assetProp; const prev = a[k] || ''; if (prev === t.value) return; a[k] = t.value; a.updatedAt = Date.now();
-    if (k === 'type') { const mt = S.materialTypes.find(x => x.name === t.value); if (mt && !a.blocks.length) a.channel = mt.channel; }
-    log('Asset updated', 'Asset', a, null, { note: ({ name: 'Name', type: 'Material type', channel: 'Channel', audience: 'Audience', disclaimer: 'Local disclaimer' })[k] + ' changed', prev: trunc(prev, 60), next: trunc(t.value, 60) }); save(); render(); return;
+    if (k === 'type') { const mt = mat(t.value); if (mt && !a.blocks.length) a.channel = mt.channel; }
+    const shown = v => k === 'type' ? mat(v).name : k === 'channel' ? chan(v).name : k === 'audience' ? aud(v).name : k === 'owner' ? user(v).name : v;
+    log(k === 'owner' ? 'Owner changed' : 'Asset updated', 'Asset', a, null, { note: ({ name: 'Name', type: 'Material type', channel: 'Channel', audience: 'Audience', disclaimer: 'Local disclaimer', owner: 'Material Owner' })[k] + ' changed', prev: trunc(shown(prev), 60), next: trunc(shown(t.value), 60) }); save(); render(); return;
   }
   const textual = (t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && t.type !== 'date' && t.type !== 'checkbox'));
   if (textual && (t.dataset.d || t.dataset.u || t.dataset.an || t.dataset.sop || t.dataset.set)) return;
@@ -459,13 +466,14 @@ document.addEventListener('change', ev => {
   if (t.dataset.actChange === 'd-addref' && t.value) { UI.draft.refs.push(t.value); render(); return; }
   if (t.dataset.actChange === 'sign-att') { UI.modal.att = t.checked; UI.modal.err = null; render(); return; }
   if (t.dataset.u) { UI.udraft[t.dataset.u] = t.value; render(); return; }
-  if (t.dataset.an) { const D = UI.modal.d; D[t.dataset.an] = t.value; if (t.dataset.an === 'type') { const mt = S.materialTypes.find(x => x.name === t.value); D.channel = mt.channel; D.name = t.value + ' — ' + (D.name.split('—')[1] || '').trim(); } render(); return; }
+  if (t.dataset.an) { const D = UI.modal.d; D[t.dataset.an] = t.value; if (t.dataset.an === 'type') { const mt = mat(t.value); D.channel = mt.channel; D.name = mt.name + ' — ' + (D.name.split('—')[1] || '').trim(); } render(); return; }
   if (t.dataset.sop) { UI.modal.d[t.dataset.sop] = t.value; render(); return; }
   if (t.dataset.set) { UI.setDraft[t.dataset.set] = t.value; render(); return; }
-  if (t.dataset.mtWf) { const mt = S.materialTypes.find(x => x.id === t.dataset.mtWf); const prev = (wfById(mt.workflow) || {}).name; mt.workflow = t.value; logAdmin('Material type updated', 'Material type', mt.id, { note: mt.name + ' workflow', prev, next: wfById(t.value).name }); save(); render(); toast(mt.name + ' now uses ' + wfById(t.value).name); return; }
+  if (false && t.dataset.mtWf) { const mt = S.materialTypes.find(x => x.id === t.dataset.mtWf); const prev = (wfById(mt.workflow) || {}).name; mt.workflow = t.value; logAdmin('Material type updated', 'Material type', mt.id, { note: mt.name + ' workflow', prev, next: wfById(t.value).name }); save(); render(); toast(mt.name + ' now uses ' + wfById(t.value).name); return; }
   if (t.dataset.w || t.dataset.wfn || t.dataset.nwfn) return;
-  if (t.dataset.nwf) { UI.nwf.steps[+t.dataset.i][t.dataset.nwf] = t.value; render(); return; }
-  if (t.dataset.wf) { UI.wfDraft.steps[UI.wfSel][t.dataset.wf] = t.value; render(); return; }
+  if (t.dataset.nwf) { const st = UI.nwf.steps[+t.dataset.i]; st[t.dataset.nwf] = t.value; if (t.dataset.nwf === 'fn') st.team = ''; if (st.team === '') delete st.team; render(); return; }
+  if (t.dataset.wf) { const st = UI.wfDraft.steps[UI.wfSel]; st[t.dataset.wf] = t.value; if (t.dataset.wf === 'fn') st.team = ''; if (st.team === '') delete st.team; render(); return; }
+  if (t.dataset.wfd) return;
 });
 document.addEventListener('submit', ev => {
   ev.preventDefault(); const f = ev.target.dataset.form;
@@ -504,6 +512,7 @@ function logModuleDiff(m, before, D, v) {
   if (!sameSet(before.markets, D.markets)) log('Country changed', 'Module', m, v, { prev: marketsTxt(before.markets), next: marketsTxt(D.markets) });
   add.forEach(r => log('Reference added', 'Module', m, v, { next: refById(r).title }));
   rem.forEach(r => log('Reference removed', 'Module', m, v, { prev: refById(r).title }));
+  if (before.owner !== D.owner) log('Owner changed', 'Module', m, v, { prev: user(before.owner).name, next: user(D.owner).name });
   if (before.body !== D.body.trim()) log('Content edited', 'Module', m, v, { prev: trunc(before.body), next: trunc(D.body.trim()) });
   const meta = [['title', 'Name'], ['type', 'Type'], ['audience', 'Audience']].filter(([k]) => before[k] !== (k === 'title' ? D.title.trim() : D[k]));
   if (!sameSet(before.channels, D.channels)) meta.push(['channels', 'Channels']);
@@ -515,7 +524,7 @@ function logModuleDiff(m, before, D, v) {
 function saveModuleForm() {
   if (!wizAdvance('module')) return;
   const D = UI.draft; const p = UI.route.p; const now = Date.now();
-  const base = { title: D.title.trim(), type: D.type, products: [...D.products], indications: [...D.indications], audience: D.audience, markets: [...D.markets], channels: [...D.channels], reviewDate: fromISO(D.reviewDate), expiry: fromISO(D.expiry), updatedAt: now };
+  const base = { title: D.title.trim(), type: D.type, owner: D.owner, products: [...D.products], indications: [...D.indications], audience: D.audience, markets: [...D.markets], channels: [...D.channels], reviewDate: fromISO(D.reviewDate), expiry: fromISO(D.expiry), updatedAt: now };
   if (p.id) {
     const m = modById(p.id); const l = latest(m); const before = { ...m, body: l.body, refs: [...l.refs] };
     if (p.newVersion) {
@@ -529,12 +538,12 @@ function saveModuleForm() {
     save(); UI.draft = null; go('module', { id: m.id }); toast(statusOf(m) === 'Amendment Requested' ? 'Changes saved — resubmit to resume approval' : 'Changes saved'); return;
   }
   const id = nextModuleId(D.products);
-  const m = { id, ...base, owner: me().id, versions: [{ v: 1, body: D.body.trim(), refs: [...D.refs], createdAt: now, createdBy: me().id, reason: 'Initial version', status: 'Draft', cycles: [], approvedAt: null, approvedBy: null }], createdAt: now, review: null, resume: null, archived: false };
-  S.modules.push(m); log('Module created', 'Module', m, 1, { next: 'Draft', note: m.type + ' · ' + productsTxt(m.products) + ' · ' + m.markets.join(', ') }); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
+  const m = { id, ...base, versions: [{ v: 1, body: D.body.trim(), refs: [...D.refs], createdAt: now, createdBy: me().id, reason: 'Initial version', status: 'Draft', cycles: [], approvedAt: null, approvedBy: null }], createdAt: now, review: null, resume: null, archived: false };
+  S.modules.push(m); log('Module created', 'Module', m, 1, { next: 'Draft', note: mtype(m.type).name + ' · ' + productsTxt(m.products) + ' · ' + m.markets.join(', ') + ' · owner ' + user(m.owner).name }); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
 }
 function saveWorkflowForm() {
   if (!wizAdvance('workflow')) return;
-  const D = UI.nwf; const w = { id: uid('WF'), name: D.name.trim(), desc: D.desc.trim() || D.use, active: true, steps: D.steps.map(s => ({ ...s })) };
+  const D = UI.nwf; const w = { id: uid('WF'), name: D.name.trim(), desc: D.desc.trim(), appliesTo: D.appliesTo || 'Module', active: true, steps: D.steps.map(s => ({ ...s })) };
   S.workflows.push(w); logAdmin('Workflow created', 'Workflow', w.id, { next: w.steps.filter(s => !isNotify(s)).map(stepLabel).join(' → '), note: w.name }); save(); UI.nwf = null; go('workflow', { id: w.id }); toast('Workflow created · ' + reviewSteps(w).length + ' steps');
 }
 function saveUserForm() {
