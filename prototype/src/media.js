@@ -6,7 +6,10 @@ const PDFC = {};
 let pdfLib = null;
 function loadPdfJs() {
   if (pdfLib) return pdfLib;
-  return (pdfLib = new Promise((res, rej) => { if (window.pdfjsLib) return res(window.pdfjsLib); const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js'; s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; res(window.pdfjsLib); }; s.onerror = rej; document.head.appendChild(s); setTimeout(() => rej(new Error('timeout')), 15000); }));
+  // A failed or slow load is not cached, so the next preview tries again.
+  pdfLib = new Promise((res, rej) => { if (window.pdfjsLib) return res(window.pdfjsLib); const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js'; s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; res(window.pdfjsLib); }; s.onerror = () => { s.remove(); rej(new Error('pdf.js could not load')); }; document.head.appendChild(s); setTimeout(() => rej(new Error('timeout')), 20000); });
+  pdfLib.catch(() => { if (!window.pdfjsLib) pdfLib = null; });
+  return pdfLib;
 }
 async function pdfRender(fileId, url) {
   const lib = await loadPdfJs(); const doc = await lib.getDocument(url).promise; const thumbs = [];
@@ -16,7 +19,7 @@ async function pdfRender(fileId, url) {
 // Called after every render: turns PDF placeholders into rendered pages.
 function hydratePdfs() {
   document.querySelectorAll('[data-pdf]').forEach(el => { const id = el.dataset.pdf; if (PDFC[id]) return; PDFC[id] = { loading: true };
-    pdfRender(id, el.dataset.url).then(r => { PDFC[id] = r; renderSoon(); }, () => { PDFC[id] = { failed: true }; renderSoon(); }); });
+    const url = el.dataset.url; const attempt = n => pdfRender(id, url).then(r => { PDFC[id] = r; renderSoon(); }, () => n < 3 ? setTimeout(() => attempt(n + 1), 1500 * n) : (PDFC[id] = { failed: true }, renderSoon())); attempt(1); });
 }
 const mediaKindOf = md => !md || !md.mime ? '' : md.mime.startsWith('image/') ? 'image' : md.mime.startsWith('video/') ? 'video' : 'document';
 function pdfView(md, url, mode) {

@@ -118,10 +118,10 @@ function viewAsset() {
 }
 function viewAssetReview() {
   const a = assetById(UI.route.p.id); if (!a) return viewMissing('Asset');
-  if (!a.review) return pageHead(esc(a.name), 'This asset is not in review.', goBtn('Open asset', 'asset', a.id, 'primary'), [['Approvals', 'tasks'], [a.id]]) + `<div class="banner">${icon('inbox')}<div class="txt"><b>Current status: ${esc(statusOf(a))}</b><p>The review has been completed or moved on.</p></div></div>`;
+  if (!a.review) return pageHead(esc(a.name), 'This asset is not in review.', goBtn('Open asset', 'asset', a.id, 'primary'), [['My Tasks', 'tasks'], [a.id]]) + `<div class="banner">${icon('inbox')}<div class="txt"><b>Current status: ${esc(statusOf(a))}</b><p>The review has been completed or moved on.</p></div></div>`;
   const u = me(); const mine = canActOn(u, a); const V = assetValidation(a); const st = curStep(a); const cyc = curCycle(a);
   if (mine && !a.review.startedBy) { a.review.startedBy = u.id; log('Review started', 'Asset', a, null, { note: stepLabel(st) }); save(); }
-  return pageHead(esc(a.name), `<span class="row" style="gap:8px">${chip('In Review')}${vtag(latest(a).v)}<span class="mono">${a.id}</span></span>`, mine ? decisionButtons(a, 'Asset') : '', [['Approvals', 'tasks'], [a.id, 'asset', a.id], ['Review']]) +
+  return pageHead(esc(a.name), `<span class="row" style="gap:8px">${chip('In Review')}${vtag(latest(a).v)}<span class="mono">${a.id}</span></span>`, mine ? decisionButtons(a, 'Asset') : '', [['My Tasks', 'tasks'], [a.id, 'asset', a.id], ['Review']]) +
   (mine ? adminNote(a) : `<div class="banner info" style="margin-bottom:14px">${icon('eye')}<div class="txt"><b>View only — this step is assigned to the ${esc(stepWho(st))}</b></div></div>`) +
   approvalTimeline(a) + `<div class="stack" style="margin-bottom:16px">${authorityBanner(a)}<div class="row"><span class="chip ok">${V.mods.length} approved module${V.mods.length === 1 ? '' : 's'} · locked</span>${V.nNew ? `<span class="chip warn">${V.nNew} new content block${V.nNew > 1 ? 's' : ''} · review required</span>` : '<span class="chip plain">No new content</span>'}</div></div>
   <div class="grid cols-main rv-grid"><div class="canvas">${reviewCanvas(a, canAnnotate(a))}</div><div class="stack rv-side">${commentsPanel(a, canAnnotate(a))}

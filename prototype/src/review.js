@@ -78,7 +78,7 @@ function pdfReview(obj, v, md, editable) {
 }
 function hydrateReview() {
   document.querySelectorAll('[data-pdfr]').forEach(el => { const id = el.dataset.pdfr; if (PDFR[id]) return; PDFR[id] = { loading: true };
-    pdfReviewLoad(id, el.dataset.url).then(r => { PDFR[id] = r; renderSoon(); }, () => { PDFR[id] = { failed: true }; renderSoon(); }); });
+    const url = el.dataset.url; const attempt = n => pdfReviewLoad(id, url).then(r => { PDFR[id] = r; renderSoon(); }, () => n < 3 ? setTimeout(() => attempt(n + 1), 1500 * n) : (PDFR[id] = { failed: true }, renderSoon())); attempt(1); });
   document.querySelectorAll('.pdf-tl').forEach(el => { if (el.dataset.done) return; const R = PDFR[el.dataset.file]; if (!R || !R.pages) return; const P = R.pages[+el.dataset.page - 1]; const w = el.parentElement.clientWidth; if (!w) return;
     const vp = P.pg.getViewport({ scale: w / P.w }); el.dataset.done = '1'; el.style.setProperty('--scale-factor', vp.scale); el.style.width = vp.width + 'px'; el.style.height = vp.height + 'px';
     try { window.pdfjsLib.renderTextLayer({ textContentSource: P.tc, container: el, viewport: vp, textDivs: [] }); } catch (e) { /* text selection unavailable; area comments still work */ } });
