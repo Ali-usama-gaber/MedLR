@@ -64,7 +64,7 @@ function assetBanners(a) {
   const u = me(); const st = statusOf(a); let b = '';
   if (st === 'Amendment Requested') b += `<div class="banner warn">${icon('undo')}<div class="txt"><b>Amendment requested by ${esc(user(a.resume.by).name)} · ${esc(a.resume.fn + ' ' + levelName(a.resume.level))}</b><p>“${esc(a.resume.note)}” After the owner amends and resubmits, approval <b>resumes at the ${esc(a.resume.fn)} ${esc(levelName(a.resume.level))} step</b>. Earlier approvals in this cycle are kept.</p></div></div>`;
   if (st === 'Rejected') { const r = latest(a).cycles.slice(-1)[0].decisions.slice(-1)[0]; b += `<div class="banner bad">${icon('x')}<div class="txt"><b>Rejected by ${esc(user(r.by).name)} · ${esc(r.fn + ' ' + levelName(r.level))}</b><p>“${esc(r.note)}” Create a new version to resubmit. The new version <b>restarts the full approval cycle</b> from the first step.</p></div></div>`; }
-  if (st === 'Awaiting Lead submission') b += `<div class="banner info">${icon('inbox')}<div class="txt"><b>Waiting for a Lead to submit</b><p>Prepared by ${esc(user(a.owner).name)}; a Lead of the same team with the Submit permission submits it for review.</p></div></div>`;
+  if (st === 'Awaiting Lead submission') b += `<div class="banner info">${icon('inbox')}<div class="txt"><b>Waiting for a Lead to submit</b><p>Prepared by ${esc(user(a.owner).name)}. A Lead of the same team submits it for review.</p></div></div>`;
   if (a.review) { const cs = curStep(a); b += `<div class="banner pending">${icon('shieldcheck')}<div class="txt"><b>In review · ${esc(stepLabel(cs))}</b><p>Assigned to ${assigneeFor(cs).map(x => esc(x.name)).join(', ') || 'the ' + esc(cs.fn) + ' team'} · cycle ${a.review.cycle} · waiting ${fmtDur(Date.now() - a.review.stepStartedAt)}.</p></div>${canActOn(u, a) ? goBtn('Open review', 'asset-review', a.id, 'sm primary') : ''}</div>`; }
   const outd = a.blocks.filter(x => { const m = x.kind === 'module' && modById(x.moduleId); return m && live(m) && x.v < live(m).v; });
   if (outd.length) b += `<div class="banner warn">${icon('alert')}<div class="txt"><b>${outd.length} module${outd.length > 1 ? 's have' : ' has'} a newer approved version</b><p>Replace the outdated version in the asset. Swapping in a newer approved version of the same module does not need a new review of that text.</p></div></div>`;
@@ -297,12 +297,12 @@ function permList(rid, compact) {
   const has = S.roles[rid] || [];
   return `<div class="perm-list ${compact ? 'compact' : ''}">${PERMS.map(p => `<div class="check-row"><span class="${has.includes(p[0]) ? 'ok' : 'no'}">${icon(has.includes(p[0]) ? 'check' : 'x', 'sm')}</span><span class="${has.includes(p[0]) ? '' : 'muted'}">${esc(p[1])}</span></div>`).join('')}</div>`;
 }
-function viewUsers() {
+function viewUsers(cr) {
   const q = F('usq').toLowerCase();
   const rows = S.users.filter(x => (!q || (x.name + x.email + roleLabel(x)).toLowerCase().includes(q)) && (!F('ufn') || x.fn === F('ufn')) && (!F('ulvl') || x.level === F('ulvl')) && (!F('usst') || x.status === F('usst')));
   const nF = f => S.users.filter(x => x.fn === f && x.status === 'Active').length;
   const lastAct = id => { const e = S.audit.filter(a => a.user === id).sort((a, b) => b.ts - a.ts)[0]; return e ? ago(e.ts) : '—'; };
-  return pageHead('Users', 'People, their function and level. The role (function + level) decides their permissions; workflows decide where each role takes part.', can(me(), 'manage_users') ? goBtn('Create user', 'user-new', null, 'primary', 'plus') : '') +
+  return pageHead('Users', 'Everyone who can sign in, with their function, level and team.', can(me(), 'manage_users') ? goBtn('Create user', 'user-new', null, 'primary', 'plus') : '', cr || null, ['users', 'Membership vs. permissions', '<p><b>Team and function</b> say where a person belongs in the organisation.</p><p><b>Role</b> (function + Member or Lead) decides what they can do in MedLR. Role permissions are managed in Roles &amp; Permissions.</p>']) +
   statStrip([...funcIds().map(f => [esc(f), nF(f), '', 'Active', 'ufn', f]), ['Administrators', nF('Administrator'), '', 'Full control', 'ufn', 'Administrator'], ['Inactive', S.users.filter(x => x.status !== 'Active').length, 'dim', 'Cannot sign in', 'usst', 'Inactive']]) +
   `${filterBar('users', `${fsearch('usq', F('usq'), 'Search name, email or role')}${fsel('ufn', F('ufn'), [...funcIds(true), 'Administrator'], 'All functions')}${fsel('ulvl', F('ulvl'), LEVELS.map(l => [l, levelName(l)]), 'Any level')}${fsel('usst', F('usst'), ['Active', 'Inactive'], 'Any status')}`, `${rows.length} of ${S.users.length}`)}
   <section class="panel table-wrap"><table class="tbl list-tbl"><thead><tr><th>Name</th><th>Role</th><th>Team</th><th>Authority</th><th>Permissions</th><th>Last activity</th><th>Status</th></tr></thead><tbody>${rows.map(x => { const a = authority(x.fn, x.level);
@@ -311,7 +311,7 @@ function viewUsers() {
 function viewUser() {
   const x = S.users.find(u => u.id === UI.route.p.id); if (!x) return viewMissing('User');
   const a = authority(x.fn, x.level); const tasks = tasksFor(x); const acts = S.audit.filter(e => e.user === x.id).sort((p, q) => q.ts - p.ts).slice(0, 6); const self = x.id === me().id;
-  return pageHead(esc(x.name), esc(x.email), can(me(), 'manage_users') ? `${goBtn('Edit', 'user-edit', x.id, '', 'edit')}${self ? '' : btn(x.status === 'Active' ? 'Deactivate' : 'Activate', 'user-status', x.status === 'Active' ? 'danger' : 'primary', `data-id="${x.id}"`)}` : '', [['Users', 'users'], [x.name]]) +
+  return pageHead(esc(x.name), esc(x.email), can(me(), 'manage_users') ? `${goBtn('Edit', 'user-edit', x.id, '', 'edit')}${self ? '' : btn(x.status === 'Active' ? 'Deactivate' : 'Activate', 'user-status', x.status === 'Active' ? 'danger' : 'primary', `data-id="${x.id}"`)}` : '', [['People & Teams', 'org'], ['Users', 'users'], [x.name]]) +
   (x.status !== 'Active' ? `<div class="banner" style="margin-bottom:16px">${icon('lock')}<div class="txt"><b>Inactive — cannot sign in</b><p>Their history stays in the audit trail. Activate the account to restore access.</p></div></div>` : '') +
   `<div class="grid cols-main"><div class="stack"><section class="panel"><div class="panel-body row" style="gap:16px;align-items:flex-start">${avatar(x, 'lg')}<div class="stack" style="gap:8px;flex:1"><div class="row"><b style="font-size:18px">${esc(roleLabel(x))}</b>${lvl(x.level)}${chip(x.status === 'Active' ? 'Active' : 'Inactive')}</div>
     <div class="banner ${a.final ? 'ok' : ''}">${icon(a.final ? 'key' : 'eye')}<div class="txt"><b>${esc(a.short)}</b><p>${esc(a.long)}</p></div></div></div></div></section>
@@ -328,7 +328,7 @@ function viewUserForm() {
   const teams = S.teams.filter(t => (t.active || t.id === D.team) && (!D.fn || t.fn === D.fn)); const title = x ? 'Edit user' : 'Create user';
   const fnIco = f => f === 'Administrator' ? 'key' : fnInfo(f).reviews ? 'shieldcheck' : 'file';
   const fnDesc = f => f === 'Administrator' ? 'Configures and governs the system' : fnInfo(f).desc;
-  return pageHead(title, 'Function and level define the role, and the role defines the permissions.', '', x ? [['Users', 'users'], [x.name, 'user', x.id], ['Edit']] : [['Users', 'users'], ['Create user']]) +
+  return pageHead(title, x ? 'Update this person’s details, role and team.' : 'Add a person who can sign in to MedLR.', '', x ? [['People & Teams', 'org'], ['Users', 'users'], [x.name, 'user', x.id], ['Edit']] : [['People & Teams', 'org'], ['Users', 'users'], ['Create user']], ['uform', 'How the role is set', '<p>The <b>function</b> and <b>level</b> (Member or Lead) together make the role, for example Medical Lead.</p><p>The role decides the permissions. The team only records where the person belongs.</p>']) +
   wizBar('user', USTEPS, D) + `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="user" novalidate><div class="stack">${wizHead(USTEPS, D)}
   <section class="panel"${hid(0)}><div class="panel-head"><h3>Personal information</h3></div><div class="panel-body fgrid">
     <div class="field"><label for="u-name">Full name</label><input class="input ${E.name ? 'invalid' : ''}" id="u-name" data-u="name" value="${esc(D.name)}" placeholder="e.g. Ahmed Youssef">${err('name')}</div>
@@ -362,7 +362,6 @@ function validateUser(D, editId) {
 /* ===== Roles & permissions ===== */
 /* ===== Roles & Permissions: how the hierarchy and permissions work, then one card per role (function + level) ===== */
 // How a workflow uses each function: the Member/Lead pattern of its steps.
-function wfPattern(w, fn) { const st = w.steps.filter(s => !isNotify(s) && s.fn === fn); const m = st.some(s => s.level === 'Member'), l = st.some(s => s.level === 'Lead'); return m && l ? 'Member → Lead' : l ? 'Lead only' : m ? 'Member only' : null; }
 function roleSummary(rid) {
   const has = S.roles[rid] || []; const lab = g => PERMS.filter(p => p[2] === g && (rid === 'Administrator' || has.includes(p[0]))).map(p => p[1]);
   const [fn, level] = rid === 'Administrator' ? ['Administrator', null] : rid.split('-');
@@ -373,29 +372,34 @@ function roleSummary(rid) {
 function roleCard(rid) {
   const R = roleSummary(rid); const admin = rid === 'Administrator'; const lvlTag = admin ? '<span class="chip plain">Full control</span>' : lvl(rid.split('-')[1]);
   const list = (items, empty) => items.length ? items.map(x => `<span class="tag">${esc(x)}</span>`).join(' ') : `<span class="muted">${empty}</span>`;
-  return `<section class="panel role-card"><div class="rc-head">${fnBadge(admin ? 'Admin' : rid.split('-')[0], 'lg')}<div class="rc-t"><h3>${esc(roleName(rid))} ${lvlTag}</h3><p>Controls what this role can access and what actions it can perform.</p></div><span class="grow"></span>${admin ? '<span class="chip plain">' + icon('lock', 'sm') + ' Always all permissions</span>' : can(me(), 'manage_users') ? btn('Edit', 'role-edit', '', `data-role="${rid}"`, 'edit') : ''}</div>
+  return `<section class="panel role-card"><div class="rc-head">${fnBadge(admin ? 'Admin' : rid.split('-')[0], 'lg')}<div class="rc-t"><h3>${esc(roleName(rid))} ${lvlTag}</h3></div><span class="grow"></span>${admin ? '<span class="chip plain">' + icon('lock', 'sm') + ' Always all permissions</span>' : can(me(), 'manage_users') ? btn('Edit', 'role-edit', '', `data-role="${rid}"`, 'edit') : ''}</div>
     <dl class="rc-kv"><dt>Pages</dt><dd>${list(R.pages, 'No pages')}</dd><dt>Actions</dt><dd>${list(R.actions, 'View only')}</dd><dt>Approval authority</dt><dd>${list(R.auth, 'None — cannot act on workflow steps')}</dd>${R.admin.length ? `<dt>Administration</dt><dd>${list(R.admin, '')}</dd>` : ''}
-    <dt>Scope</dt><dd><span class="rc-scope">${R.people.length} active ${R.people.length === 1 ? 'person' : 'people'}${R.teams.length ? ' · ' + esc(R.teams.join(', ')) : ''}</span>${R.steps.length ? `<span class="muted rc-steps">Acts on: ${esc(uniq(R.steps).join(' · '))}</span>` : admin ? '<span class="muted rc-steps">Can act on any step when Settings allow it</span>' : ''}</dd></dl></section>`;
+    <dt>Scope</dt><dd><span class="rc-scope">${R.people.length} active ${R.people.length === 1 ? 'person' : 'people'}${R.teams.length ? ' · ' + esc(R.teams.join(', ')) : ''}</span></dd></dl></section>`;
 }
+// Roles & Permissions: a short statement of the model, two explanations on demand, then the roles of each function.
 function viewRoles() {
   const fns = S.functions.filter(f => f.active !== false).map(f => f.id); const tabs = [...fns, 'Administration'];
   const tab = tabs.includes(UI.route.p.tab) ? UI.route.p.tab : tabs[0];
-  const wfs = S.workflows.filter(w => !w.hidden && w.active !== false);
-  const patterns = [['Member only', 'A Member reviews and passes the item on; no Lead step for that function.'], ['Lead only', 'A Lead reviews and approves directly — used for low-risk updates.'], ['Member → Lead', 'A Member does the initial review, the Lead gives the final approval and can return it to the Member.'], ['Lead only for escalated content', 'Routine content uses Member review; a separate workflow sends escalated content straight to the Lead.']];
-  const hier = `<section class="panel"><div class="panel-head"><h3>${icon('workflow', 'sm')} Review hierarchy</h3></div><div class="panel-body stack" style="gap:12px">
-    <div class="hier-flow"><span class="hier-step">${lvl('Member')} Member review</span>${icon('arrow', 'sm')}<span class="hier-step">${lvl('Lead')} Lead review</span>${icon('arrow', 'sm')}<span class="hier-step ok">${icon('award', 'sm')} Approval</span></div>
-    <p class="muted" style="font-size:12.5px">Each workflow decides, per function, which levels take part:</p>
-    <div class="hier-pats">${patterns.map(p => `<div><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>
-    <div class="section-title" style="margin-top:4px">How your active workflows use it</div>
-    <div class="hier-wf">${wfs.map(w => `<div class="hw-row"><b>${esc(w.name)}</b><span>${uniq(w.steps.filter(s => !isNotify(s)).map(s => s.fn)).map(fn => `<span class="hw-p">${fnBadge(fn, 'sm')}${esc(fn)} · ${esc(wfPattern(w, fn))}</span>`).join('')}</span></div>`).join('')}</div></div></section>`;
-  const how = [['user', 'User type', 'Administrator or a business user. Administrators always hold every permission.'], ['shieldcheck', 'Position', 'Member or Lead within a function. Workflows assign steps to a level.'], ['team', 'Team', 'People belong to one team; a workflow step can be limited to a team.'], ['key', 'Role', 'Function + position, e.g. Medical Lead. Permissions are set per role.'], ['check', 'Permissions', 'Pages a role can open and actions it can perform.'], ['workflow', 'Workflow authority', 'Member review / Lead review: which workflow steps the role may act on.'], ['award', 'Approval authority', 'Approve signs an approval step; Final approval signs the last one.']];
-  const howP = `<section class="panel"><div class="panel-head"><h3>${icon('key', 'sm')} How permissions work</h3></div><div class="panel-body"><ol class="how-list">${how.map((h, i) => `<li><span class="how-n">${i + 1}</span><span class="how-i">${icon(h[0], 'sm')}</span><span><b>${esc(h[1])}</b><span>${esc(h[2])}</span></span></li>`).join('')}</ol><p class="muted" style="font-size:12.5px;margin-top:10px">A person can act on a workflow step only when their function, position, team, workflow authority and approval permission all match the step. Every change is recorded in the audit trail.</p></div></section>`;
   const cards = tab === 'Administration' ? roleCard('Administrator') : `<div class="role-grid">${LEVELS.map(l => roleCard(tab + '-' + l)).join('')}</div>`;
-  const matrix = '';
-  return pageHead('Roles & Permissions', 'A role is a function plus a position (Member or Lead). Permissions apply to everyone in the role immediately.', `${btn('Compare all roles', 'role-compare', '', '', 'layers')}${can(me(), 'manage_users') ? btn('Restore defaults', 'roles-reset', '', '', 'undo') : ''}`) +
-  `<div class="grid cols-2 roles-intro">${hier}${howP}</div>
-  <div class="tabs" role="tablist" style="margin:18px 0 14px">${tabs.map(t => `<button class="tab ${tab === t ? 'active' : ''}" role="tab" aria-selected="${tab === t}" ${goAttr('roles', null, ` data-tab="${esc(t)}"`)}>${t === 'Administration' ? '' : fnBadge(t, 'sm')}${esc(t)}<span class="n">${S.users.filter(u => u.status === 'Active' && (t === 'Administration' ? isAdmin(u) : u.fn === t)).length}</span></button>`).join('')}</div>
-  ${cards}${matrix}`;
+  const model = `<section class="rp-model">
+    <div class="rp-eq"><span class="rp-t">${icon('team', 'sm')}Function</span><span class="rp-op">+</span><span class="rp-t">${icon('shieldcheck', 'sm')}Level</span><span class="rp-op">=</span><span class="rp-t on">${icon('key', 'sm')}Role</span><span class="rp-op">→</span><span class="rp-t">${icon('check', 'sm')}Permissions</span></div>
+    <p class="rp-say">Each person has one role. The role decides what they can open and do. Who reviews a given item is set by its <b>workflow</b> — it can ask for a Member, a Lead, or a Member and then a Lead.</p>
+    <div class="rp-lv"><div><span class="rp-lv-h">${lvl('Member')}</span><span>Prepares content and gives the first review.</span></div><div><span class="rp-lv-h">${lvl('Lead')}</span><span>Submits work, gives final approval and can send it back.</span></div></div>
+    <div class="rp-btns"><button type="button" class="btn" data-act="rp-info" data-v="perm">${icon('key', 'sm')}How permissions work</button><button type="button" class="btn" data-act="rp-info" data-v="hier">${icon('workflow', 'sm')}Review hierarchy</button></div></section>`;
+  return pageHead('Roles & Permissions', 'The roles in each function and what each one can do.', `${btn('Compare all roles', 'role-compare', '', '', 'layers')}${can(me(), 'manage_users') ? btn('Restore defaults', 'roles-reset', '', '', 'undo') : ''}`) +
+  model +
+  `<div class="tabs" role="tablist" style="margin:18px 0 14px">${tabs.map(t => `<button class="tab ${tab === t ? 'active' : ''}" role="tab" aria-selected="${tab === t}" ${goAttr('roles', null, ` data-tab="${esc(t)}"`)}>${t === 'Administration' ? '' : fnBadge(t, 'sm')}${esc(t)}<span class="n">${S.users.filter(u => u.status === 'Active' && (t === 'Administration' ? isAdmin(u) : u.fn === t)).length}</span></button>`).join('')}</div>
+  ${cards}`;
+}
+// The two explanations behind the buttons on Roles & Permissions.
+function rolesInfoModal(M) {
+  if (M.v === 'hier') return modalShell('workflow', 'info', 'Review hierarchy', 'Members and Leads within each function', `
+    <div class="hier-flow"><span class="hier-step">${lvl('Member')} Member review</span>${icon('arrow', 'sm')}<span class="hier-step">${lvl('Lead')} Lead review</span>${icon('arrow', 'sm')}<span class="hier-step ok">${icon('award', 'sm')} Approved</span></div>
+    <p class="rp-p">Every function has two levels. A <b>Member</b> reviews first; a <b>Lead</b> gives the final approval and can return the item to the Member.</p>
+    <p class="rp-p">Each workflow decides which levels take part, function by function:</p>
+    <div class="rp-pats"><div><b>Member only</b><span>A Member reviews and passes the item on.</span></div><div><b>Lead only</b><span>A Lead reviews and approves directly.</span></div><div><b>Member → Lead</b><span>A Member reviews, then the Lead approves.</span></div></div>`, btn('Close', 'modal-close', 'primary'));
+  const how = [['key', 'Role', 'Function plus level, for example Medical Lead.'], ['check', 'Permissions', 'Each role has its own set: the pages it can open and the actions it can take.'], ['workflow', 'Workflow steps', 'A person can act on a step when their function and level match the step and their role allows the action.'], ['lock', 'Administrators', 'Always hold every permission.'], ['history', 'Audit', 'Every permission change is recorded in the audit trail.']];
+  return modalShell('key', 'info', 'How permissions work', 'From role to what someone can do', `<ol class="how-list">${how.map((h, i) => `<li><span class="how-n">${i + 1}</span><span class="how-i">${icon(h[0], 'sm')}</span><span><b>${esc(h[1])}</b><span>${esc(h[2])}</span></span></li>`).join('')}</ol>`, btn('Close', 'modal-close', 'primary'));
 }
 /* Compare all roles: a tabbed popup over the real role permissions. Edits are a draft until Save; Cancel discards them. */
 const CMP_TABS = [['overview', 'Overview'], ['pages', 'Page access'], ['content', 'Content actions'], ['review', 'Review & approval'], ['admin', 'Administration'], ['special', 'Special permissions']];

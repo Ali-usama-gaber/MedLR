@@ -148,25 +148,33 @@ function cfgDelete(k, id) {
    Each hub has an overview (counts computed from the records) and one management table per entity. */
 const HUBS = {
   refdata: { title: 'Reference Data', icon: 'database', keys: ['products', 'markets', 'moduletypes', 'materials', 'channels', 'audiences', 'references'], sub: 'The controlled lists offered when modules and assets are created, reviewed and filtered. Changes apply everywhere the list is used.' },
-  org: { title: 'Organisation', icon: 'org', keys: ['teams', 'functions'], sub: 'Teams own content; functions staff the review and approval steps of workflows.' }
+  org: { title: 'People & Teams', icon: 'users', keys: ['teams', 'functions'], sub: 'The people who use MedLR and where they belong. What each person can do is set by their role in Roles & Permissions.',
+    // Lists that are not configuration records but live in the same section.
+    extra: [{ k: 'users', label: 'Users', icon: 'users', perm: ['manage_users', ADMIN_VIEW], sub: 'People who can sign in, with their function, level and team.', coll: () => S.users, active: x => x.status === 'Active', used: x => S.modules.some(m => m.owner === x.id) || S.assets.some(a => a.owner === x.id) || S.audit.some(e => e.user === x.id), objType: 'User', view: cr => viewUsers(cr) }] }
 };
-const hubOf = k => Object.keys(HUBS).find(h => HUBS[h].keys.includes(k));
+const hubOf = k => Object.keys(HUBS).find(h => HUBS[h].keys.includes(k) || (HUBS[h].extra || []).some(e => e.k === k));
 const cfgViewPerm = k => CONFIG[k].viewPerm ? [...CONFIG[k].viewPerm, CONFIG[k].perm, ADMIN_VIEW] : [CONFIG[k].perm, ADMIN_VIEW];
-const hubKeys = h => HUBS[h].keys.filter(k => can(me(), cfgViewPerm(k)));
+// The entries of a section the current user may open, in order: extra lists first, then configuration lists.
+function hubEntries(h) {
+  const H = HUBS[h];
+  return [...(H.extra || []).filter(e => can(me(), e.perm)).map(e => ({ ...e, plural: e.label })),
+    ...H.keys.filter(k => can(me(), cfgViewPerm(k))).map(k => { const C = CONFIG[k]; return { k, plural: C.plural, icon: C.icon, sub: C.sub, coll: C.coll, active: x => !!x.active, used: x => cfgUseCount(k, x) > 0, objType: C.label, manage: canManageCfg(k), cfg: true }; })];
+}
+const hubKeys = h => hubEntries(h).map(e => e.k);
 // Route permissions and the sidebar entries follow the entities' own permissions.
-Object.keys(HUBS).forEach(h => { ROUTE_PERM[h] = [...new Set(HUBS[h].keys.flatMap(cfgViewPerm))]; HUBS[h].keys.forEach(k => { ROUTE_PERM[k] = cfgViewPerm(k); NAV_OF[k] = h; }); const n = NAV.find(x => x[0] === h); if (n) n[4] = ROUTE_PERM[h]; });
-function hubLastChange(k) { const L = CONFIG[k].label; let t = 0; S.audit.forEach(e => { if (e.objType === L && e.ts > t) t = e.ts; }); return t; }
+Object.keys(HUBS).forEach(h => { const ex = HUBS[h].extra || []; ROUTE_PERM[h] = [...new Set([...HUBS[h].keys.flatMap(cfgViewPerm), ...ex.flatMap(e => e.perm)])]; HUBS[h].keys.forEach(k => { ROUTE_PERM[k] = cfgViewPerm(k); NAV_OF[k] = h; }); ex.forEach(e => { NAV_OF[e.k] = h; }); const n = NAV.find(x => x[0] === h); if (n) n[4] = ROUTE_PERM[h]; });
+function hubLastChange(objType) { let t = 0; S.audit.forEach(e => { if (e.objType === objType && e.ts > t) t = e.ts; }); return t; }
 function viewHub(h, tab) {
-  const H = HUBS[h]; const keys = hubKeys(h); if (!keys.length) return `<div class="empty"><h4>Not available for your role</h4></div>`;
-  const cur = keys.includes(tab) ? tab : null;
-  const side = `<nav class="set-nav" aria-label="${H.title} sections"><div class="set-grp">${esc(H.title)}</div><button type="button" class="set-tab ${cur ? '' : 'on'}" ${goAttr(h)} aria-current="${cur ? 'false' : 'page'}">${icon('grid', 'sm')}<span>Overview</span></button>${keys.map(k => `<button type="button" class="set-tab ${k === cur ? 'on' : ''}" ${goAttr(k)} aria-current="${k === cur ? 'page' : 'false'}">${icon(CONFIG[k].icon, 'sm')}<span>${esc(CONFIG[k].plural)}</span><span class="n">${CONFIG[k].coll().length}</span></button>`).join('')}</nav>`;
+  const H = HUBS[h]; const ents = hubEntries(h); if (!ents.length) return `<div class="empty"><h4>Not available for your role</h4></div>`;
+  const cur = ents.find(e => e.k === tab) || null;
+  const side = `<nav class="set-nav" aria-label="${esc(H.title)} sections"><div class="set-grp">${esc(H.title)}</div><button type="button" class="set-tab ${cur ? '' : 'on'}" ${goAttr(h)} aria-current="${cur ? 'false' : 'page'}">${icon('grid', 'sm')}<span>Overview</span></button>${ents.map(e => `<button type="button" class="set-tab ${cur && e.k === cur.k ? 'on' : ''}" ${goAttr(e.k)} aria-current="${cur && e.k === cur.k ? 'page' : 'false'}">${icon(e.icon, 'sm')}<span>${esc(e.plural)}</span><span class="n">${e.coll().length}</span></button>`).join('')}</nav>`;
   let main;
-  if (cur) main = viewConfig(cur, [[H.title, h], [CONFIG[cur].plural]]);
+  if (cur) main = cur.cfg ? viewConfig(cur.k, [[H.title, h], [cur.plural]]) : cur.view([[H.title, h], [cur.plural]]);
   else {
-    const rows = keys.map(k => { const C = CONFIG[k]; const L = C.coll(); const act = L.filter(x => x.active).length; const used = L.filter(x => cfgUseCount(k, x) > 0).length; const t = hubLastChange(k);
-      return `<tr class="click" ${goAttr(k)} tabindex="0"><td><span class="hub-name">${icon(C.icon, 'sm')}<span><b>${esc(C.plural)}</b><span class="muted" title="${esc(C.sub || '')}">${esc(C.sub || '')}</span></span></span></td><td class="num"><b>${L.length}</b></td><td class="num">${act}</td><td class="num">${L.length - act ? L.length - act : '<span class="muted">0</span>'}</td><td class="num">${used}<span class="muted"> / ${L.length}</span></td><td class="muted">${t ? ago(t) : '—'}</td></tr>`; }).join('');
-    const tot = keys.reduce((n, k) => n + CONFIG[k].coll().length, 0);
-    main = pageHead(H.title, H.sub, '', null) + `<section class="panel table-wrap"><table class="tbl list-tbl hub-tbl"><thead><tr><th>List</th><th class="num">Records</th><th class="num">Active</th><th class="num">Inactive</th><th class="num">In use</th><th>Last change</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td><b>${keys.length} list${keys.length === 1 ? '' : 's'}</b></td><td class="num"><b>${tot}</b></td><td colspan="4"></td></tr></tfoot></table></section>`;
+    const rows = ents.map(e => { const L = e.coll(); const act = L.filter(e.active).length; const used = L.filter(e.used).length; const t = hubLastChange(e.objType);
+      return `<tr class="click" ${goAttr(e.k)} tabindex="0"><td><span class="hub-name">${icon(e.icon, 'sm')}<span><b>${esc(e.plural)}</b><span class="muted" title="${esc(e.sub || '')}">${esc(e.sub || '')}</span></span></span></td><td class="num"><b>${L.length}</b></td><td class="num">${act}</td><td class="num">${L.length - act ? L.length - act : '<span class="muted">0</span>'}</td><td class="num">${used}<span class="muted"> / ${L.length}</span></td><td class="muted">${t ? ago(t) : '—'}</td></tr>`; }).join('');
+    const tot = ents.reduce((n, e) => n + e.coll().length, 0);
+    main = pageHead(H.title, H.sub, '', null) + `<section class="panel table-wrap"><table class="tbl list-tbl hub-tbl"><thead><tr><th>List</th><th class="num">Records</th><th class="num">Active</th><th class="num">Inactive</th><th class="num">In use</th><th>Last change</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td><b>${ents.length} list${ents.length === 1 ? '' : 's'}</b></td><td class="num"><b>${tot}</b></td><td colspan="4"></td></tr></tfoot></table></section>`;
   }
   return `<div class="set-shell">${side}<div class="set-main">${main}</div></div>`;
 }

@@ -9,7 +9,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   const navs = () => E(() => [...document.querySelectorAll('.side .nav-item')].map(b => b.title));
   await login('ali.usama@saja.com');
   let n = await navs();
-  ok(n.includes('Reference Data') && n.includes('Organisation') && !n.includes('References'), 'admin sidebar: Reference Data + Organisation, References folded in (' + n.join(', ') + ')');
+  ok(n.includes('Reference Data') && n.includes('People & Teams') && !n.includes('Users') && !n.includes('References'), 'admin sidebar: Reference Data + People & Teams (no separate Users), References folded in (' + n.join(', ') + ')');
   ok(n.length <= 15, 'sidebar not overcrowded (' + n.length + ' items)');
   await G('settings');
   const tabs = await E(() => [...document.querySelectorAll('.set-tab')].map(b => b.textContent.trim()));
@@ -33,12 +33,12 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   // item page breadcrumb back to hub
   await G('item', { k: 'teams', id: 'T-MED' });
   const cr = await E(() => [...document.querySelectorAll('.crumbs button, .crumbs .cur')].map(x => x.textContent.trim()));
-  ok(cr[0] === 'Organisation' && cr[1] === 'Teams', 'team detail breadcrumbs: ' + cr.join(' › '));
-  ok(await E(() => document.querySelector('.side .nav-item.active').title === 'Organisation'), 'Organisation highlighted in the sidebar on a team page');
+  ok(cr[0] === 'People & Teams' && cr[1] === 'Teams', 'team detail breadcrumbs: ' + cr.join(' › '));
+  ok(await E(() => document.querySelector('.side .nav-item.active').title === 'People & Teams'), 'People & Teams highlighted in the sidebar on a team page');
   ok(await E(() => S.teams.every(t => t.active)), 'seeded teams are active');
   // content member: only References in Reference Data, no Organisation
   await login('hana.zaki@saja.com'); n = await navs();
-  ok(!n.includes('Organisation') && !n.includes('Settings'), 'content member has no Organisation/Settings');
+  ok(!n.includes('People & Teams') && !n.includes('Settings'), 'content member has no People & Teams/Settings');
   if (n.includes('Reference Data')) { await G('refdata'); const t2 = await E(() => [...document.querySelectorAll('.set-tab')].map(b => b.textContent.trim())); ok(t2.length === 2 && /References/.test(t2[1]), 'content member sees only References (' + t2.join(', ') + ')'); ok(!(await p.$('[data-act=cfg-new]')), 'and cannot add'); }
   await G('products'); ok(await E(() => !document.querySelector('.hub-tbl') && !document.querySelector('[data-act=cfg-new]')), 'content member is blocked from Products');
   ok(errs.length === 0, 'no page errors ' + errs.join('|'));

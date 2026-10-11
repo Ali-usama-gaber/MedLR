@@ -27,7 +27,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   await p.click('[data-act=msel-open][data-id=sop-products]'); await W(); await p.click(`.msel-opt[data-act=sop-toggle][data-v="${PE}"]`); await p.keyboard.press('Escape'); await W(); await p.click('[data-act=sop-save]'); await W();
   ok(await E(pe => { const s = S.sops.find(x => x.name === 'Product E — evidence required'); return s && s.scope.products.join() === pe && !s.scope.markets.length; }, PE), 'SOP scoped to Product E, every country (none selected)');
   // ===== 2. Module creation by the Content Lead with the new workflow
-  await login('omar.khalil@saja.com'); await G('module-new'); await p.click('[data-act=d-type][data-v=TY-CLAIM]'); await next();
+  await login('omar.khalil@saja.com'); await G('module-new'); await p.$eval('[data-act=d-type][data-v=TY-CLAIM]', e => e.scrollIntoView({ block: 'center' })); await p.click('[data-act=d-type][data-v=TY-CLAIM]'); await next();
   await p.fill('#d-title', 'Clinical Claim — PASI 90 at week 16'); await p.fill('#d-body', 'Product E achieved PASI 90 in 64% of patients at week 16 versus 4% with placebo.¹'); await next();
   await pick('d-products', [PE]); await p.selectOption('#d-aud', 'AU-GP'); await pick('d-markets', ['BH', 'SA']); await p.click('[data-act=d-toggle][data-k=channels][data-v="CH-EMAIL"]'); await next();
   await p.click('[data-act=msel-open][data-id=d-wf]'); await W(); await p.click(`.wfp-opt[data-v="${WF}"]`); await W(); await p.selectOption('#d-addref', 'REF-A-01'); await W(); await next(); await next(); await W(300);
@@ -66,7 +66,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   // ===== 6. Approved Library
   await login('karim.fawzi@saja.com'); await E(() => { UI.f = {}; }); await G('library'); ok((await p.textContent('#content')).includes('PASI 90'), 'approved module in the Approved Library');
   // ===== 6b. Safety statement for Product E (assets need one) through the Low-risk workflow
-  await login('omar.khalil@saja.com'); await G('module-new'); await p.click('[data-act=d-type][data-v=TY-SAFETY]'); await next();
+  await login('omar.khalil@saja.com'); await G('module-new'); await p.$eval('[data-act=d-type][data-v=TY-SAFETY]', e => e.scrollIntoView({ block: 'center' })); await p.click('[data-act=d-type][data-v=TY-SAFETY]'); await next();
   await p.fill('#d-title', 'Safety Statement E — Infections'); await p.fill('#d-body', 'Product E may increase the risk of infections. Do not start treatment during an active infection.'); await next();
   await pick('d-products', [PE]); await p.selectOption('#d-aud', 'AU-GP'); await pick('d-markets', ['BH']); await p.click('[data-act=d-toggle][data-k=channels][data-v="CH-EMAIL"]'); await next();
   await p.click('[data-act=msel-open][data-id=d-wf]'); await W(); await p.click('.wfp-opt[data-v="WF-LOW"]'); await W(); await p.selectOption('#d-addref', 'REF-A-01'); await W(); await next(); await next(); await W(300);

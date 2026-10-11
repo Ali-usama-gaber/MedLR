@@ -1,5 +1,5 @@
 /* ---------- Controller: routing, modals, actions ---------- */
-const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, roles: viewRoles, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, refdata: () => viewHub('refdata'), org: () => viewHub('org'), products: () => viewHub('refdata', 'products'), markets: () => viewHub('refdata', 'markets'), moduletypes: () => viewHub('refdata', 'moduletypes'), materials: () => viewHub('refdata', 'materials'), channels: () => viewHub('refdata', 'channels'), audiences: () => viewHub('refdata', 'audiences'), references: () => viewHub('refdata', 'references'), teams: () => viewHub('org', 'teams'), functions: () => viewHub('org', 'functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
+const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: () => viewHub('org', 'users'), user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, roles: viewRoles, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, refdata: () => viewHub('refdata'), org: () => viewHub('org'), products: () => viewHub('refdata', 'products'), markets: () => viewHub('refdata', 'markets'), moduletypes: () => viewHub('refdata', 'moduletypes'), materials: () => viewHub('refdata', 'materials'), channels: () => viewHub('refdata', 'channels'), audiences: () => viewHub('refdata', 'audiences'), references: () => viewHub('refdata', 'references'), teams: () => viewHub('org', 'teams'), functions: () => viewHub('org', 'functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
 const app = document.getElementById('app');
 
 function go(name, p = {}) {
@@ -134,6 +134,7 @@ function viewModal() {
   if (M.type === 'filters') return filterModal(M);
   if (M.type === 'role') return roleModal(M);
   if (M.type === 'compare') return roleCompareModal(M);
+  if (M.type === 'rp-info') return rolesInfoModal(M);
   if (M.type === 'file') return fileViewerModal(M);
   if (M.type === 'wf-panel') return `<div class="scrim drawer-scrim" data-act="modal-bg"><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title"><header class="drawer-head"><div><span class="eyebrow">Create Module · ${esc((UI.draft && UI.draft.title) || 'new module')}</span><h2 id="dr-title">New workflow</h2><p class="muted">Your module entries stay as they are. The workflow is selected when you create it.</p></div><button type="button" class="btn icon" data-act="modal-close" aria-label="Close">${icon('x')}</button></header><div class="drawer-body">${viewWorkflowNew(true)}</div></aside></div>`;
   if (M.type === 'version') {
@@ -270,6 +271,8 @@ const ACT = {
   'file-open': el => { UI.modal = { type: 'file', id: el.dataset.file, z: 1, back: UI.modal && UI.modal.type !== 'file' ? UI.modal : null }; render(); },
   'fv-zoom': el => { const M = UI.modal; const d = +el.dataset.v; M.z = d === 0 ? 1 : Math.max(0.25, Math.min(4, Math.round((M.z + d * 0.25) * 100) / 100)); render(); },
   'role-edit': el => { UI.modal = { type: 'role', id: el.dataset.role }; render(); },
+  'rp-info': el => { UI.modal = { type: 'rp-info', v: el.dataset.v }; render(); },
+  'pop-close': () => { UI.pop = null; render(); },
   'role-compare': () => { UI.modal = { type: 'compare', tab: 'overview', d: JSON.parse(JSON.stringify(S.roles)) }; render(); },
   'cmp-tab': el => { UI.modal.tab = el.dataset.v; render(); },
   'cmp-diff': () => { UI.modal.diff = !UI.modal.diff; render(); },

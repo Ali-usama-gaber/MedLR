@@ -17,7 +17,7 @@ const D = __dirname;
   ok(['Clinical Claim', 'Safety Statement', 'Headline', 'Supporting Evidence', 'CTA', 'Reference', 'Image', 'Video', 'PDF / Document'].every(t => types.includes(t)), 'all 9 module types available: ' + types.length);
   ok(await E(() => mtype('TY-REF').desc === 'Citation block' && kindOfType('TY-REF') === 'content'), 'Reference stays a content Citation block');
   // ---- IMAGE
-  await p.click('[data-act=d-type][data-v=TY-IMAGE]'); await submitBtn(); await W();
+  await p.$eval('[data-act=d-type][data-v=TY-IMAGE]', e => e.scrollIntoView({ block: 'center' })); await p.click('[data-act=d-type][data-v=TY-IMAGE]'); await submitBtn(); await W();
   ok((await p.textContent('.wiz-head h2')).includes('Image & details') && await p.isVisible('label.upload'), 'form switches to image upload step');
   await submitBtn(); await W(); ok((await p.textContent('#content')).includes('Upload the image file'), 'cannot continue without a file');
   await p.setInputFiles('#d-file', D + '/upload.png'); await p.waitForFunction(() => UI.draft.media && UI.draft.media.fileId && !UI.draft.mediaBusy); await W(200);
@@ -52,13 +52,13 @@ const D = __dirname;
   await G('module', { id: IMG, tab: 'versions' }); const vh = await p.textContent('.list-tbl'); ok(vh.includes('upload.png') && vh.includes('upload2.png'), 'version history lists the file of each version');
   ok(await E(id => liveMeta(modById(id)) && live(modById(id)).media.name === 'upload.png', IMG), 'library keeps serving the approved v1 file while v2 is a draft');
   // ---- VIDEO
-  await E(() => { UI.draft = null; }); await G('module-new'); await p.click('[data-act=d-type][data-v=TY-VIDEO]'); await submitBtn(); await W();
+  await E(() => { UI.draft = null; }); await G('module-new'); await p.$eval('[data-act=d-type][data-v=TY-VIDEO]', e => e.scrollIntoView({ block: 'center' })); await p.click('[data-act=d-type][data-v=TY-VIDEO]'); await submitBtn(); await W();
   await p.setInputFiles('#d-file', D + '/upload.webm'); await p.waitForFunction(() => UI.draft.media && !UI.draft.mediaBusy, null, { timeout: 15000 }); await W(300);
   const vd = await E(() => UI.draft.media); ok(vd.duration === 6 && vd.width === 640 && /WebM/.test(vd.format), 'video read: duration ' + vd.duration + ' s, ' + vd.format);
   ok(await p.isVisible('.media-stage video') && (await p.textContent('#content')).includes('0:06'), 'video preview and duration shown');
   await p.setInputFiles('#d-file', D + '/upload.png'); await W(300); ok(await E(() => UI.draft.media.name === 'upload.webm'), 'wrong file type rejected for a video module');
   // ---- PDF
-  await E(() => { UI.draft = null; }); await G('module-new'); await p.click('[data-act=d-type][data-v=TY-DOC]'); await submitBtn(); await W();
+  await E(() => { UI.draft = null; }); await G('module-new'); await p.$eval('[data-act=d-type][data-v=TY-DOC]', e => e.scrollIntoView({ block: 'center' })); await p.click('[data-act=d-type][data-v=TY-DOC]'); await submitBtn(); await W();
   await p.setInputFiles('#d-file', D + '/upload.pdf'); await p.waitForFunction(() => UI.draft.media && !UI.draft.mediaBusy, null, { timeout: 20000 }); await W(300);
   const pd = await E(() => UI.draft.media); ok(pd.pages === 2 && pd.mime === 'application/pdf', 'PDF read: ' + pd.pages + ' pages');
   ok(await p.isVisible('.file-card .fc-badge'), 'PDF file card with PDF badge');

@@ -9,7 +9,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   const sub = async () => { await p.click('#content button[type=submit]'); await W(); };
   await p.fill('#login-email', 'ali.usama@saja.com'); await p.fill('#login-pass', 'pw'); await p.click('button[type=submit]'); await W(300);
   await E(() => go('module-new')); await W(300);
-  await p.click('[data-act=d-type][data-v=TY-IMAGE]'); await sub();
+  await p.$eval('[data-act=d-type][data-v=TY-IMAGE]', e => e.scrollIntoView({ block: 'center' })); await p.click('[data-act=d-type][data-v=TY-IMAGE]'); await sub();
   await p.setInputFiles('#d-file', D + '/upload.png'); await p.waitForFunction(() => UI.draft.media && UI.draft.media.fileId && !UI.draft.mediaBusy); await W(200);
   await p.fill('#d-title', 'Image — unsaved state check'); await p.fill('#d-body', 'Typed text that must survive.');
   const before = await E(() => { const f = document.querySelector('#content form'); f._k = 1; const img = document.querySelector('.media-stage img'); if (img) img._k = 1; return { file: UI.draft.media.fileId, sum: UI.draft.media.checksum }; });

@@ -9,7 +9,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   const next = async () => { await p.click('button[type=submit]'); await W(); };
   await login('ali.usama@saja.com');
   // ---- module form: workflow picker lists every eligible workflow
-  await G('module-new'); await p.click('[data-act=d-type][data-v=TY-CLAIM]'); await next();
+  await G('module-new'); await p.$eval('[data-act=d-type][data-v=TY-CLAIM]', e => e.scrollIntoView({ block: 'center' })); await p.click('[data-act=d-type][data-v=TY-CLAIM]'); await next();
   await p.fill('#d-title', 'Clinical Claim — Workflow picker test'); await p.fill('#d-body', 'Product A reduced hospitalisation by 21% versus standard care.'); await next();
   // + Add new product: modal on top of the form, then selected in the form with its indication
   await p.click('[data-act=cfg-quick][data-k=products]'); await W(); ok(await E(() => UI.modal && UI.modal.type === 'cfg' && UI.modal.quick === 'draft:products'), '“Add new product” opens the product form without leaving the module form');
@@ -76,7 +76,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   await G('channels'); ok(await E(() => !!document.querySelector('.set-tab.on') && document.querySelector('.set-tab.on').textContent.includes('Channels') && document.querySelector('.side .nav-item.active').title === 'Reference Data'), 'old Channels link opens inside Reference Data');
   await G('settings', { tab: 'lifecycle' }); ok(await p.isVisible('#st-expiryWarnDays'), 'Lifecycle rules tab shows its settings');
   // ---- permissions: add-new hidden or disabled with a reason
-  await login('hana.zaki@saja.com'); await G('module-new'); await p.click('[data-act=d-type][data-v=TY-CLAIM]'); await next(); await p.fill('#d-title', 'x'); await p.fill('#d-body', 'Some content body'); await next();
+  await login('hana.zaki@saja.com'); await G('module-new'); await p.$eval('[data-act=d-type][data-v=TY-CLAIM]', e => e.scrollIntoView({ block: 'center' })); await p.click('[data-act=d-type][data-v=TY-CLAIM]'); await next(); await p.fill('#d-title', 'x'); await p.fill('#d-body', 'Some content body'); await next();
   ok(!(await p.$('[data-act=cfg-quick][data-k=products]')) && !!(await p.$('.add-new.disabled[title*="permission"]')), 'without Manage settings, Add new is disabled and explains why');
   await G('settings'); ok((await p.textContent('#content')).includes('do not have access'), 'Settings blocked for a Content Member');
   ok(!errs.length, 'no page errors ' + errs.join(' | ')); console.log(fails ? fails + ' FAILED' : 'ALL PASSED'); await b.close();
