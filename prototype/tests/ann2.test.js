@@ -90,8 +90,8 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
     await sel('.pdf-tl[data-page="1"]', word.slice(0, 3), true); await W(); const pt = await E(() => [...document.querySelectorAll('.an-tb [data-s]')].map(b => b.dataset.s).join(','));
     ok(pt.startsWith('insert'), 'clicking in PDF text offers Insert text'); await p.click('.an-tb [data-s=insert]'); await p.fill('#an-rep', '(adults)'); await save(''); A = await last();
     ok(A.anchor.kind === 'ptext' && A.anchor.quote === '' && A.style === 'insert', 'PDF insertion point saved');
-    await p.click('[data-act=an-tool][data-v=ink]'); await W(); await E(() => document.querySelector('.pdfr-page[data-page="1"]').scrollIntoView({ block: 'start' })); await W(200);
-    await drag('.pdfr-page[data-page="1"] .an-layer', [0.6, 0.15], [0.8, 0.25], 10); await save(''); A = await last(); ok(A.anchor.kind === 'shape' && A.anchor.shape === 'ink' && A.anchor.page === 1, 'freehand on a PDF page');
+    await p.click('[data-act=an-tool][data-v=ink]'); await W(); await E(() => document.querySelector('.pdfr-page[data-page="1"]').scrollIntoView({ block: 'center' })); await W(200);
+    await drag('.pdfr-page[data-page="1"] .an-layer', [0.6, 0.4], [0.8, 0.5], 10); await save(''); A = await last(); ok(A.anchor.kind === 'shape' && A.anchor.shape === 'ink' && A.anchor.page === 1, 'freehand on a PDF page');
     await p.click('[data-act=an-page][data-page="1"]'); await save('General note for page 1'); A = await last(); ok(A.anchor.kind === 'page', 'page-level comment without selecting text');
   } catch (e) { ok(false, 'PDF tools: ' + e.message.slice(0, 400)); }
   // ---- persistence after reload
@@ -102,7 +102,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   await p.click('[data-act=decide][data-d=pass]'); await W(); await p.click('[data-act=decide-confirm]'); await W(300);
   ok(await E(n => annsFor(modById('MOD-B-007'), 1).length === n && modById('MOD-B-007').review.step === 1, cnt), 'comments kept when the module moves to the next step');
   // ---- notification for the mentioned user
-  await login('sara.ahmed@saja.com'); ok(await E(() => notificationsFor(me()).some(e => e.action === 'User mentioned')), 'Sara is notified of the mention');
+  await login('sara.ahmed@saja.com'); ok(await E(() => notificationsFor(me()).some(e => e.type === 'mention' && e.stored)), 'Sara is notified of the mention (stored notification)');
   await G('module', { id: 'MOD-B-007', tab: 'comments' }); await p.selectOption('[data-anf=fm]', 'me'); await W(); ok((await p.locator('.an-card').count()) >= 1, '“Mentions me” filter shows her mention');
   ok(!(await p.$(`[data-an-card="${noteId}"] [data-act=an-edit]`)), 'she cannot edit the administrator’s comment');
   ok(!errs.length, 'no page errors ' + errs.join(' | ')); console.log(fails ? fails + ' FAILED' : 'ALL PASSED'); await b.close();

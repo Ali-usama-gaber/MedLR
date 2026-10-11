@@ -168,9 +168,9 @@ const SEED = () => {
     ].map(([id, name, desc, icon, tone, safety, kind]) => ({ id, name, desc, icon, tone, safety: !!safety, kind: kind || 'content', workflow: '', active: true })),
     functions: SEED_FUNCS.map(([id, desc, reviews]) => ({ id, desc, reviews, active: true })),
     teams: [
-      { id: 'T-CON', name: 'Content — Cardiology', fn: 'Content' }, { id: 'T-CON2', name: 'Content — Respiratory & Diabetes', fn: 'Content' },
-      { id: 'T-MED', name: 'Medical Affairs', fn: 'Medical' }, { id: 'T-LEG', name: 'Legal', fn: 'Legal' }, { id: 'T-REG', name: 'Regulatory Affairs', fn: 'Regulatory' },
-      { id: 'T-MKT', name: 'Marketing', fn: 'Marketing' }, { id: 'T-ADM', name: 'Platform Administration', fn: 'Administrator' }
+      { id: 'T-CON', name: 'Content — Cardiology', fn: 'Content', active: true }, { id: 'T-CON2', name: 'Content — Respiratory & Diabetes', fn: 'Content', active: true },
+      { id: 'T-MED', name: 'Medical Affairs', fn: 'Medical', active: true }, { id: 'T-LEG', name: 'Legal', fn: 'Legal', active: true }, { id: 'T-REG', name: 'Regulatory Affairs', fn: 'Regulatory', active: true },
+      { id: 'T-MKT', name: 'Marketing', fn: 'Marketing', active: true }, { id: 'T-ADM', name: 'Platform Administration', fn: 'Administrator', active: true }
     ],
     users: [
       ['u-omar', 'Omar Khalil', 'Content', 'Lead', 'T-CON'], ['u-hana', 'Hana Zaki', 'Content', 'Member', 'T-CON2'],

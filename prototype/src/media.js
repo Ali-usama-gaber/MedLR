@@ -26,9 +26,9 @@ function hydratePdfs() {
 }
 const mediaKindOf = md => !md || !md.mime ? '' : md.mime.startsWith('image/') ? 'image' : md.mime.startsWith('video/') ? 'video' : 'document';
 function pdfView(md, url, mode) {
-  const c = PDFC[md.fileId]; const open = fileActions(md);
-  if (c && c.thumbs) return mode === 'thumb' ? `<img class="media-img thumb pdf-page" src="${c.thumbs[0]}" alt="First page of ${esc(md.name)}">` : `<div class="pdf-pages">${c.thumbs.map((t, i) => `<figure><img class="pdf-page" src="${t}" alt="Page ${i + 1} of ${esc(md.name)}"><figcaption>Page ${i + 1} of ${c.pages}</figcaption></figure>`).join('')}</div><div class="row" style="justify-content:center;margin-top:10px">${c.pages > 3 ? `<span class="muted" style="font-size:12px">${c.pages - 3} more page${c.pages - 3 > 1 ? 's' : ''} — preview to read all</span>` : ''}${open}</div>`;
-  if (c && c.failed) return mode === 'thumb' ? `<div class="media-empty thumb">${icon('file')}</div>` : `<object class="pdf-embed" data="${url}" type="application/pdf" aria-label="${esc(md.name)}"><div class="media-empty">${icon('file')}<span>Preview not available in this browser.</span>${open}</div></object><div class="row" style="justify-content:center;margin-top:8px">${open}</div>`;
+  const c = PDFC[md.fileId];
+  if (c && c.thumbs) return mode === 'thumb' ? `<img class="media-img thumb pdf-page" src="${c.thumbs[0]}" alt="First page of ${esc(md.name)}">` : `<div class="pdf-pages">${c.thumbs.map((t, i) => `<figure><img class="pdf-page" src="${t}" alt="Page ${i + 1} of ${esc(md.name)}"><figcaption>Page ${i + 1} of ${c.pages}</figcaption></figure>`).join('')}</div>${c.pages > 3 ? `<p class="muted fp-more">${c.pages - 3} more page${c.pages - 3 > 1 ? 's' : ''} — open the document to read all</p>` : ''}`;
+  if (c && c.failed) return mode === 'thumb' ? `<div class="media-empty thumb">${icon('file')}</div>` : `<div class="media-empty">${icon('file')}<span>${esc(md.name)} · ${md.pages ? md.pages + ' pages · ' : ''}open to read it in the document viewer</span></div>`;
   return `<div class="media-empty ${mode === 'thumb' ? 'thumb' : ''}" data-pdf="${md.fileId}" data-url="${url}">${icon('file')}${mode === 'thumb' ? '' : '<span>Rendering PDF preview…</span>'}</div>`;
 }
 // The preview of an approved (or draft) file. mode: 'full' | 'thumb'.
@@ -53,17 +53,24 @@ function fileCard(md, extra = '') {
   if (!md || !md.fileId) return '';
   const k = mediaKindOf(md); const label = { image: 'Image', video: 'Video', document: 'PDF' }[k] || 'File';
   const info = [label + (md.format ? ' · ' + md.format.replace(/^[A-Z0-9]+ · /, '') : ''), fmtSize(md.size), md.duration != null ? fmtSecs(md.duration) : ''].filter(Boolean).join(' · ');
-  return `<div class="file-card k-${k}"><span class="fc-thumb">${mediaView(md, 'thumb')}${k === 'document' ? '<span class="fc-badge">PDF</span>' : ''}</span><span class="fc-body"><b title="${esc(md.name)}">${esc(md.name)}</b><span>${esc(info)}</span>${extra ? `<span class="fc-extra">${extra}</span>` : ''}</span></div>`;
+  FILES[md.fileId] = FILES[md.fileId] || { md, ctx: '' };
+  return `<div class="file-card k-${k}"><button type="button" class="fc-thumb" data-act="file-open" data-file="${esc(md.fileId)}" aria-label="Open ${esc(md.name)}">${mediaView(md, 'thumb')}${k === 'document' ? '<span class="fc-badge">PDF</span>' : ''}</button><span class="fc-body"><b title="${esc(md.name)}">${esc(md.name)}</b><span>${esc(info)}</span>${extra ? `<span class="fc-extra">${extra}</span>` : ''}</span></div>`;
 }
 
 /* ---------- File viewer: Preview opens the file inside the app, Download saves the original ----------
    Every place that shows an uploaded file offers these two explicit actions. */
 const FILES = {};
-// ctx: what the file belongs to, e.g. "MOD-A-050 · v1 · Approved" (shown in the viewer header).
-function fileActions(md, ctx = '', cls = '') {
-  if (!md || !md.fileId) return ''; FILES[md.fileId] = { md, ctx };
+// Secondary file actions ("⋯"): open in the viewer, download the original. Download is never the default action.
+function fileMenu(md, ctx = '') {
+  if (!md || !md.fileId) return ''; FILES[md.fileId] = { md, ctx }; const key = 'file:' + md.fileId; const open = UI.pop === key;
   const url = mediaUrl(md.fileId); const ok = url && url !== 'missing';
-  return `<span class="file-acts ${cls}"><button type="button" class="btn sm" data-act="file-open" data-file="${esc(md.fileId)}">${icon('eye', 'sm')}Preview</button>${ok ? `<a class="btn sm ghost" href="${url}" download="${esc(md.name)}" data-file-dl="${esc(md.fileId)}">${icon('download', 'sm')}Download</a>` : ''}</span>`;
+  return `<span class="fmenu rel"><button type="button" class="fmenu-btn" data-act="pop" data-pop="${esc(key)}" aria-label="File actions for ${esc(md.name)}" aria-haspopup="menu" aria-expanded="${open}">${icon('more', 'sm')}</button>${open ? `<div class="pop fmenu-pop" role="menu"><button type="button" class="pop-item" role="menuitem" data-act="file-open" data-file="${esc(md.fileId)}">${icon('eye', 'sm')}Open in viewer</button>${ok ? `<a class="pop-item" role="menuitem" href="${url}" download="${esc(md.name)}" data-file-dl="${esc(md.fileId)}">${icon('download', 'sm')}Download original</a>` : ''}<div class="pop-meta">${esc(md.name)}<br>${esc(fmtSize(md.size))}${md.format ? ' · ' + esc(md.format) : ''}</div></div>` : ''}</span>`;
+}
+// A file preview: clicking it opens the in-app viewer (videos keep their own player controls); "⋯" holds the secondary actions.
+function filePreview(md, ctx = '', mode = 'full', opts = {}) {
+  if (!md || !md.fileId) return mediaView(md, mode); FILES[md.fileId] = { md, ctx };
+  const k = mediaKindOf(md); const clickable = !opts.noOpen && (k !== 'video' || mode === 'thumb');
+  return `<div class="fp ${mode}">${clickable ? `<button type="button" class="fp-hit" data-act="file-open" data-file="${esc(md.fileId)}" aria-label="Open ${esc(md.name)} in the viewer" title="Open in the viewer">${mediaView(md, mode)}<span class="fp-zoom">${icon('eye', 'sm')}Open</span></button>` : mediaView(md, mode)}${fileMenu(md, ctx)}</div>`;
 }
 const fileKindLabel = md => ({ image: 'Image', video: 'Video', document: 'PDF document' })[mediaKindOf(md)] || 'File';
 function fileViewerModal(M) {

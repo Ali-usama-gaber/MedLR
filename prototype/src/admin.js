@@ -34,7 +34,7 @@ function blockHTML(a, b, i, editable, reviewMode) {
   const m = modById(b.moduleId); if (!m) return '';
   const v = verOf(m, b.v) || latest(m); const el = eligibility(m, a); const lv = live(m); const outdated = lv && b.v < lv.v;
   const mt = metaOf(m, v); const k = { headline: 'k-headline', cta: 'k-cta', safety: 'k-safety' }[mtype(mt.type).tone] || '';
-  return `<div class="block approved ${k}" ${editable ? `draggable="true" data-drag="blk" data-i="${i}"` : ''}><div class="meta">${editable ? `<span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span>` : ''}${icon('lock', 'sm')}${reviewMode ? 'Approved module · locked' : esc(mtype(mt.type).name)} · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span>${outdated ? `<span class="chip warn">v${lv.v} available</span>` : ''}${editable ? blockTools(i, a) : ''}</div>${v.media ? `<div class="block-media">${mediaView(v.media)}</div><div class="row file-row">${fileActions(v.media, m.id + ' · v' + v.v)}</div><div class="block-rules">${icon('alert', 'sm')}<span><b>Usage rules:</b> ${esc(v.media.usage || '—')}</span></div>` : `<div class="txt">${esc(v.body)}</div>`}
+  return `<div class="block approved ${k}" ${editable ? `draggable="true" data-drag="blk" data-i="${i}"` : ''}><div class="meta">${editable ? `<span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span>` : ''}${icon('lock', 'sm')}${reviewMode ? 'Approved module · locked' : esc(mtype(mt.type).name)} · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span>${outdated ? `<span class="chip warn">v${lv.v} available</span>` : ''}${editable ? blockTools(i, a) : ''}</div>${v.media ? `<div class="block-media">${filePreview(v.media, m.id + ' · v' + v.v, 'full', { noOpen: editable })}</div><div class="block-rules">${icon('alert', 'sm')}<span><b>Usage rules:</b> ${esc(v.media.usage || '—')}</span></div>` : `<div class="txt">${esc(v.body)}</div>`}
   <div class="checks">${[[el.prodOk ? 'Product match' : 'Different product', el.prodOk], ...el.checks].map(c => `<span class="${c[1] ? '' : 'x'}">${icon(c[1] ? 'check' : 'x', 'sm')} ${esc(c[0])}</span>`).join('')}${outdated && canEditObj(me(), a) && !reviewMode ? `<button class="btn sm" data-act="replace-version" data-asset="${a.id}" data-module="${m.id}">Replace with v${lv.v}</button>` : ''}</div></div>`;
 }
 function blockTools(i, a) { return `<span class="tools"><button data-act="blk-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button data-act="blk-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === a.blocks.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button data-act="blk-del" data-i="${i}" aria-label="Remove">${icon('trash', 'sm')}</button></span>`; }
@@ -434,10 +434,6 @@ function roleModal(M) {
 }
 
 /* ===== Organisation & configuration: generated from CONFIG (config.js) ===== */
-const viewTeams = () => viewSettings('teams');
-const viewProducts = () => viewSettings('products');
-const viewMarkets = () => viewSettings('markets');
-const viewMaterials = () => viewSettings('materials');
 
 /* ===== Validation SOPs ===== */
 const typeLabel = id => S.moduleTypes.some(t => t.id === id) ? mtype(id).name : mat(id).name;
@@ -452,19 +448,18 @@ function viewSops() {
 
 /* ===== Settings ===== */
 const SETTINGS = [
-  ['Organisation', [['orgName', 'Organisation name', 'text', 'Shown on cover letters and sign-in.']]],
+  ['General', [['orgName', 'Organisation name', 'text', 'Shown on cover letters and sign-in.']]],
   ['Lifecycle rules', [['expiryWarnDays', 'Expiry warning (days)', 'number', 'Approved content is flagged as Expiring this many days before expiry.'], ['reviewReminderDays', 'Periodic review reminder (days)', 'number', 'Owners are reminded this many days before the periodic review date.'], ['defaultValidityMonths', 'Default validity (months)', 'number', 'Pre-filled expiry for new modules.']]],
   ['Approved Library governance', [['libraryShowExpiring', 'Show expiring content in the library', 'bool', 'When off, content inside the expiry warning window is hidden from the library.']]],
+  ['Notifications', [['mentionEmail', 'Email people when they are @mentioned', 'bool', 'In-app notifications are always delivered. Email needs a delivery endpoint below.'], ['notifyEndpoint', 'Email delivery endpoint (HTTPS)', 'url', 'The address of your mail service or relay that accepts a JSON POST {to, subject, text}. Leave empty to deliver in the app only; emails are then recorded as “not configured”.']]],
   ['Approval settings', [['reviewSlaDays', 'Review SLA (days)', 'number', 'My Tasks marks a task High priority once it has waited longer than this, Medium after half of it.'], ['blockOnOpenComments', 'Block approval while comments are open', 'bool', 'Reviewers resolve or answer every open comment on the version before approving.'], ['requireSignature', 'Require password e-signature for approvals', 'bool', 'Approvers re-enter their password to sign.'], ['adminActsOnAnyStep', 'Administrators can act on any approval step', 'bool', 'Decisions are marked “Recorded by Administrator”.'], ['defaultModuleWorkflow', 'Default workflow for new modules', 'wf', ''], ['newVersionWorkflow', 'Default workflow for new versions', 'wf', 'Pre-selected when a new version of an approved module is submitted.'], ['assetStreamWorkflow', 'Workflow for assets made only of approved modules', 'wfa', 'Assets with new text use the workflow of their Material Type.']]]
 ];
 /* Settings: vertical tabs, each with its own management table or form. Every tab reads the same records used elsewhere. */
-const SET_GROUPS = { general: 'Organisation', lifecycle: 'Lifecycle rules', library: 'Approved Library governance', approval: 'Approval settings' };
+const SET_GROUPS = { notifications: 'Notifications', general: 'General', lifecycle: 'Lifecycle rules', library: 'Approved Library governance', approval: 'Approval settings' };
 function settingsTabs() {
   const anyAdmin = [ADMIN_VIEW];
   return [
-    ['WORKSPACE', [['general', 'Organisation', 'settings', 'manage_settings'], ['lifecycle', 'Lifecycle rules', 'clock', 'manage_settings'], ['approval', 'Approval settings', 'shieldcheck', 'manage_settings'], ['library', 'Library governance', 'book', 'manage_settings']]],
-    ['REFERENCE DATA', ['products', 'markets', 'moduletypes', 'materials', 'channels', 'audiences', 'references'].map(k => [k, CONFIG[k].plural, CONFIG[k].icon, CONFIG[k].viewPerm || [CONFIG[k].perm, ...anyAdmin]])],
-    ['ORGANISATION', ['teams', 'functions'].map(k => [k, CONFIG[k].plural, CONFIG[k].icon, [CONFIG[k].perm, ...anyAdmin]])],
+    ['WORKSPACE', [['general', 'General', 'settings', 'manage_settings'], ['lifecycle', 'Lifecycle rules', 'clock', 'manage_settings'], ['approval', 'Approval settings', 'shieldcheck', 'manage_settings'], ['notifications', 'Notifications', 'bell', 'manage_settings'], ['library', 'Library governance', 'book', 'manage_settings']]],
     ['DATA', [['data', 'Workspace data', 'refresh', 'manage_settings']]]
   ].map(([g, items]) => [g, items.filter(t => can(me(), t[3]))]).filter(g => g[1].length);
 }

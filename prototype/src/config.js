@@ -69,10 +69,10 @@ const cfgUsage = (k, x) => CONFIG[k].usage(x);
 const cfgUseCount = (k, x) => cfgUsage(k, x).reduce((n, g) => n + g[1].length, 0);
 const canManageCfg = k => can(me(), CONFIG[k].perm);
 
-function viewConfig(k) {
+function viewConfig(k, cr) {
   const C = CONFIG[k]; const q = F('cq-' + k).toLowerCase(); const st = F('cs-' + k); const manage = canManageCfg(k);
   const rows = C.coll().filter(x => (!q || JSON.stringify(x).toLowerCase().includes(q)) && (!st || (st === 'Active') === !!x.active));
-  return pageHead(C.plural, C.sub, manage ? btn('Add ' + C.label.toLowerCase(), 'cfg-new', 'primary', `data-k="${k}"`, 'plus') : '') +
+  return pageHead(C.plural, C.sub, manage ? btn('Add ' + C.label.toLowerCase(), 'cfg-new', 'primary', `data-k="${k}"`, 'plus') : '', cr || null) +
   `${filterBar('cfg', `${fsearch('cq-' + k, F('cq-' + k), 'Search ' + C.plural.toLowerCase())}${fsel('cs-' + k, st, ['Active', 'Inactive'], 'Any status')}`, `${rows.length} of ${C.coll().length}`)}
   <section class="panel table-wrap">${rows.length ? `<table class="tbl list-tbl"><thead><tr><th>${esc(C.label)}</th>${C.cols.map(c => `<th>${c[0]}</th>`).join('')}<th>Used by</th><th>Status</th>${manage ? '<th style="text-align:right">Actions</th>' : ''}</tr></thead><tbody>${rows.map(x => { const n = cfgUseCount(k, x);
     return `<tr class="click" ${goAttr('item', x.id, ` data-k="${k}"`)} tabindex="0"><td><div class="title">${esc(cfgName(k, x))}</div>${C.codeId && k !== 'functions' ? '' : `<span class="mono muted">${esc(x.id)}</span>`}</td>${C.cols.map(c => `<td>${c[1](x)}</td>`).join('')}<td class="num">${n ? n + ' item' + (n > 1 ? 's' : '') : '<span class="muted">Not used</span>'}</td><td>${chip(x.active ? 'Active' : 'Inactive')}</td>${manage ? `<td style="text-align:right"><div class="row nowrap" style="justify-content:flex-end;gap:6px"><button class="btn sm ghost" data-act="cfg-edit" data-k="${k}" data-id="${esc(x.id)}">${icon('edit', 'sm')}Edit</button><button class="btn sm" data-act="cfg-toggle" data-k="${k}" data-id="${esc(x.id)}">${x.active ? 'Deactivate' : 'Activate'}</button></div></td>` : ''}</tr>`; }).join('')}</tbody></table>` : `<div class="empty"><h4>No ${C.plural.toLowerCase()} match</h4><p>${manage ? 'Add one with the button above.' : 'Clear the search.'}</p></div>`}</section>`;
@@ -89,7 +89,7 @@ function viewConfigItem() {
   const x = C.coll().find(i => i.id === UI.route.p.id); if (!x) return viewMissing(C.label);
   const manage = canManageCfg(k); const use = cfgUsage(k, x); const n = use.reduce((s, g) => s + g[1].length, 0);
   const hist = S.audit.filter(e => e.objType === C.label && e.objId === x.id);
-  return pageHead(esc(cfgName(k, x)), `<span class="row" style="gap:8px">${chip(x.active ? 'Active' : 'Inactive')}<span class="mono">${esc(x.id)}</span><span class="muted">·</span>${esc(C.label)}</span>`, manage ? `${btn('Edit', 'cfg-edit', '', `data-k="${k}" data-id="${esc(x.id)}"`, 'edit')}${btn(x.active ? 'Deactivate' : 'Activate', 'cfg-toggle', x.active ? '' : 'primary', `data-k="${k}" data-id="${esc(x.id)}"`)}${n ? '' : btn('Delete', 'cfg-delete', 'danger', `data-k="${k}" data-id="${esc(x.id)}"`, 'trash')}` : '', [[C.plural, k], [cfgName(k, x)]]) +
+  return pageHead(esc(cfgName(k, x)), `<span class="row" style="gap:8px">${chip(x.active ? 'Active' : 'Inactive')}<span class="mono">${esc(x.id)}</span><span class="muted">·</span>${esc(C.label)}</span>`, manage ? `${btn('Edit', 'cfg-edit', '', `data-k="${k}" data-id="${esc(x.id)}"`, 'edit')}${btn(x.active ? 'Deactivate' : 'Activate', 'cfg-toggle', x.active ? '' : 'primary', `data-k="${k}" data-id="${esc(x.id)}"`)}${n ? '' : btn('Delete', 'cfg-delete', 'danger', `data-k="${k}" data-id="${esc(x.id)}"`, 'trash')}` : '', [...(hubOf(k) ? [[HUBS[hubOf(k)].title, hubOf(k)]] : []), [C.plural, k], [cfgName(k, x)]]) +
   (!x.active ? `<div class="banner" style="margin-bottom:16px">${icon('lock')}<div class="txt"><b>Inactive</b><p>Not offered when creating or editing content. The ${n} existing item${n === 1 ? '' : 's'} that use it keep it.</p></div></div>` : '') +
   `<div class="grid cols-main"><div class="stack"><section class="panel"><div class="panel-head"><h3>Details</h3></div><div class="panel-body"><dl class="kv">${C.fields.map(f => `<dt>${esc(f[1])}</dt><dd>${cfgFieldVal(k, f, x)}</dd>`).join('')}</dl></div></section>
   ${use.map(([title, list]) => `<section class="panel"><div class="panel-head"><h3>${esc(title)}</h3><span class="chip plain">${list.length}</span></div>${list.length ? list.slice(0, 50).map(r => `<button class="task" ${r.route === 'item' ? goAttr('item', r.id, ` data-k="${r.k}"`) : goAttr(r.route, r.id)}><span class="body"><b>${esc(r.label)}</b>${r.extra ? `<span>${esc(r.extra)}</span>` : ''}</span>${icon('chevron', 'sm')}</button>`).join('') : '<div class="empty" style="padding:18px"><p>Not used yet.</p></div>'}</section>`).join('')}</div>
@@ -142,4 +142,31 @@ function cfgDelete(k, id) {
   if (cfgUseCount(k, x)) { toast('It is in use — deactivate it instead'); return; }
   list.splice(i, 1); if (k === 'functions') LEVELS.forEach(l => delete S.roles[x.id + '-' + l]);
   log(C.label + ' deleted', C.label, { id }, 1, { prev: cfgName(k, x) }); save(); go(k); toast(C.label + ' deleted');
+}
+
+/* ---------- Reference Data and Organisation: their own sections, outside Settings ----------
+   Each hub has an overview (counts computed from the records) and one management table per entity. */
+const HUBS = {
+  refdata: { title: 'Reference Data', icon: 'database', keys: ['products', 'markets', 'moduletypes', 'materials', 'channels', 'audiences', 'references'], sub: 'The controlled lists offered when modules and assets are created, reviewed and filtered. Changes apply everywhere the list is used.' },
+  org: { title: 'Organisation', icon: 'org', keys: ['teams', 'functions'], sub: 'Teams own content; functions staff the review and approval steps of workflows.' }
+};
+const hubOf = k => Object.keys(HUBS).find(h => HUBS[h].keys.includes(k));
+const cfgViewPerm = k => CONFIG[k].viewPerm ? [...CONFIG[k].viewPerm, CONFIG[k].perm, ADMIN_VIEW] : [CONFIG[k].perm, ADMIN_VIEW];
+const hubKeys = h => HUBS[h].keys.filter(k => can(me(), cfgViewPerm(k)));
+// Route permissions and the sidebar entries follow the entities' own permissions.
+Object.keys(HUBS).forEach(h => { ROUTE_PERM[h] = [...new Set(HUBS[h].keys.flatMap(cfgViewPerm))]; HUBS[h].keys.forEach(k => { ROUTE_PERM[k] = cfgViewPerm(k); NAV_OF[k] = h; }); const n = NAV.find(x => x[0] === h); if (n) n[4] = ROUTE_PERM[h]; });
+function hubLastChange(k) { const L = CONFIG[k].label; let t = 0; S.audit.forEach(e => { if (e.objType === L && e.ts > t) t = e.ts; }); return t; }
+function viewHub(h, tab) {
+  const H = HUBS[h]; const keys = hubKeys(h); if (!keys.length) return `<div class="empty"><h4>Not available for your role</h4></div>`;
+  const cur = keys.includes(tab) ? tab : null;
+  const side = `<nav class="set-nav" aria-label="${H.title} sections"><div class="set-grp">${esc(H.title)}</div><button type="button" class="set-tab ${cur ? '' : 'on'}" ${goAttr(h)} aria-current="${cur ? 'false' : 'page'}">${icon('grid', 'sm')}<span>Overview</span></button>${keys.map(k => `<button type="button" class="set-tab ${k === cur ? 'on' : ''}" ${goAttr(k)} aria-current="${k === cur ? 'page' : 'false'}">${icon(CONFIG[k].icon, 'sm')}<span>${esc(CONFIG[k].plural)}</span><span class="n">${CONFIG[k].coll().length}</span></button>`).join('')}</nav>`;
+  let main;
+  if (cur) main = viewConfig(cur, [[H.title, h], [CONFIG[cur].plural]]);
+  else {
+    const rows = keys.map(k => { const C = CONFIG[k]; const L = C.coll(); const act = L.filter(x => x.active).length; const used = L.filter(x => cfgUseCount(k, x) > 0).length; const t = hubLastChange(k);
+      return `<tr class="click" ${goAttr(k)} tabindex="0"><td><span class="hub-name">${icon(C.icon, 'sm')}<span><b>${esc(C.plural)}</b><span class="muted" title="${esc(C.sub || '')}">${esc(C.sub || '')}</span></span></span></td><td class="num"><b>${L.length}</b></td><td class="num">${act}</td><td class="num">${L.length - act ? L.length - act : '<span class="muted">0</span>'}</td><td class="num">${used}<span class="muted"> / ${L.length}</span></td><td class="muted">${t ? ago(t) : '—'}</td></tr>`; }).join('');
+    const tot = keys.reduce((n, k) => n + CONFIG[k].coll().length, 0);
+    main = pageHead(H.title, H.sub, '', null) + `<section class="panel table-wrap"><table class="tbl list-tbl hub-tbl"><thead><tr><th>List</th><th class="num">Records</th><th class="num">Active</th><th class="num">Inactive</th><th class="num">In use</th><th>Last change</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td><b>${keys.length} list${keys.length === 1 ? '' : 's'}</b></td><td class="num"><b>${tot}</b></td><td colspan="4"></td></tr></tfoot></table></section>`;
+  }
+  return `<div class="set-shell">${side}<div class="set-main">${main}</div></div>`;
 }

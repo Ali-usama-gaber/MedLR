@@ -109,7 +109,8 @@ function annRegions(obj, v, target, page, editable) {
 
 /* --- tool rail for visual surfaces --- */
 function toolRail(kind) {
-  const U = annUI(); const def = kind === 'document' ? 'text' : kind === 'video' ? 'play' : 'region'; const cur = U.tool || def;
+  const U = annUI();
+  if (kind === 'text') { const H0 = U.hist; return `<div class="an-rail" role="toolbar" aria-label="Annotation tools"><span class="an-rail-hint">${icon('cursor', 'sm')}<span>Select text for Comment · Highlight · Underline · Strike · Insert · Replace · Note</span></span><span class="grow"></span><button type="button" data-act="an-genfocus" title="Add a general comment">${icon('message', 'sm')}<span>General comment</span></button><button type="button" data-act="an-undo" ${H0.u.length ? '' : 'disabled'} title="Undo (Ctrl+Z)" aria-label="Undo">${icon('undo', 'sm')}</button><button type="button" data-act="an-redo" ${H0.r.length ? '' : 'disabled'} title="Redo (Ctrl+Shift+Z)" aria-label="Redo">${icon('redo', 'sm')}</button></div>`; } const def = kind === 'document' ? 'text' : kind === 'video' ? 'play' : 'region'; const cur = U.tool || def;
   const tools = [...(kind === 'document' ? [['text', 'Select text', 'cursor']] : kind === 'video' ? [['play', 'Play / pause', 'cursor']] : []), ['region', 'Area comment', 'square'], ['note', 'Sticky note', 'sticky'], ['ink', 'Freehand', 'pen'], ['rect', 'Rectangle', 'square'], ['ellipse', 'Ellipse', 'circle'], ['arrow', 'Arrow', 'arrowne']];
   const H = U.hist;
   return `<div class="an-rail" role="toolbar" aria-label="Annotation tools">${tools.map(t => `<button type="button" class="${cur === t[0] ? 'on' : ''} ${t[0] === 'region' ? 'dashed' : ''}" data-act="an-tool" data-v="${t[0]}" aria-pressed="${cur === t[0]}" title="${t[1]}">${icon(t[2], 'sm')}<span>${t[1]}</span></button>`).join('')}<span class="grow"></span><button type="button" data-act="an-undo" ${H.u.length ? '' : 'disabled'} title="Undo (Ctrl+Z)" aria-label="Undo">${icon('undo', 'sm')}</button><button type="button" data-act="an-redo" ${H.r.length ? '' : 'disabled'} title="Redo (Ctrl+Shift+Z)" aria-label="Redo">${icon('redo', 'sm')}</button></div>`;
@@ -131,6 +132,7 @@ function pdfReview(obj, v, md, editable) {
   return `<div class="pdfr">${R.pages.map((p, i) => `<figure class="pdfr-page" data-page="${i + 1}" style="aspect-ratio:${p.w}/${p.h}"><img src="${p.img}" alt="Page ${i + 1} of ${esc(md.name)}" draggable="false"><div class="textLayer pdf-tl" data-file="${md.fileId}" data-page="${i + 1}" data-an-target="pdf" ${editable ? 'data-an-sel="1"' : ''}></div>${annRegions(obj, v, 'pdf', i + 1, editable)}<figcaption>Page ${i + 1} of ${R.n}${editable ? ` · <button type="button" class="linklike" data-act="an-page" data-page="${i + 1}">Comment on this page</button>` : ''}</figcaption></figure>`).join('')}${R.n > R.pages.length ? `<p class="muted" style="text-align:center;font-size:12px">${R.n - R.pages.length} more pages — preview the file to read them all.</p>` : ''}</div>`;
 }
 function hydrateReview() {
+  const tb = document.querySelector('.topbar'); if (tb) document.documentElement.style.setProperty('--topbar-h', tb.offsetHeight + 'px');
   document.querySelectorAll('[data-pdfr]').forEach(el => { const id = el.dataset.pdfr; if (PDFR[id]) return; PDFR[id] = { loading: true };
     const url = el.dataset.url; const attempt = n => pdfReviewLoad(id, url).then(r => { PDFR[id] = r; renderSoon(); }, () => n < 3 ? setTimeout(() => attempt(n + 1), 1500 * n) : (PDFR[id] = { failed: true }, renderSoon())); attempt(1); });
   document.querySelectorAll('.pdf-tl').forEach(el => { if (el.dataset.done) return; const R = PDFR[el.dataset.file]; if (!R || !R.pages) return; const P = R.pages[+el.dataset.page - 1]; const w = el.parentElement.clientWidth; if (!w) return;
@@ -163,8 +165,9 @@ function reviewCanvas(obj, editable) {
     else if (k === 'video') { const ts = annsFor(obj, v.v).filter(a => a.anchor.t != null); const dur = md.duration || Math.max(1, ...ts.map(a => a.anchor.t + 1));
       body = `<div class="an-media"><div class="an-vframe">${mediaView(md)}<div class="an-vlayer ${U.tool && U.tool !== 'play' ? 'tool-on' : ''}">${annRegions(obj, v.v, 'file', 0, editable && U.tool && U.tool !== 'play')}</div></div><div class="an-tl" aria-label="Comment timeline"><span class="an-tl-track">${ts.map(a => `<button type="button" class="an-tl-m s-${a.style} ${a.status === 'resolved' ? 'res' : ''} ${U.focus === a.id ? 'an-focus' : ''}" style="left:${Math.min(100, 100 * a.anchor.t / dur)}%" data-an-tl="${a.id}" data-act="an-go" data-id="${a.id}" title="${esc(fmtSecs(a.anchor.t) + ' — ' + a.text)}">${annNo(obj, a)}</button>`).join('')}</span><span class="an-tl-l"><span>0:00</span><span>${fmtSecs(dur)}</span></span></div>${editable ? `<div class="row" style="gap:8px;margin-top:8px"><button class="btn sm" data-act="an-time">${icon('message', 'sm')}Comment at current time</button><span class="muted" style="font-size:12px">Pause where the comment applies; choose a drawing tool to mark the frame.</span></div>` : ''}</div>`; }
     else body = md ? pdfReview(obj, v.v, md, editable) : mediaView(md);
-    body += `<div class="row file-row">${fileActions(md, obj.id + ' · v' + v.v + ' · ' + v.status)}</div><p class="media-desc">${esc(v.body)}</p>`;
+    body = `<div class="fp-bar">${icon(mediaKindOf(md) === 'image' ? 'image' : mediaKindOf(md) === 'video' ? 'video' : 'file', 'sm')}<b>${esc(md ? md.name : '')}</b><span class="muted">${esc(md ? (md.format || md.mime) + ' · ' + fmtSize(md.size) : '')}</span><span class="grow"></span>${fileMenu(md, obj.id + ' · v' + v.v + ' · ' + v.status)}</div>` + body + `<p class="media-desc">${esc(v.body)}</p>`;
   } else body = `<p class="claim ${mtype(obj.type).tone === 'headline' ? 'is-headline' : ''}">${annText(obj, v.v, 'body', v.body, editable)}</p>`;
+  if (editable && !rail) rail = toolRail('text');
   // Citations are reviewable too: each reference can be selected and commented on.
   const refs = kind === 'Module' && v.refs.length ? `<div class="an-refs"><span class="fn-title">References</span><ol>${v.refs.map(r => { const R = refById(r); return `<li>${annText(obj, v.v, 'ref:' + r, R.title + ' — ' + R.source, editable)}</li>`; }).join('')}</ol></div>` : '';
   const hint = editable ? `<p class="an-hint">${icon('pointer', 'sm')}${kind === 'Asset' ? 'Select text in new content to mark it up, or comment on any block.' : isMediaType(obj.type) ? { image: 'Drag an area to comment, or pick a drawing tool: sticky note, freehand, rectangle, ellipse or arrow.', video: 'Pause and comment at a timestamp; pick a drawing tool to mark the paused frame.', document: 'Select text to comment, highlight, underline, strike through, insert or replace. Drag on empty space for an area comment, or pick a drawing tool.' }[mediaKindOf(v.media)] || '' : 'Select text to comment, highlight, underline, strike through or replace it. Click between words to insert text or add a sticky note.'}</p>` : '';
@@ -175,7 +178,7 @@ function assetBlockReview(a, v, b, i, editable) {
   const btnC = editable ? `<button type="button" class="btn ghost sm an-bc" data-act="an-block" data-t="${esc(tgt)}" data-l="${esc(b.kind === 'new' ? b.label || 'New content' : (modById(b.moduleId) || {}).id || 'Module')}">${icon('message', 'sm')}Comment${n ? ' · ' + n : ''}</button>` : n ? `<span class="chip plain">${n} comment${n > 1 ? 's' : ''}</span>` : '';
   if (b.kind === 'new') return `<div class="block new" data-an="${esc(tgt)}"><div class="meta">${icon('edit', 'sm')}${b.approved ? 'Text approved in this asset' : 'New content · requires review'}<span class="grow"></span>${btnC}</div><div class="txt">${annText(a, v.v, tgt, b.text, editable)}</div></div>`;
   const m = modById(b.moduleId); if (!m) return ''; const mv = verOf(m, b.v) || latest(m);
-  return `<div class="block approved" data-an="${esc(tgt)}"><div class="meta">${icon('lock', 'sm')}Approved module · locked · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span><span class="grow"></span>${btnC}</div> ${mv.media ? `<div class="block-media">${mediaView(mv.media)}</div><div class="row file-row">${fileActions(mv.media, m.id + ' · v' + mv.v)}</div>` : `<div class="txt">${esc(mv.body)}</div>`}</div>`;
+  return `<div class="block approved" data-an="${esc(tgt)}"><div class="meta">${icon('lock', 'sm')}Approved module · locked · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span><span class="grow"></span>${btnC}</div> ${mv.media ? `<div class="block-media">${filePreview(mv.media, m.id + ' · v' + mv.v)}</div>` : `<div class="txt">${esc(mv.body)}</div>`}</div>`;
 }
 
 /* --- @mention-aware text field --- */
@@ -188,10 +191,29 @@ function menField(id, ph, rows) {
 // Mentioned ids still present in the text, without duplicates.
 function menCollect(id) { const U = annUI(); const t = U.vals[id] || ''; return uniq((U.vals[id + ':m'] || []).filter(x => t.includes('@' + user(x).name))); }
 function menReset(id) { const U = annUI(); delete U.vals[id]; delete U.vals[id + ':m']; if (U.men && U.men.field === id) U.men = null; }
-function notifyMentions(obj, a, ids, where) {
-  if (!ids.length) return; const k = kindOf(obj);
-  log('User mentioned', k, obj, a.version, { cycle: a.cycle, annId: a.id, note: where + ' · ' + annLabel(a), next: mentionNames(ids).join(', '), toIds: [...ids] });
-  S.outbox.push({ id: uid('e'), ts: Date.now(), to: mentionNames(ids), toIds: [...ids], subject: me().name + ' mentioned you on ' + obj.id, objType: k, objId: obj.id });
+/* Mention notifications: one stored, per-recipient record for each new mention event (new comment, new reply, or a person
+   newly added when a comment is edited). Re-saving or repeating a name in the same event never notifies twice.
+   In-app delivery is the stored record shown in the recipient's bell. Email goes through the endpoint configured in Settings;
+   without one, the email is recorded as "not configured" rather than reported as sent. */
+function notifyMentions(obj, a, ids, where, reply) {
+  ids = uniq(ids).filter(id => id !== me().id); if (!ids.length) return;
+  S.notifications = S.notifications || []; const k = kindOf(obj); const sent = [];
+  ids.forEach(id => { const u = S.users.find(x => x.id === id); if (!u || u.status !== 'Active' || !canSeeObj(u, obj)) return;
+    if (S.notifications.some(n => n.to === id && n.annId === a.id && (n.replyId || null) === (reply ? reply.id : null))) return;
+    const n = { id: uid('n'), type: 'mention', to: id, by: me().id, ts: Date.now(), objType: k, objId: obj.id, version: a.version, cycle: a.cycle, annId: a.id, replyId: reply ? reply.id : null, text: reply ? reply.text : a.text, where: annLabel(a), read: false };
+    n.email = S.settings.mentionEmail === false ? { status: 'off' } : { status: S.settings.notifyEndpoint ? 'queued' : 'not configured', to: u.email };
+    S.notifications.push(n); sent.push(n); if (n.email.status === 'queued') deliverEmail(n); });
+  if (!sent.length) return;
+  log('User mentioned', k, obj, a.version, { cycle: a.cycle, annId: a.id, note: where + ' · ' + annLabel(a), next: sent.map(n => user(n.to).name).join(', '), toIds: sent.map(n => n.to), delivery: 'in-app' + (sent[0].email ? ' · email ' + sent[0].email.status : '') });
+}
+// Email integration point: POSTs the notification to the endpoint configured in Settings (your mail service or a relay).
+async function deliverEmail(n) {
+  const u = user(n.to), by = user(n.by); const url = S.settings.notifyEndpoint;
+  const msg = { to: u.email, subject: by.name + ' mentioned you on ' + n.objId, text: by.name + ' mentioned you: “' + n.text + '” (' + n.where + ')', objType: n.objType, objId: n.objId, annotationId: n.annId };
+  try { const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msg) }); n.email.status = r.ok ? 'sent' : 'failed'; n.email.detail = r.ok ? '' : 'HTTP ' + r.status; }
+  catch (e) { n.email.status = 'failed'; n.email.detail = String(e && e.message || e).slice(0, 120); }
+  n.email.at = Date.now(); S.outbox.push({ id: uid('e'), ts: n.email.at, to: [u.email], toIds: [n.to], subject: msg.subject, objType: n.objType, objId: n.objId, status: n.email.status });
+  log(n.email.status === 'sent' ? 'Mention email sent' : 'Mention email failed', n.objType, objById(n.objType, n.objId), n.version, { cycle: n.cycle, annId: n.annId, next: u.email, note: n.email.detail || '' }); save(); renderSoon();
 }
 
 /* --- comments panel --- */
@@ -267,6 +289,7 @@ const ANN_ACT = {
   'an-page': el => { const obj = reviewObj(); annUI().comp = { objId: obj.id, anchor: { kind: 'page', page: +el.dataset.page }, style: 'comment' }; menReset('an-text'); render(); setTimeout(() => { const t = document.getElementById('an-text'); t && t.focus(); }, 30); },
   'an-time': () => { const obj = reviewObj(); const vd = document.querySelector('.an-scope video'); const t = vd ? Math.round(vd.currentTime * 10) / 10 : 0; if (vd) vd.pause(); annUI().seek = t; annUI().comp = { objId: obj.id, anchor: { kind: 'time', target: 'file', t }, style: 'comment' }; menReset('an-text'); render(); setTimeout(() => { const x = document.getElementById('an-text'); x && x.focus(); }, 30); },
   'an-tool': el => { const U = annUI(); U.tool = el.dataset.v; U.sel = null; if (U.tool !== 'play') { const vd = document.querySelector('.an-scope video'); if (vd) { vd.pause(); U.seek = vd.currentTime; } } render(); },
+  'an-genfocus': () => { const t = document.getElementById('an-general'); if (t) { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); t.focus({ preventScroll: true }); } },
   'an-undo': () => annUndo(false), 'an-redo': () => annUndo(true),
   'an-focus': el => { const U = annUI(); U.focus = el.dataset.id; render(); const c = document.querySelector(`[data-an-card="${el.dataset.id}"]`); c && c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); },
   'an-go': el => { const U = annUI(); U.focus = el.dataset.id; U.goto = el.dataset.id; render(); },
@@ -280,7 +303,7 @@ const ANN_ACT = {
   'an-reply-x': () => { annUI().reply = null; render(); },
   'an-reply-save': el => { const U = annUI(); const a = S.annotations.find(x => x.id === el.dataset.id); const t = (U.vals['an-reply'] || '').trim(); if (!t) return; const u = me(); const ids = menCollect('an-reply');
     annMutate(a, 'edit', x => x.replies.push({ id: uid('r'), author: u.id, role: roleLabel(u), ts: Date.now(), text: t, mentions: ids }));
-    annLog('Reply added', annObj(a), a, { next: t }); notifyMentions(annObj(a), a, ids, 'Reply'); menReset('an-reply'); U.reply = null; save(); render(); },
+    annLog('Reply added', annObj(a), a, { next: t }); notifyMentions(annObj(a), a, ids, 'Reply', a.replies[a.replies.length - 1]); menReset('an-reply'); U.reply = null; save(); render(); },
   'an-status': el => { const a = S.annotations.find(x => x.id === el.dataset.id); const to = a.status === 'open' ? 'resolved' : 'open';
     annMutate(a, 'status', x => { x.status = to; x.resolvedBy = to === 'resolved' ? me().id : null; x.resolvedAt = to === 'resolved' ? Date.now() : null; });
     annLog(to === 'resolved' ? 'Comment resolved' : 'Comment reopened', annObj(a), a, { prev: to === 'resolved' ? 'Open' : 'Resolved', next: to === 'resolved' ? 'Resolved' : 'Open' }); save(); render(); },

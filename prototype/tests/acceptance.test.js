@@ -48,7 +48,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   await p.click('[data-act=decide][data-d=amend]'); await W(); await p.fill('#m-note', 'Add the source table for the 64% figure.'); await p.click('[data-act=decide-confirm]'); await W(300);
   ok(await E(id => statusOf(modById(id)) === 'Amendment Requested', MID), 'amendment requested');
   // ===== 4. Owner sees the mention, replies, amends, resubmits
-  await login('omar.khalil@saja.com'); ok(await E(() => notificationsFor(me()).some(e => e.action === 'User mentioned')), 'Omar is notified of the mention');
+  await login('omar.khalil@saja.com'); ok(await E(() => notificationsFor(me()).some(e => e.type === 'mention' && e.stored && !e.read)), 'Omar is notified of the mention (stored, unread)');
   await G('module', { id: MID, tab: 'comments' }); await p.click(`[data-an-card="${AN.id}"] [data-act=an-reply]`); await W(); await p.fill('#an-reply', 'Added Table 2 from the CSR.'); await p.click('[data-act=an-reply-save]'); await W();
   ok(!(await p.$(`[data-an-card="${AN.id}"] [data-act=an-edit]`)), 'owner cannot edit the reviewer’s comment');
   await G('module-edit', { id: MID }); await p.fill('#d-body', 'Product E achieved PASI 90 in 64% of patients at week 16 versus 4% with placebo (Table 2).¹'); await p.fill('#d-reason', 'Added the source table.'); await p.click('[data-act=wiz-save]'); await W(300);

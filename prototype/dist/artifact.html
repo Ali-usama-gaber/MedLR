@@ -1,4 +1,4 @@
-<!-- SAJA MedLR build 2026-10-11 09:23 UTC -->
+<!-- SAJA MedLR build 2026-10-11 11:41 UTC -->
 <title>SAJA MedLR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2062,6 +2062,242 @@ mark.an-pt[data-n]::before { content: none; }
 .kpis { grid-auto-rows: 1fr; }
 @media (max-width: 640px) { .ch-donut { grid-template-columns: 1fr; justify-items: center; } .ch-dleg { width: 100%; } .chart-card > .panel-body { min-height: 0; } }
 
+/* ===== Side panel (create a related record without leaving the form) ===== */
+.drawer-scrim { justify-content: flex-end; align-items: stretch; padding: 0; }
+.drawer { width: min(1040px, 100vw); height: 100vh; background: var(--bg, #f5f6f5); box-shadow: -20px 0 50px -20px rgba(16, 24, 20, .35); display: flex; flex-direction: column; animation: drawerIn .22s cubic-bezier(.2, .8, .2, 1); }
+@keyframes drawerIn { from { transform: translateX(40px); opacity: 0; } }
+.drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 24px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.drawer-head h2 { margin: 2px 0; font-size: 20px; }
+.drawer-head p { font-size: 12.5px; margin: 0; }
+.drawer-body { flex: 1; overflow: auto; padding: 18px 24px 28px; }
+.drawer-body .wiz-foot { position: sticky; bottom: -28px; }
+@media (max-width: 760px) { .drawer-body { padding: 14px; } .drawer-head { padding: 14px; } }
+
+/* ===== File previews: click to open, "⋯" for secondary actions ===== */
+.fp { position: relative; }
+.fp-hit { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; position: relative; text-align: inherit; color: inherit; font: inherit; border-radius: inherit; }
+.fp-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fp-zoom { position: absolute; left: 50%; bottom: 12px; transform: translate(-50%, 6px); display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; background: rgba(19, 32, 26, .82); color: #fff; font-size: 12px; font-weight: 700; opacity: 0; transition: opacity .15s, transform .15s; pointer-events: none; }
+.fp-hit:hover .fp-zoom, .fp-hit:focus-visible .fp-zoom { opacity: 1; transform: translate(-50%, 0); }
+.fp.thumb .fp-zoom { display: none; }
+.fmenu { position: absolute; top: 8px; right: 8px; z-index: 6; }
+.fp-bar .fmenu, .panel-head .fmenu { position: relative; top: 0; right: 0; }
+.fmenu-btn { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 9px; background: rgba(255, 255, 255, .94); color: var(--ink-2); cursor: pointer; box-shadow: 0 1px 2px rgba(16, 24, 20, .08); }
+.fmenu-btn:hover { color: var(--ink); border-color: var(--line-strong, #c5cdc9); }
+.fmenu-pop { right: 0; left: auto; top: calc(100% + 6px); width: 230px; }
+.fmenu-pop a.pop-item { text-decoration: none; color: inherit; }
+.pop-meta { padding: 8px 12px 6px; border-top: 1px solid var(--line); margin-top: 4px; font-size: 11.5px; color: var(--ink-3); word-break: break-all; }
+.fp-bar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); font-size: 12.5px; }
+.fp-bar b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%; }
+.fp-more { text-align: center; font-size: 12px; margin-top: 8px; }
+.file-card .fc-thumb { border: 0; padding: 0; cursor: zoom-in; }
+@media print { .fmenu { display: none; } }
+
+/* ===== Sticky annotation toolbar: stays attached to the review workspace while scrolling ===== */
+.an-rail { position: sticky; top: calc(var(--topbar-h, 62px) + 8px); z-index: 12; backdrop-filter: blur(6px); background: color-mix(in srgb, var(--surface) 94%, transparent); }
+.an-rail-hint { display: inline-flex; align-items: center; gap: 6px; padding: 0 6px; font-size: 12px; color: var(--ink-3); min-width: 0; }
+.an-rail-hint span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rv-side { top: calc(var(--topbar-h, 62px) + 12px); max-height: calc(100vh - var(--topbar-h, 62px) - 24px); }
+@media (max-width: 760px) { .an-rail { top: calc(var(--topbar-h, 56px) + 4px); flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .an-rail::-webkit-scrollbar { display: none; } .an-rail button { flex: none; } .an-rail-hint { display: none; } }
+
+/* Notifications */
+.notif-pop { width: 380px; }
+.notif-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.notif-head .linklike { text-transform: none; letter-spacing: 0; font-weight: 700; font-size: 12px; }
+.pop-item.notif { align-items: flex-start; position: relative; padding-right: 22px; }
+.pop-item.notif:hover { background: var(--surface-2); }
+.pop-item.notif.unread { background: var(--accent-soft); }
+.notif-body { flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.45; }
+.notif-body > .muted { display: block; font-size: 11.5px; margin-top: 2px; }
+.notif-snip { display: block; color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
+.notif-dot { position: absolute; right: 9px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.bell-dot.bell-n { width: auto; min-width: 17px; height: 17px; top: 2px; right: 1px; padding: 0 4px; border-radius: 9px; font-size: 10px; font-weight: 800; line-height: 13px; color: #fff; text-align: center; }
+@media (max-width: 640px) { .notif-pop { width: min(380px, calc(100vw - 24px)); right: -48px; } }
+
+/* Reference Data / Organisation overview */
+.hub-name { display: flex; gap: 10px; align-items: flex-start; }
+.hub-name > .ico { margin-top: 2px; color: var(--ink-3); flex: none; }
+.hub-name > span { display: flex; flex-direction: column; min-width: 0; }
+.hub-name .muted { font-size: 12px; line-height: 1.4; max-width: 340px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hub-go { font-size: 12px; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
+.hub-tbl th.num, .hub-tbl td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.hub-tbl tfoot td { border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: 10px; }
+@media (max-width: 760px) { .hub-tbl th:nth-child(4), .hub-tbl td:nth-child(4), .hub-tbl th:nth-child(6), .hub-tbl td:nth-child(6) { display: none; } .hub-name .muted { display: none; } }
+
+/* ===== Home (design checkpoint) — flat panels, hairlines, tabular figures, colour only for status ===== */
+.hx { display: flex; flex-direction: column; gap: 12px; }
+.mk-ok { background: var(--mk-ok); } .mk-warn { background: var(--mk-warn); } .mk-bad { background: var(--mk-bad); } .mk-dim { background: var(--mk-dim); } .mk-s1 { background: var(--mk-s1); } .mk-o1 { background: var(--mk-o1); } .mk-o2 { background: var(--mk-o2); } .mk-none { background: var(--surface-2); }
+.hx-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; padding: 2px 0 4px; }
+.hx-head h1 { font-size: 22px; line-height: 1.2; margin: 0 0 4px; letter-spacing: -.01em; }
+.hx-meta { display: flex; flex-wrap: wrap; gap: 4px 0; margin: 0; font-size: 12.5px; color: var(--ink-2); }
+.hx-meta > span { display: inline-flex; align-items: center; gap: 5px; }
+.hx-meta > span + span::before { content: ""; width: 3px; height: 3px; border-radius: 50%; background: var(--ink-3); margin: 0 9px; opacity: .6; }
+.hx-meta > span:last-child { color: var(--ink-3); }
+.hx-qa { display: flex; gap: 8px; flex-wrap: wrap; }
+.hx-qa .btn { height: 34px; font-size: 13px; }
+/* key metrics */
+.hx-kpis { display: grid; grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.hx-k { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 12px 16px 13px; border: 0; border-left: 1px solid var(--line); background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; transition: background .15s; }
+.hx-k:first-child { border-left: 0; }
+.hx-k:hover:not(:disabled) { background: var(--surface-2); }
+.hx-k:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.hx-k:disabled { cursor: default; }
+.hx-kl { font-size: 12px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-kv { font-size: 26px; font-weight: 700; line-height: 1.15; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.hx-kv small { font-size: 12.5px; font-weight: 600; color: var(--ink-3); letter-spacing: 0; margin-left: 3px; }
+.hx-kc { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-kc.bad { color: #a8322d; font-weight: 600; } .hx-kc.warn { color: #87600e; font-weight: 600; }
+.hx-kc .k-dot { flex: none; }
+.hx-sec { display: flex; flex-wrap: wrap; gap: 2px 20px; margin-top: -4px; padding: 0 2px; }
+.hx-sec button { display: inline-flex; align-items: baseline; gap: 5px; border: 0; background: none; padding: 3px 0; font: inherit; font-size: 12px; color: var(--ink-2); cursor: pointer; }
+.hx-sec b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.hx-sec span { color: var(--ink-3); }
+.hx-sec button:hover b { color: var(--accent-ink); text-decoration: underline; }
+/* grid + panels */
+.hx-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+.hx-p { display: flex; flex-direction: column; min-width: 0; border-radius: 12px; box-shadow: none; border: 1px solid var(--line); overflow: hidden; }
+.hx-p.span8 { grid-column: span 8; } .hx-p.span4 { grid-column: span 4; } .hx-p.span12 { grid-column: span 12; }
+.hx-ph { display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+.hx-ph .grow { flex: 1; }
+.hx-ph h3 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: -.005em; }
+.hx-n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--surface-2); font-size: 11.5px; font-weight: 700; display: inline-grid; place-items: center; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.hx-ctx { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-link { display: inline-flex; align-items: center; gap: 2px; border: 0; background: none; padding: 4px 0 4px 6px; font: inherit; font-size: 12px; font-weight: 600; color: var(--accent-ink); cursor: pointer; white-space: nowrap; }
+.hx-link:hover { text-decoration: underline; }
+.hx-link .ico { width: 14px; height: 14px; }
+.hx-cap { display: block; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+.hx-muted { color: var(--ink-3); font-size: 12px; margin: 0; }
+.hx-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 22px 16px; font-size: 12.5px; color: var(--ink-3); text-align: center; flex-wrap: wrap; }
+.hx-err .hx-empty { color: #a8322d; }
+.hx-more { margin-top: auto; padding: 8px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-3); }
+.hx-more .hx-link { padding: 0; }
+.hx-note { display: flex; align-items: center; gap: 6px; margin: 0 16px 8px; font-size: 12px; color: var(--ink-2); }
+/* tables */
+.hx-tw { overflow-x: auto; }
+.hx-tbl { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12.5px; }
+.hx-tbl th { padding: 7px 10px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-3); text-align: left; background: var(--surface-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-tbl th:first-child, .hx-tbl td:first-child { padding-left: 16px; } .hx-tbl th:last-child, .hx-tbl td:last-child { padding-right: 16px; }
+.hx-tbl td { padding: 7px 10px; border-top: 1px solid var(--line); vertical-align: middle; height: 46px; }
+.hx-tbl tr.click { cursor: pointer; } .hx-tbl tr.click:hover td { background: var(--surface-2); }
+.hx-tbl tr.click:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.hx-tbl .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hx-cut { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-item { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hx-item .type-ico { width: 28px; height: 28px; border-radius: 7px; }
+.hx-item .mthumb { width: 38px; height: 28px; }
+.hx-it { display: flex; flex-direction: column; min-width: 0; }
+.hx-it b { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-it span { font-size: 11px; color: var(--ink-3); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-2 { display: flex; flex-direction: column; line-height: 1.3; } .hx-2 span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hx-2 .hx-muted { font-size: 11px; }
+.hx-step { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.hx-step > span:last-child { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }
+.hx-resp { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+.hx-wait { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.hx-wait::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--mk-dim); }
+.hx-wait.bad::before { background: var(--mk-bad); } .hx-wait.warn::before { background: var(--mk-warn); }
+.hx-wait.bad { color: #a8322d; }
+.hx-act { display: inline-block; max-width: 100%; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--accent-soft); color: var(--accent-ink); }
+.hx-act.amend, .hx-act.rejected { background: #fbf2e0; color: #7a560d; }
+.hx-act.watch, .hx-act.submit, .hx-act.draft { background: var(--surface-2); color: var(--ink-2); }
+.hx-div td { height: auto; padding: 6px 16px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-3); background: var(--surface-2); }
+.hx-seg { display: flex; gap: 0; margin: 10px 16px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.hx-seg button { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; padding: 6px 10px; border: 0; border-left: 1px solid var(--line); background: none; font: inherit; font-size: 12px; color: var(--ink-2); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-seg button:first-child { border-left: 0; }
+.hx-seg button b { font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.hx-seg button.zero { color: var(--ink-3); } .hx-seg button.zero b { color: var(--ink-3); font-weight: 600; }
+.hx-seg button:hover { background: var(--surface-2); }
+/* pipeline + bars */
+.hx-pb { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.hx-stack { display: flex; gap: 2px; height: 10px; border-radius: 3px; overflow: hidden; }
+.hx-stack.thin { height: 8px; }
+.hx-stack > span { min-width: 3px; }
+.hx-stages { display: flex; flex-direction: column; }
+.hx-stages button { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto 40px; align-items: center; gap: 8px; padding: 6px 0; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; font-size: 12.5px; color: var(--ink); text-align: left; cursor: pointer; }
+.hx-stages button:first-child { border-top: 0; }
+.hx-stages button:hover span { color: var(--accent-ink); text-decoration: underline; }
+.hx-stages i { width: 10px; height: 10px; border-radius: 2px; }
+.hx-stages b { font-variant-numeric: tabular-nums; }
+.hx-stages em { font-style: normal; font-size: 11.5px; color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
+.hx-sub { padding-top: 12px; border-top: 1px solid var(--line); }
+.hx-bar { display: grid; grid-template-columns: minmax(0, 118px) minmax(0, 1fr) 40px; align-items: center; gap: 10px; min-height: 24px; font-size: 12.5px; }
+.hx-bl { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+.hx-bl .linklike { color: var(--ink-2); }
+.hx-tr { position: relative; display: block; height: 8px; border-radius: 0 3px 3px 0; background: var(--surface-2); }
+.hx-tr > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 3px 3px 0; min-width: 2px; transition: width .4s ease; }
+.hx-tr2 { display: flex; flex-direction: column; gap: 2px; } .hx-tr2 .hx-tr { height: 6px; }
+.hx-bar b { text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hx-bar.pair { grid-template-columns: minmax(0, 104px) minmax(0, 1fr) 52px; }
+.hx-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); }
+.hx-leg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.hx-leg b { margin-left: 3px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.hx-leg.sm { font-size: 11px; gap: 10px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+/* performance */
+.hx-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+.hx-st { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; border-left: 1px solid var(--line); min-width: 0; }
+.hx-st:first-child { border-left: 0; }
+.hx-st > span { font-size: 12px; color: var(--ink-2); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-st b { font-size: 22px; line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.hx-st small { font-size: 12px; color: var(--ink-3); font-weight: 600; margin-left: 2px; letter-spacing: 0; }
+.hx-st em { font-style: normal; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-out { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.hx-perf { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; flex: 1; }
+.hx-perf > div { padding: 12px 16px 14px; min-width: 0; }
+.hx-perf > div + div { border-left: 1px solid var(--line); }
+.hx-cols { display: block; width: 100%; height: auto; }
+.hx-col { fill: var(--mk-o1); } .hx-col.cur { fill: var(--mk-s1); }
+.hx-flag { display: flex; gap: 6px; align-items: flex-start; margin: 10px 0 0; font-size: 12px; color: var(--ink-2); line-height: 1.4; }
+.hx-flag .ico { color: #87600e; flex: none; margin-top: 1px; }
+/* lists: activity + watch */
+.hx-list { display: flex; flex-direction: column; flex: 1; }
+.hx-ev, .hx-due { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 46px; padding: 6px 16px; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; text-align: left; color: inherit; cursor: pointer; }
+.hx-list > :first-child { border-top: 0; }
+.hx-ev:hover, .hx-due:hover { background: var(--surface-2); }
+.hx-evb { display: flex; flex-direction: column; min-width: 0; flex: 1; font-size: 12.5px; line-height: 1.35; }
+.hx-evb > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-evb b { font-weight: 600; }
+.hx-evb > span:last-child, .hx-evo { font-size: 11.5px; color: var(--ink-3); }
+.hx-evt { color: var(--ink-2); } .hx-evt b { color: var(--ink); }
+.hx-ev time { flex: none; font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.hx-wc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+.hx-wc > div { display: flex; flex-direction: column; padding: 9px 16px; border-left: 1px solid var(--line); min-width: 0; }
+.hx-wc > div:first-child { border-left: 0; }
+.hx-wc b { font-size: 18px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.hx-wc span { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hx-wc .bad b { color: #b3261e; } .hx-wc .warn b { color: #87600e; }
+.hx-dd { flex: none; width: 50px; display: flex; align-items: baseline; justify-content: flex-end; gap: 2px; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hx-dd b { font-size: 15px; color: var(--ink); }
+.hx-dd.bad b { color: #b3261e; } .hx-dd.warn b { color: #87600e; }
+.hx-tag { flex: none; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 5px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+.hx-tag.bad { background: #fbe9e7; color: #a8322d; } .hx-tag.warn { background: #fbf2e0; color: #7a560d; }
+/* overview */
+.hx-ovg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hx-ov { padding: 14px 16px; border-left: 1px solid var(--line); border-top: 1px solid var(--line); min-width: 0; }
+.hx-ov:nth-child(3n + 1) { border-left: 0; } .hx-ov:nth-child(-n + 3) { border-top: 0; }
+.hx-ovh { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; } .hx-ovh .hx-cap { margin-bottom: 8px; }
+/* responsive */
+@media (max-width: 1280px) { .hx-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .hx-k:nth-child(3n + 1) { border-left: 0; } .hx-k:nth-child(n + 4) { border-top: 1px solid var(--line); } }
+@media (max-width: 1100px) { .hx-p.span8, .hx-p.span4 { grid-column: span 12; } .hx-ovg { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hx-ov { border-left: 1px solid var(--line) !important; border-top: 1px solid var(--line) !important; } .hx-ov:nth-child(2n + 1) { border-left: 0 !important; } .hx-ov:nth-child(-n + 2) { border-top: 0 !important; } }
+@media (max-width: 760px) {
+  .hx-head h1 { font-size: 20px; } .hx-qa { width: 100%; } .hx-qa .btn { flex: 1; justify-content: center; }
+  .hx-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hx-k { border-left: 1px solid var(--line) !important; border-top: 1px solid var(--line) !important; padding: 10px 12px; } .hx-k:nth-child(2n + 1) { border-left: 0 !important; } .hx-k:nth-child(-n + 2) { border-top: 0 !important; } .hx-kv { font-size: 22px; }
+  .hx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hx-st:nth-child(3) { border-left: 0; } .hx-st:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  .hx-perf { grid-template-columns: minmax(0, 1fr); } .hx-perf > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .hx-ovg { grid-template-columns: minmax(0, 1fr); } .hx-ov { border-left: 0 !important; border-top: 1px solid var(--line) !important; } .hx-ov:first-child { border-top: 0 !important; }
+  .hx-seg { flex-wrap: wrap; } .hx-seg button { flex: 1 1 45%; border-top: 1px solid var(--line); } .hx-seg button:nth-child(-n + 2) { border-top: 0; } .hx-seg button:nth-child(3) { border-left: 0; }
+  .hx-tbl, .hx-tbl tbody { display: block; } .hx-tbl thead, .hx-tbl colgroup { display: none; }
+  .hx-tbl tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 8px 16px; border-top: 1px solid var(--line); }
+  .hx-tbl tr:first-child { border-top: 0; }
+  .hx-tbl td { display: none; height: auto; padding: 0 !important; border: 0; }
+  .hx-tbl td:first-child { display: block; grid-column: 1; grid-row: 1 / span 2; min-width: 0; }
+  .hx-tasks td:nth-child(4) { display: block; grid-column: 2; grid-row: 1; justify-self: end; }
+  .hx-tasks td:nth-child(5) { display: block; grid-column: 2; grid-row: 2; justify-self: end; max-width: 130px; }
+  .hx-tbl:not(.hx-tasks) td:last-child { display: block; grid-column: 2; grid-row: 1 / span 2; }
+  .hx-tbl tr.hx-div { display: block; padding: 6px 16px; } .hx-tbl tr.hx-div td { display: block; padding: 0 !important; background: none; }
+  .hx-tbl tr.hx-div { background: var(--surface-2); }
+  .hx-ph h3 { white-space: nowrap; } .hx-ph .hx-ctx { min-width: 0; }
+}
+}
+
 </style>
 <div id="app"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -2281,9 +2517,9 @@ const SEED = () => {
     ].map(([id, name, desc, icon, tone, safety, kind]) => ({ id, name, desc, icon, tone, safety: !!safety, kind: kind || 'content', workflow: '', active: true })),
     functions: SEED_FUNCS.map(([id, desc, reviews]) => ({ id, desc, reviews, active: true })),
     teams: [
-      { id: 'T-CON', name: 'Content — Cardiology', fn: 'Content' }, { id: 'T-CON2', name: 'Content — Respiratory & Diabetes', fn: 'Content' },
-      { id: 'T-MED', name: 'Medical Affairs', fn: 'Medical' }, { id: 'T-LEG', name: 'Legal', fn: 'Legal' }, { id: 'T-REG', name: 'Regulatory Affairs', fn: 'Regulatory' },
-      { id: 'T-MKT', name: 'Marketing', fn: 'Marketing' }, { id: 'T-ADM', name: 'Platform Administration', fn: 'Administrator' }
+      { id: 'T-CON', name: 'Content — Cardiology', fn: 'Content', active: true }, { id: 'T-CON2', name: 'Content — Respiratory & Diabetes', fn: 'Content', active: true },
+      { id: 'T-MED', name: 'Medical Affairs', fn: 'Medical', active: true }, { id: 'T-LEG', name: 'Legal', fn: 'Legal', active: true }, { id: 'T-REG', name: 'Regulatory Affairs', fn: 'Regulatory', active: true },
+      { id: 'T-MKT', name: 'Marketing', fn: 'Marketing', active: true }, { id: 'T-ADM', name: 'Platform Administration', fn: 'Administrator', active: true }
     ],
     users: [
       ['u-omar', 'Omar Khalil', 'Content', 'Lead', 'T-CON'], ['u-hana', 'Hana Zaki', 'Content', 'Member', 'T-CON2'],
@@ -2525,6 +2761,8 @@ const IC = {
   lock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
   eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
   mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  database: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+  org: '<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v4M5 16v-2a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2"/>',
   archive: '<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
   copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   sparkle: '<path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/><path d="m5.6 5.6 2.1 2.1"/><path d="m16.3 16.3 2.1 2.1"/><path d="m5.6 18.4 2.1-2.1"/><path d="m16.3 7.7 2.1-2.1"/>',
@@ -2545,7 +2783,7 @@ const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, modal: null,
 
 function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return linkModuleWorkflows(s); if (s && s.version === 7) return linkModuleWorkflows(migrate7to8(s)); } } catch (e) {} return linkModuleWorkflows(SEED()); }
 // Every module records the workflow chosen for it. Older records take it from their approval history; drafts with no history stay unset until someone chooses.
-function linkModuleWorkflows(s) { s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
+function linkModuleWorkflows(s) { s.notifications = s.notifications || []; s.notifSeenBy = s.notifSeenBy || {}; (s.teams || []).forEach(t => { if (t.active === undefined) t.active = true; }); if (s.settings.mentionEmail === undefined) s.settings.mentionEmail = true; if (s.settings.notifyEndpoint === undefined) s.settings.notifyEndpoint = ''; s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
 // v7 → v8 keeps every user-created record: indications become records, permissions gain page access and authority, annotations start empty.
 function migrate7to8(s) {
   const valid = new Set(PERMS.map(p => p[0]));
@@ -2968,9 +3206,9 @@ function hydratePdfs() {
 }
 const mediaKindOf = md => !md || !md.mime ? '' : md.mime.startsWith('image/') ? 'image' : md.mime.startsWith('video/') ? 'video' : 'document';
 function pdfView(md, url, mode) {
-  const c = PDFC[md.fileId]; const open = fileActions(md);
-  if (c && c.thumbs) return mode === 'thumb' ? `<img class="media-img thumb pdf-page" src="${c.thumbs[0]}" alt="First page of ${esc(md.name)}">` : `<div class="pdf-pages">${c.thumbs.map((t, i) => `<figure><img class="pdf-page" src="${t}" alt="Page ${i + 1} of ${esc(md.name)}"><figcaption>Page ${i + 1} of ${c.pages}</figcaption></figure>`).join('')}</div><div class="row" style="justify-content:center;margin-top:10px">${c.pages > 3 ? `<span class="muted" style="font-size:12px">${c.pages - 3} more page${c.pages - 3 > 1 ? 's' : ''} — preview to read all</span>` : ''}${open}</div>`;
-  if (c && c.failed) return mode === 'thumb' ? `<div class="media-empty thumb">${icon('file')}</div>` : `<object class="pdf-embed" data="${url}" type="application/pdf" aria-label="${esc(md.name)}"><div class="media-empty">${icon('file')}<span>Preview not available in this browser.</span>${open}</div></object><div class="row" style="justify-content:center;margin-top:8px">${open}</div>`;
+  const c = PDFC[md.fileId];
+  if (c && c.thumbs) return mode === 'thumb' ? `<img class="media-img thumb pdf-page" src="${c.thumbs[0]}" alt="First page of ${esc(md.name)}">` : `<div class="pdf-pages">${c.thumbs.map((t, i) => `<figure><img class="pdf-page" src="${t}" alt="Page ${i + 1} of ${esc(md.name)}"><figcaption>Page ${i + 1} of ${c.pages}</figcaption></figure>`).join('')}</div>${c.pages > 3 ? `<p class="muted fp-more">${c.pages - 3} more page${c.pages - 3 > 1 ? 's' : ''} — open the document to read all</p>` : ''}`;
+  if (c && c.failed) return mode === 'thumb' ? `<div class="media-empty thumb">${icon('file')}</div>` : `<div class="media-empty">${icon('file')}<span>${esc(md.name)} · ${md.pages ? md.pages + ' pages · ' : ''}open to read it in the document viewer</span></div>`;
   return `<div class="media-empty ${mode === 'thumb' ? 'thumb' : ''}" data-pdf="${md.fileId}" data-url="${url}">${icon('file')}${mode === 'thumb' ? '' : '<span>Rendering PDF preview…</span>'}</div>`;
 }
 // The preview of an approved (or draft) file. mode: 'full' | 'thumb'.
@@ -2995,17 +3233,24 @@ function fileCard(md, extra = '') {
   if (!md || !md.fileId) return '';
   const k = mediaKindOf(md); const label = { image: 'Image', video: 'Video', document: 'PDF' }[k] || 'File';
   const info = [label + (md.format ? ' · ' + md.format.replace(/^[A-Z0-9]+ · /, '') : ''), fmtSize(md.size), md.duration != null ? fmtSecs(md.duration) : ''].filter(Boolean).join(' · ');
-  return `<div class="file-card k-${k}"><span class="fc-thumb">${mediaView(md, 'thumb')}${k === 'document' ? '<span class="fc-badge">PDF</span>' : ''}</span><span class="fc-body"><b title="${esc(md.name)}">${esc(md.name)}</b><span>${esc(info)}</span>${extra ? `<span class="fc-extra">${extra}</span>` : ''}</span></div>`;
+  FILES[md.fileId] = FILES[md.fileId] || { md, ctx: '' };
+  return `<div class="file-card k-${k}"><button type="button" class="fc-thumb" data-act="file-open" data-file="${esc(md.fileId)}" aria-label="Open ${esc(md.name)}">${mediaView(md, 'thumb')}${k === 'document' ? '<span class="fc-badge">PDF</span>' : ''}</button><span class="fc-body"><b title="${esc(md.name)}">${esc(md.name)}</b><span>${esc(info)}</span>${extra ? `<span class="fc-extra">${extra}</span>` : ''}</span></div>`;
 }
 
 /* ---------- File viewer: Preview opens the file inside the app, Download saves the original ----------
    Every place that shows an uploaded file offers these two explicit actions. */
 const FILES = {};
-// ctx: what the file belongs to, e.g. "MOD-A-050 · v1 · Approved" (shown in the viewer header).
-function fileActions(md, ctx = '', cls = '') {
-  if (!md || !md.fileId) return ''; FILES[md.fileId] = { md, ctx };
+// Secondary file actions ("⋯"): open in the viewer, download the original. Download is never the default action.
+function fileMenu(md, ctx = '') {
+  if (!md || !md.fileId) return ''; FILES[md.fileId] = { md, ctx }; const key = 'file:' + md.fileId; const open = UI.pop === key;
   const url = mediaUrl(md.fileId); const ok = url && url !== 'missing';
-  return `<span class="file-acts ${cls}"><button type="button" class="btn sm" data-act="file-open" data-file="${esc(md.fileId)}">${icon('eye', 'sm')}Preview</button>${ok ? `<a class="btn sm ghost" href="${url}" download="${esc(md.name)}" data-file-dl="${esc(md.fileId)}">${icon('download', 'sm')}Download</a>` : ''}</span>`;
+  return `<span class="fmenu rel"><button type="button" class="fmenu-btn" data-act="pop" data-pop="${esc(key)}" aria-label="File actions for ${esc(md.name)}" aria-haspopup="menu" aria-expanded="${open}">${icon('more', 'sm')}</button>${open ? `<div class="pop fmenu-pop" role="menu"><button type="button" class="pop-item" role="menuitem" data-act="file-open" data-file="${esc(md.fileId)}">${icon('eye', 'sm')}Open in viewer</button>${ok ? `<a class="pop-item" role="menuitem" href="${url}" download="${esc(md.name)}" data-file-dl="${esc(md.fileId)}">${icon('download', 'sm')}Download original</a>` : ''}<div class="pop-meta">${esc(md.name)}<br>${esc(fmtSize(md.size))}${md.format ? ' · ' + esc(md.format) : ''}</div></div>` : ''}</span>`;
+}
+// A file preview: clicking it opens the in-app viewer (videos keep their own player controls); "⋯" holds the secondary actions.
+function filePreview(md, ctx = '', mode = 'full', opts = {}) {
+  if (!md || !md.fileId) return mediaView(md, mode); FILES[md.fileId] = { md, ctx };
+  const k = mediaKindOf(md); const clickable = !opts.noOpen && (k !== 'video' || mode === 'thumb');
+  return `<div class="fp ${mode}">${clickable ? `<button type="button" class="fp-hit" data-act="file-open" data-file="${esc(md.fileId)}" aria-label="Open ${esc(md.name)} in the viewer" title="Open in the viewer">${mediaView(md, mode)}<span class="fp-zoom">${icon('eye', 'sm')}Open</span></button>` : mediaView(md, mode)}${fileMenu(md, ctx)}</div>`;
 }
 const fileKindLabel = md => ({ image: 'Image', video: 'Video', document: 'PDF document' })[mediaKindOf(md)] || 'File';
 function fileViewerModal(M) {
@@ -3142,10 +3387,10 @@ const ADMIN_VIEW = 'page_admin';
 const NAV = [
   ['WORKSPACE'], ['home', 'Home', 'home'], ['modules', 'Modules', 'grid', 'mods', 'page_modules', 'primary'], ['tasks', 'My Tasks', 'inbox', 'tasks', 'page_tasks'], ['assets', 'Assets', 'layers', null, 'page_assets'], ['library', 'Approved Library', 'book', null, 'page_library'],
   ['INSIGHTS'], ['reports', 'Reports', 'chart', null, 'view_reports'],
-  ['GOVERNANCE'], ['lifecycle', 'Lifecycle', 'clock', null, 'view_audit'], ['audit', 'Audit Trail', 'history', null, 'view_audit'], ['sops', 'Validation SOPs', 'clipboard', null, ['manage_sops', ADMIN_VIEW]], ['workflows', 'Workflows', 'workflow', null, ['manage_workflows', ADMIN_VIEW]], ['references', 'References', 'quote', null, 'view_audit'],
-  ['ADMINISTRATION'], ['users', 'Users', 'users', null, ['manage_users', ADMIN_VIEW]], ['roles', 'Roles & Permissions', 'key', null, ['manage_users', ADMIN_VIEW]], ['settings', 'Settings', 'settings', null, ['manage_settings', 'manage_users', ADMIN_VIEW]]
+  ['GOVERNANCE'], ['lifecycle', 'Lifecycle', 'clock', null, 'view_audit'], ['audit', 'Audit Trail', 'history', null, 'view_audit'], ['sops', 'Validation SOPs', 'clipboard', null, ['manage_sops', ADMIN_VIEW]], ['workflows', 'Workflows', 'workflow', null, ['manage_workflows', ADMIN_VIEW]], ['refdata', 'Reference Data', 'database', null, 'page_admin'],
+  ['ADMINISTRATION'], ['users', 'Users', 'users', null, ['manage_users', ADMIN_VIEW]], ['roles', 'Roles & Permissions', 'key', null, ['manage_users', ADMIN_VIEW]], ['org', 'Organisation', 'org', null, ['manage_users', ADMIN_VIEW]], ['settings', 'Settings', 'settings', null, ['manage_settings', 'manage_users', ADMIN_VIEW]]
 ];
-const NAV_OF = { products: 'settings', markets: 'settings', moduletypes: 'settings', materials: 'settings', channels: 'settings', audiences: 'settings', teams: 'settings', functions: 'settings', module: 'modules', 'module-new': 'modules', 'module-edit': 'modules', review: 'tasks', 'asset-review': 'tasks', approvals: 'tasks', assemble: 'assets', asset: 'assets', user: 'users', 'user-new': 'users', 'user-edit': 'users', workflow: 'workflows', 'workflow-new': 'workflows', cover: 'library' };
+const NAV_OF = { module: 'modules', 'module-new': 'modules', 'module-edit': 'modules', review: 'tasks', 'asset-review': 'tasks', approvals: 'tasks', assemble: 'assets', asset: 'assets', user: 'users', 'user-new': 'users', 'user-edit': 'users', workflow: 'workflows', 'workflow-new': 'workflows', cover: 'library' };
 const ROUTE_PERM = { modules: 'page_modules', module: 'view', 'module-new': 'create', 'module-edit': 'edit', review: 'view', tasks: 'page_tasks', approvals: 'page_tasks', assets: 'page_assets', asset: 'view', assemble: 'edit', 'asset-review': 'view', library: 'page_library', cover: 'view', references: 'view_audit', reports: 'view_reports', lifecycle: 'view_audit', audit: 'view_audit', sops: ['manage_sops', ADMIN_VIEW], workflows: ['manage_workflows', ADMIN_VIEW], workflow: ['manage_workflows', ADMIN_VIEW], 'workflow-new': 'manage_workflows', users: ['manage_users', ADMIN_VIEW], user: ['manage_users', ADMIN_VIEW], 'user-new': 'manage_users', 'user-edit': 'manage_users', roles: ['manage_users', ADMIN_VIEW], functions: ['manage_users', ADMIN_VIEW], teams: ['manage_users', ADMIN_VIEW], products: ['manage_settings', ADMIN_VIEW], markets: ['manage_settings', ADMIN_VIEW], moduletypes: ['manage_settings', ADMIN_VIEW], materials: ['manage_settings', ADMIN_VIEW], channels: ['manage_settings', ADMIN_VIEW], audiences: ['manage_settings', ADMIN_VIEW], settings: ['manage_settings', 'manage_users', ADMIN_VIEW] };
 
 function viewShell(inner) {
@@ -3167,21 +3412,30 @@ function viewShell(inner) {
   </div>`;
 }
 function viewTopbar(u) {
-  const notifs = notificationsFor(u); const unread = notifs.some(n => n.ts > (S.notifSeen || 0));
+  const notifs = notificationsFor(u); const nUnread = notifUnread(u); const unread = nUnread > 0;
   return `<header class="topbar">
     <div class="search" id="gsearch">${icon('search', 'sm')}<input id="global-search" type="search" placeholder="Search modules, assets, people…" value="${esc(UI.search)}" aria-label="Search" autocomplete="off">${UI.search ? viewSearchPop() : ''}</div>
     <div class="grow"></div>
-    <div class="rel"><button class="btn icon" data-act="pop" data-pop="bell" aria-label="Notifications">${icon('bell')}${unread ? '<span class="bell-dot"></span>' : ''}</button>${UI.pop === 'bell' ? viewNotifPop(notifs) : ''}</div>
+    <div class="rel"><button class="btn icon" data-act="pop" data-pop="bell" aria-label="Notifications">${icon('bell')}${unread ? `<span class="bell-dot bell-n" aria-label="${nUnread} unread">${nUnread > 9 ? '9+' : nUnread}</span>` : ''}</button>${UI.pop === 'bell' ? viewNotifPop(notifs) : ''}</div>
     <div class="rel"><button class="userbtn" data-act="pop" data-pop="user" aria-label="Account menu">${avatar(u)}<span class="meta"><b>${esc(u.name)}</b><span>${esc(roleLabel(u))}</span></span>${icon('down', 'sm')}</button>${UI.pop === 'user' ? `<div class="pop" role="menu" style="width:260px"><div class="pop-id">${avatar(u)}<span><b>${esc(u.name)}</b><span>${esc(u.email)}</span></span></div>${can(u, 'manage_users') ? `<button class="pop-item" role="menuitem" ${goAttr('user', u.id)}>${icon('users', 'sm')}My profile</button>` : ''}${can(u, 'manage_settings') ? `<button class="pop-item" role="menuitem" ${goAttr('settings')}>${icon('settings', 'sm')}Settings</button>` : ''}<button class="pop-item" data-act="logout" role="menuitem">${icon('logout', 'sm')}Sign out</button></div>` : ''}</div>
   </header>`;
 }
+// The bell: stored per-recipient notifications (mentions) plus activity on items the user owns or acts on.
+const seenAt = u => (S.notifSeenBy || {})[u.id] || 0;
+const canSeeObj = (u, o) => !!o && can(u, 'view') && can(u, kindOf(o) === 'Asset' ? ['page_assets', 'page_tasks'] : ['page_modules', 'page_tasks', 'page_library']);
 function notificationsFor(u) {
   const admin = isAdmin(u); const mine = new Set();
   [...S.modules, ...S.assets].forEach(o => { if (o.owner === u.id || (o.review && canActOn(u, o))) mine.add(o.id); });
-  return S.audit.filter(e => e.user !== u.id && ((e.toIds || []).includes(u.id) || (admin ? /approv|amend|reject|submitted|resubmitted/i.test(e.action) && !e.auto : mine.has(e.objId) && !e.auto))).sort((a, b) => b.ts - a.ts).slice(0, 8);
+  const stored = (S.notifications || []).filter(n => n.to === u.id && canSeeObj(u, objById(n.objType, n.objId))).map(n => ({ ...n, stored: true }));
+  const act = S.audit.filter(e => e.user !== u.id && e.action !== 'User mentioned' && ((e.toIds || []).includes(u.id) || (admin ? /approv|amend|reject|submitted|resubmitted/i.test(e.action) && !e.auto : mine.has(e.objId) && !e.auto)));
+  return [...stored, ...act].sort((a, b) => b.ts - a.ts).slice(0, 12);
 }
+const notifUnread = u => notificationsFor(u).filter(n => n.stored ? !n.read : n.ts > seenAt(u)).length;
 function viewNotifPop(list) {
-  return `<div class="pop" role="menu"><div class="grp">Notifications</div>${list.length ? list.map(e => { const x = user(e.user); return `<button class="pop-item" ${goAttr(e.objType === 'Asset' ? 'asset' : e.objType === 'Module' ? 'module' : 'audit', e.objType === 'Asset' || e.objType === 'Module' ? e.objId : null)} role="menuitem">${avatar(x, 'sm')}<span style="flex:1;min-width:0;font-size:12.5px"><b>${esc(x.name)}</b> <span class="muted">${esc(e.role || '')}</span><br>${esc(e.action)} · ${esc(e.objId)}<br><span class="muted">${ago(e.ts)}</span></span></button>`; }).join('') : '<div class="empty" style="padding:20px">No notifications yet.</div>'}</div>`;
+  const u = me(); const unread = notifUnread(u);
+  return `<div class="pop notif-pop" role="menu"><div class="grp notif-head"><span>Notifications</span>${unread ? `<button type="button" class="linklike" data-act="notif-readall">Mark all read</button>` : ''}</div>${list.length ? list.map(e => { const x = user(e.stored ? e.by : e.user); const o = objById(e.objType, e.objId);
+    if (e.stored) return `<button class="pop-item notif ${e.read ? '' : 'unread'}" data-act="notif-open" data-id="${e.id}" role="menuitem">${avatar(x, 'sm')}<span class="notif-body"><b>${esc(x.name)}</b> mentioned you${e.replyId ? ' in a reply' : ''} · <span class="mono">${esc(e.objId)}</span><span class="notif-snip">“${esc(e.text.length > 90 ? e.text.slice(0, 87) + '…' : e.text)}”</span><span class="muted">${esc(o ? nameOf(o) : '')} · ${ago(e.ts)}${e.email ? ' · email ' + esc(e.email.status) : ''}</span></span>${e.read ? '' : '<span class="notif-dot" aria-label="Unread"></span>'}</button>`;
+    return `<button class="pop-item notif" ${goAttr(e.objType === 'Asset' ? 'asset' : e.objType === 'Module' ? 'module' : 'audit', e.objType === 'Asset' || e.objType === 'Module' ? e.objId : null)} role="menuitem">${avatar(x, 'sm')}<span class="notif-body"><b>${esc(x.name)}</b> <span class="muted">${esc(e.role || '')}</span><br>${esc(e.action)} · ${esc(e.objId)}<span class="muted">${ago(e.ts)}</span></span></button>`; }).join('') : '<div class="empty" style="padding:20px">No notifications yet.</div>'}</div>`;
 }
 function viewSearchPop() {
   const q = UI.search.toLowerCase(); const cv = can(me(), 'view');
@@ -3258,89 +3512,134 @@ function homeScope(u) {
   if (fnInfo(u.fn).reviews) return { label: 'All content in MLR review', f: () => true };
   return { label: 'Your team’s content', f: o => sameTeam(u, o) || (!!o.blocks && o.blocks.some(b => b.moduleId && sameTeam(u, modById(b.moduleId)))) };
 }
+/* Each Home section renders on its own: if one fails, it shows an inline error and the rest of the page still works. */
+function homeSafe(name, cls, fn) { try { return fn(); } catch (e) { console.error('Home section failed:', name, e); return `<section class="panel hx-p ${cls} hx-err" role="alert"><div class="hx-ph"><h3>${esc(name)}</h3></div><div class="hx-empty">${icon('alert', 'sm')}<span>This section could not be loaded. The rest of Home is unaffected.</span><button type="button" class="btn sm" data-act="home-retry">Try again</button></div></section>`; } }
+// Approvals completed per week, oldest first (last n weeks) — from closed approval cycles.
+function weeklyApprovals(cycles, n = 12) { const now = Date.now(); const out = Array.from({ length: n }, (_, i) => ({ start: now - (n - i) * 7 * DAY, n: 0 })); cycles.forEach(c => { if (c.outcome !== 'Approved' || !c.end) return; const k = n - 1 - Math.floor((now - c.end) / (7 * DAY)); if (k >= 0 && k < n) out[k].n++; }); return out; }
+function miniCols(weeks) {
+  const W = 360, H = 112, L = 22, B = 18, T = 8; const iw = W - L - 4, ih = H - T - B; const mx = Math.max(2, ...weeks.map(w => w.n)); const tk = Math.ceil(mx / 2) * 2; const bw = iw / weeks.length;
+  const y = v => T + ih - ih * v / tk; const lab = t => { const d = new Date(t); return d.getDate() + ' ' + MON[d.getMonth()]; };
+  return `<svg class="hx-cols" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc('Approvals per week: ' + weeks.map(w => lab(w.start) + ' ' + w.n).join(', '))}">
+    ${[0, tk / 2, tk].map(v => `<line class="ch-grid" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="ch-ax" x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${Math.round(v * 10) / 10}</text>`).join('')}
+    ${weeks.map((w, i) => { const x = L + i * bw; const h = ih * w.n / tk; return `<g><rect class="hx-col${i === weeks.length - 1 ? ' cur' : ''}" x="${x + bw * .22}" y="${y(w.n)}" width="${bw * .56}" height="${Math.max(0, h)}" rx="3"/><rect class="ch-hit" x="${x}" y="${T}" width="${bw}" height="${ih}" data-tip="${esc('Week of ' + lab(w.start) + '\n' + w.n + ' approval' + (w.n === 1 ? '' : 's'))}"/></g>`; }).join('')}
+    ${[0, Math.floor(weeks.length / 2), weeks.length - 1].map(i => `<text class="ch-ax" x="${i === weeks.length - 1 ? W - 2 : i === 0 ? L : L + i * bw + bw / 2}" y="${H - 4}" text-anchor="${i === weeks.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'}">${i === weeks.length - 1 ? 'This wk' : lab(weeks[i].start)}</text>`).join('')}</svg>`;
+}
 function viewHome() {
   const u = me(); const tasks = tasksFor(u); const a = authority(u.fn, u.level); const first = u.name.split(' ')[0]; const admin = isAdmin(u);
-  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const sc = homeScope(u); const mods = S.modules.filter(sc.f); const assets = can(u, 'page_assets') ? S.assets.filter(sc.f) : []; const seeAssets = can(u, 'page_assets');
-  const ls = m => lifeStatus(m); const libOk = m => ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '');
+  const now = new Date(); const today = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); const hr = now.getHours();
+  const sc = homeScope(u); const mods = S.modules.filter(sc.f); const seeAssets = can(u, 'page_assets'); const assets = seeAssets ? S.assets.filter(sc.f) : [];
+  const libOk = m => ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '');
   const mIn = mods.filter(m => m.review), mDraft = mods.filter(m => ['Draft', 'Awaiting Lead submission'].includes(statusOf(m))), mAmend = mods.filter(m => statusOf(m) === 'Amendment Requested');
-  const aAmend = assets.filter(x => statusOf(x) === 'Amendment Requested'); const mLive = mods.filter(libOk); const mExp = mods.filter(m => libraryStatus(m) === 'Expiring');
-  // metric strip
-  const M = (label, val, tone, sub, go) => `<button class="hm-m" ${go || 'disabled'}><span class="hm-l">${tone ? `<span class="k-dot ${tone}"></span>` : ''}${label}</span><b>${val}</b><span class="hm-s">${esc(sub)}</span></button>`;
-  const metrics = [
-    M('Total modules', mods.length, '', mods.filter(m => isMediaType(m.type)).length + ' media & documents', goAttr('modules', null, ' data-mstat=""')),
-    M('Modules in review', mIn.length, mIn.length ? 'warn' : 'ok', mIn.length ? 'Oldest ' + ago(Math.min(...mIn.map(m => m.review.stepStartedAt))) : 'None waiting', goAttr('modules', null, ' data-mstat="In Review"')),
-    can(u, 'page_tasks') && M('My tasks', tasks.length, tasks.length ? 'warn' : 'ok', tasks.filter(t => taskInfo(t).priority === 'High').length + ' high priority', goAttr('tasks')),
-    M('Approved modules', mLive.length, 'ok', 'Live in the library', goAttr('modules', null, ' data-mstat="live"')),
-    M('Draft modules', mDraft.length, 'dim', 'Not yet submitted', goAttr('modules', null, ' data-mstat="open"')),
-    M('Amendment requests', mAmend.length + aAmend.length, mAmend.length + aAmend.length ? 'warn' : 'ok', mAmend.length + ' modules · ' + aAmend.length + ' assets', goAttr('modules', null, ' data-mstat="Amendment Requested"')),
-    seeAssets && M('Assets in review', assets.filter(x => x.review).length, assets.some(x => x.review) ? 'warn' : 'ok', assets.length + ' assets in total', goAttr('assets', null, ' data-setf="astat=In Review"')),
-    seeAssets && M('Approved assets', assets.filter(x => live(x)).length, 'ok', 'Have a live version', goAttr('assets', null, ' data-setf="astat=Approved"')),
-    M('Expiring soon', mExp.length, mExp.length ? 'warn' : 'ok', 'Within ' + S.settings.expiryWarnDays + ' days', goAttr('modules', null, ' data-mstat="Expiring"')),
-    (admin || can(u, ['manage_workflows', 'page_admin'])) && M('Active workflows', S.workflows.filter(w => !w.hidden && w.active !== false).length, '', S.workflows.filter(w => !w.hidden && w.active !== false && w.appliesTo === 'Module').length + ' module · ' + S.workflows.filter(w => !w.hidden && w.active !== false && w.appliesTo === 'Asset').length + ' asset', goAttr('workflows')),
-    (admin || can(u, ['manage_users', 'page_admin'])) && M('Active users', S.users.filter(x => x.status === 'Active').length, '', S.functions.filter(f => f.active).length + ' functions', goAttr('users'))
+  const aAmend = assets.filter(x => statusOf(x) === 'Amendment Requested'); const aIn = assets.filter(x => x.review); const mLive = mods.filter(libOk); const mExp = mods.filter(m => libraryStatus(m) === 'Expiring');
+  const cyc90 = allCycles().filter(c => (c.end || Date.now()) > Date.now() - 90 * DAY && sc.f(c.obj)); const P = (() => { try { return approvalStats(cyc90); } catch (e) { console.error('Approval statistics failed', e); return null; } })();
+  const high = tasks.filter(t => taskInfo(t).priority === 'High').length;
+  const new30 = mLive.filter(m => live(m) && live(m).approvedAt > Date.now() - 30 * DAY).length;
+  const expired = mods.filter(m => live(m) && !m.archived && liveMeta(m).expiry && daysTo(liveMeta(m).expiry) < 0).length;
+
+  /* 1 · Key metrics: six primary figures for the role; the rest as a quiet secondary line. */
+  const K = (label, val, unit, ctx, tone, go, id) => `<button class="hx-k" ${go || 'disabled'} data-k="${id}"><span class="hx-kl">${label}</span><span class="hx-kv">${val}${unit ? `<small>${unit}</small>` : ''}</span><span class="hx-kc ${tone || ''}">${tone ? `<span class="k-dot ${tone}"></span>` : ''}${ctx}</span></button>`;
+  const kpis = homeSafe('Key metrics', 'span12', () => { const list = [
+    can(u, 'page_tasks') && K('My tasks', tasks.length, '', high ? high + ' high priority' : tasks.length ? 'None overdue' : 'Nothing waiting', high ? 'bad' : '', goAttr('tasks'), 'tasks'),
+    K('Modules in review', mIn.length, '', mIn.length ? 'Oldest step ' + fmtDur(Date.now() - Math.min(...mIn.map(m => m.review.stepStartedAt))) : 'None waiting', '', goAttr('modules', null, ' data-mstat="In Review"'), 'inreview'),
+    K('Amendment requests', mAmend.length + aAmend.length, '', mAmend.length + ' module' + (mAmend.length === 1 ? '' : 's') + (seeAssets ? ' · ' + aAmend.length + ' asset' + (aAmend.length === 1 ? '' : 's') : ''), mAmend.length + aAmend.length ? 'warn' : '', goAttr('modules', null, ' data-mstat="Amendment Requested"'), 'amend'),
+    K('Approved modules', mLive.length, '', new30 ? '+' + new30 + ' in the last 30 days' : 'Live in the library', '', goAttr('modules', null, ' data-mstat="live"'), 'approved'),
+    K('Expiring soon', mExp.length, '', (expired ? expired + ' expired · ' : '') + '≤ ' + S.settings.expiryWarnDays + ' days', mExp.length || expired ? 'warn' : '', goAttr('modules', null, ' data-mstat="Expiring"'), 'expiring'),
+    !P ? K('Avg. approval time', '—', '', 'Unavailable', '', '', 'avg') : K('Avg. approval time', P.done.length ? durDays(P.avgApproval) : '—', P.done.length ? 'days' : '', P.n ? Math.round(100 * P.approvalRate) + '% approval rate · 90d' : 'No cycles in 90 days', '', can(u, 'view_reports') ? goAttr('reports') : '', 'avg')
   ].filter(Boolean);
-  // My Tasks
-  const byG = TASK_GROUPS.map(g => [g[0], g[1], tasks.filter(t => taskGroup(t) === g[0])]);
-  // Nothing to act on: follow your own items that are with reviewers instead.
-  const watching = tasks.length < 4 && !admin ? [...mods, ...assets].filter(o => o.review && !tasks.some(t => t.obj === o) && (fnInfo(u.fn).reviews ? curStep(o).fn === u.fn : sameTeam(u, o))).map(o => ({ kind: 'watch', obj: o, type: kindOf(o), title: nameOf(o), id: o.id, step: curStep(o), since: o.review.stepStartedAt })) : [];
-  const tq = [...tasks].sort((x, y) => ({ High: 0, Medium: 1, Normal: 2 })[taskInfo(x).priority] - ({ High: 0, Medium: 1, Normal: 2 })[taskInfo(y).priority] || x.since - y.since).slice(0, 7).concat(watching.slice(0, 5 - Math.min(tasks.length, 4)));
-  const taskBox = `<section class="panel hp span8 hm-tasks"><div class="panel-head"><h3>${icon('inbox', 'sm')} My Tasks</h3><span class="chip plain">${tasks.length}</span><span class="grow"></span>${can(u, 'page_tasks') ? goBtn('View all My Tasks', 'tasks', null, 'sm', 'chevron') : ''}</div>
-    <div class="hm-tg">${byG.map(g => `<button class="hm-tgi ${g[2].length ? '' : 'zero'}" ${goAttr('tasks', null, ` data-tab="${g[0]}"`)}><b>${g[2].length}</b><span>${esc(g[1])}</span></button>`).join('')}</div>
-    ${!tasks.length && watching.length ? `<div class="hm-note">${icon('check', 'sm')}Nothing needs your action right now.</div>` : ''}${tq.length ? `<table class="tbl compact no-pg hp-tbl hm-ttbl"><thead><tr><th>Item</th><th>Current step</th><th>Responsible</th><th style="text-align:right">Waiting</th><th>Required action</th></tr></thead><tbody>${tq.map(t => { const o = t.obj; const I = taskInfo(t);
-      return `<tr class="click" ${goAttr(t.kind === 'watch' ? (t.type === 'Asset' ? 'asset' : 'module') : taskTarget(t), o.id)} tabindex="0"><td><div class="cell-title">${t.type === 'Asset' ? `<span class="type-ico">${icon('layers', 'sm')}</span>` : modThumb(o, latest(o))}<div><div class="title">${esc(t.title)}</div><span class="muted hm-sub">${esc(t.type)} · ${esc(I.typeName)} · v${latest(o).v}</span></div></div></td><td><span class="hm-step">${t.step ? fnBadge(t.step.fn, 'sm') : ''}${esc(I.step)}</span></td><td class="hm-resp">${esc(I.responsible)}</td><td class="num nw" style="text-align:right"><span class="k-dot ${PRIO_TONE[I.priority]}" title="${I.priority} priority"></span> ${fmtDur(I.wait)}</td><td><span class="hm-act ${t.kind}">${esc(I.action)}</span></td></tr>`; }).map((r, i) => tq[i].kind === 'watch' && (i === 0 || tq[i - 1].kind !== 'watch') ? `<tr class="hm-div"><td colspan="5">${fnInfo(u.fn).reviews ? 'Also in ' + esc(u.fn) + ' review' : 'Your team’s items with reviewers'}</td></tr>` + r : r).join('')}</tbody></table>` : `<div class="empty" style="padding:22px"><p>Nothing needs your action. ${can(u, 'page_library') ? 'Browse the Approved Library for reusable content.' : ''}</p></div>`}</section>`;
-  // Pipeline: Draft → In Review → Amendment → Approved → Expiring
-  const stages = [['Draft', mDraft.length, 'dim', 'open', 'file'], ['In Review', mIn.length, 'warn', 'In Review', 'shieldcheck'], ['Amend&shy;ment', mAmend.length, 'warn', 'Amendment Requested', 'undo'], ['Approved', mLive.length, 'ok', 'live', 'check'], ['Expiring', mExp.length, mExp.length ? 'bad' : 'dim', 'Expiring', 'clock']];
-  const inFn = reviewFuncs().map(fn => [fn, mIn.filter(m => curStep(m).fn === fn).length]);
-  const pipe = `<section class="panel hp span4"><div class="panel-head"><h3>Approval pipeline</h3><span class="grow"></span><span class="muted" style="font-size:12px">Modules · ${esc(sc.label)}</span></div><div class="panel-body">
-    <div class="pipe5">${stages.map(s => `<button class="p5 ${s[2]}" ${goAttr('modules', null, ` data-mstat="${s[3]}"`)} aria-label="${s[0].replace('&shy;', '')}: ${s[1]}"><span class="p5-i">${icon(s[4], 'sm')}</span><b>${s[1]}</b><span>${s[0]}</span></button>`).join('')}</div>
-    <div class="hp-sub"><span class="section-title">In review now, by step</span>${hbars(inFn.map(([fn, n]) => [`${fnBadge(fn, 'sm')}${esc(fn)}`, n]), Math.max(1, ...inFn.map(x => x[1])), 's1')}</div></div></section>`;
-  // Approval performance (last 90 days)
-  const P = approvalStats(allCycles().filter(c => (c.end || Date.now()) > Date.now() - 90 * DAY && sc.f(c.obj)));
-  const slowFn = [...P.fnAvg].sort((x, y) => y.avg - x.avg)[0];
-  const outcome = [['Approved', P.done.length, 'ok'], ['Rejected', P.rej.length, 'bad'], ['In progress', P.n - P.closed, 'warn']];
-  const perf = `<section class="panel hp span8"><div class="panel-head"><h3>Approval performance</h3><span class="grow"></span><span class="muted" style="font-size:12px">Last 90 days · ${P.n} cycles</span>${can(u, 'view_reports') ? goBtn('Reports', 'reports', null, 'ghost sm') : ''}</div><div class="panel-body hm-perf">
-    <div class="hm-rates"><div><span>Average approval time</span><b>${durDays(P.avgApproval)}<small>days</small></b></div><div><span>Approval rate</span><b>${Math.round(100 * P.approvalRate)}<small>%</small></b></div><div><span>Amendment rate</span><b>${Math.round(100 * P.amendmentRate)}<small>%</small></b></div><div><span>Rejection rate</span><b>${Math.round(100 * P.rejectionRate)}<small>%</small></b></div>
-      <div class="hm-out">${donut(outcome, { unit: 'cycles' })}</div></div>
-    <div class="hm-fn"><span class="section-title">Average review time per step · days</span>${hbars(P.fnAvg.map(x => [`${fnBadge(x.fn, 'sm')}${esc(x.fn)}`, x.avg, slowFn && x.fn === slowFn.fn ? 'o2' : 'o1']), Math.max(1, ...P.fnAvg.map(x => x.avg)), '', ms => durDays(ms) + 'd')}
-      ${P.slow ? `<div class="hm-slow">${icon('alert', 'sm')}<span>Slowest step: <b>${esc(P.slow.fn)} ${esc(levelName(P.slow.level))} ${P.slow.level === 'Lead' ? 'approval' : 'review'}</b> · ${durDays(P.slow.avg)} days on average</span></div>` : ''}</div></div></section>`;
-  // Recent activity
-  const ACT_RX = /submitted|approv|review|comment|reply|amend|reject|created|version|resolved|uploaded|replaced|withdraw|reinstat/i;
-  const acts = [...S.audit].filter(e => !e.auto && ['Module', 'Asset'].includes(e.objType) && ACT_RX.test(e.action) && (sc.f(objById(e.objType, e.objId) || {}) || e.user === u.id)).sort((x, y) => y.ts - x.ts).slice(0, 6);
-  const actBox = `<section class="panel hp span4"><div class="panel-head"><h3>Recent activity</h3><span class="grow"></span>${can(u, 'view_audit') ? goBtn('Audit trail', 'audit', null, 'ghost sm') : ''}</div><div class="hp-acts">${acts.length ? acts.map(e => { const x = user(e.user); const o = objById(e.objType, e.objId); return `<button class="hp-act hm-ev" ${goAttr(e.objType === 'Asset' ? 'asset' : 'module', e.objId)}>${avatar(x, 'sm')}<span class="body"><span><b>${esc(x.name)}</b> <span class="ink2">${esc(e.action.toLowerCase())}</span></span><span class="hm-evo">${esc(o ? nameOf(o) : e.objId)} <span class="mono muted">v${e.version}</span></span><span class="muted">${fmtDT(e.ts)}</span></span><span class="k-dot ${toneOf(e.action) || 'dim'}"></span></button>`; }).join('') : '<p class="muted" style="padding:16px">No activity yet.</p>'}</div></section>`;
-  // Recently approved (modules and assets) — opens the approved version
-  const recent = [...mods.filter(m => live(m) && !m.archived).map(m => ['Module', m]), ...assets.filter(x => live(x)).map(x => ['Asset', x])].sort((x, y) => live(y[1]).approvedAt - live(x[1]).approvedAt).slice(0, 6);
-  const recentBox = `<section class="panel hp span8"><div class="panel-head"><h3>Recently approved</h3><span class="grow"></span>${can(u, 'page_library') ? goBtn('Approved Library', 'library', null, 'ghost sm') : ''}</div>${recent.length ? `<table class="tbl compact no-pg hp-tbl"><thead><tr><th>Name</th><th>Type</th><th>Product</th><th>Country</th><th>Version</th><th style="text-align:right">Approved</th></tr></thead><tbody>${recent.map(([k, o]) => { const lv = live(o); const mt = k === 'Module' ? metaOf(o, lv) : o;
-    return `<tr class="click" ${goAttr(k === 'Asset' ? 'asset' : 'module', o.id, ` data-v="${lv.v}"`)} tabindex="0"><td><div class="cell-title">${k === 'Asset' ? `<span class="type-ico">${icon('layers', 'sm')}</span>` : modThumb(o, lv)}<div><div class="title">${esc(k === 'Module' ? mt.title || o.title : o.name)}</div><span class="mono muted">${o.id}</span></div></div></td><td style="font-size:12.5px">${esc(k === 'Module' ? mtype(mt.type || o.type).name : mat(o.type).name)}<br><span class="muted">${k}</span></td><td>${tagList(mt.products || o.products, 'p')}</td><td>${tagList(mt.markets || o.markets)}</td><td>${vtag(lv.v)}</td><td class="num nw" style="text-align:right">${fmtD(lv.approvedAt)}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty"><p>Nothing approved yet.</p></div>'}</section>`;
-  // Expiry / review watch — most urgent first
-  const watch = []; mods.filter(m => live(m) && !m.archived).forEach(m => { const mt = liveMeta(m); const de = mt.expiry ? daysTo(mt.expiry) : null, dr = mt.reviewDate ? daysTo(mt.reviewDate) : null;
-    if (de != null && de < 0) watch.push([m, 'Expired', de, mt.expiry, 'bad']); else if (de != null && de <= 90) watch.push([m, 'Expiring', de, mt.expiry, de <= S.settings.expiryWarnDays ? 'warn' : '']);
-    if (dr != null && dr <= 60 && !(de != null && de < 0)) watch.push([m, 'Review due', dr, mt.reviewDate, dr < 0 ? 'bad' : dr <= 30 ? 'warn' : '']); });
-  watch.sort((x, y) => x[2] - y[2]);
-  const wc = k => watch.filter(w => w[1] === k).length;
-  const dueBox = `<section class="panel hp span4"><div class="panel-head"><h3>Expiry & review watch</h3><span class="grow"></span>${can(u, 'view_audit') ? goBtn('Lifecycle', 'lifecycle', null, 'ghost sm') : ''}</div><div class="hm-wc"><span class="bad"><b>${wc('Expired')}</b>Expired</span><span class="warn"><b>${wc('Expiring')}</b>Expiring ≤ 90d</span><span><b>${wc('Review due')}</b>Review ≤ 60d</span></div>${watch.length ? watch.slice(0, 6).map(([m, k, d, at, tone]) => `<button class="hp-row" ${goAttr('module', m.id, ' data-tab="lifecycle"')}><span class="hp-date ${tone}"><b>${Math.abs(d)}</b>${d < 0 ? 'days late' : 'days'}</span><span class="body"><b>${esc(liveMeta(m).title || m.title)}</b><span>${k} · ${fmtD(at)} · v${live(m).v}</span></span><span class="chip ${tone || 'plain'}">${k}</span></button>`).join('') : '<div class="empty" style="padding:22px"><p>Nothing expiring or due for review in the next 90 days.</p></div>'}</section>`;
-  // Content overview
-  const ov = (title, body) => `<div class="hm-ov"><span class="section-title">${title}</span>${body}</div>`;
-  const tRows = S.moduleTypes.map(t => [esc(t.name), mods.filter(m => m.type === t.id).length, isMediaType(t.id) ? 'o2' : 's1']).filter(r => r[1]);
-  const sRows = [['Draft', mDraft.length, 'dim'], ['In Review', mIn.length, 'warn'], ['Amendment', mAmend.length, 'warn'], ['Rejected', mods.filter(m => statusOf(m) === 'Rejected').length, 'bad'], ['Approved', mLive.length, 'ok'], ['Review required', mods.filter(m => libraryStatus(m) === 'Review Required').length, 'bad']];
-  const pair = (rows) => { const mx = Math.max(1, ...rows.flatMap(r => [r[1], r[2]])); return `<div class="hm-pair">${rows.map(r => `<div class="hm-pr"><span class="hb-l">${esc(r[0])}</span><span class="hm-pb"><span class="hb-track"><span class="hb-bar o1" style="width:${100 * r[1] / mx}%" data-tip="${esc(r[0])} · ${r[1]} modules"></span></span>${seeAssets ? `<span class="hb-track"><span class="hb-bar o2" style="width:${100 * r[2] / mx}%" data-tip="${esc(r[0])} · ${r[2]} assets"></span></span>` : ''}</span><b class="hb-v">${r[1]}${seeAssets ? `<span class="muted"> · ${r[2]}</span>` : ''}</b></div>`).join('')}</div>`; };
-  const legend = seeAssets ? `<div class="legend sm"><span><i class="o1"></i>Modules</span><span><i class="o2"></i>Assets</span></div>` : '';
-  const reuse = {}; assets.forEach(x => uniq(x.blocks.filter(b => b.kind === 'module').map(b => b.moduleId)).forEach(id => { reuse[id] = (reuse[id] || 0) + 1; }));
-  const top = Object.entries(reuse).filter(([id]) => modById(id)).sort((x, y) => y[1] - x[1]).slice(0, 5);
-  const statusBar = `<div class="sbar" role="img" aria-label="${sRows.map(s => s[0] + ' ' + s[1]).join(', ')}">${sRows.filter(s => s[1]).map(s => `<span class="${s[2]}" style="flex:${s[1]}" data-tip="${s[0]} · ${s[1]}"></span>`).join('')}</div>${hbars(sRows, Math.max(1, ...sRows.map(s => s[1])), '')}`;
-  const overview = `<section class="panel hp span12"><div class="panel-head"><h3>Content overview</h3><span class="grow"></span><span class="muted" style="font-size:12px">${esc(sc.label)} · ${mods.length} modules${seeAssets ? ' · ' + assets.length + ' assets' : ''}</span></div><div class="hm-ovg">
-    ${ov('Modules by type', hbars(tRows, Math.max(1, ...tRows.map(r => r[1])), ''))}
-    ${ov('Modules by status', statusBar)}
-    ${ov('Content by product' + legend, pair(S.products.filter(p => p.active).map(p => [p.name, mods.filter(m => m.products.includes(p.id)).length, assets.filter(x => x.products.includes(p.id)).length])))}
-    ${ov('Content by country' + legend, pair(S.markets.filter(x => x.active).map(x => [x.name, mods.filter(m => m.markets.includes(x.id)).length, assets.filter(y => y.markets.includes(x.id)).length]).filter(r => r[1] || r[2])))}
-    ${seeAssets ? ov('Assets by type', hbars(S.materialTypes.map(t => [esc(t.name), assets.filter(x => x.type === t.id).length, 'o2']).filter(r => r[1]), Math.max(1, ...S.materialTypes.map(t => assets.filter(x => x.type === t.id).length)), '')) : ''}
-    ${seeAssets ? ov('Most reused modules · assets using each', top.length ? hbars(top.map(([id, n]) => [`<button class="linklike" ${goAttr('module', id)}>${esc(modById(id).title)}</button>`, n, 's1']), Math.max(1, ...top.map(x => x[1])), '') : '<p class="muted">No modules are used in assets yet.</p>') : ''}
-  </div></section>`;
+    const sec = [
+      [mods.length + ' modules', mods.filter(m => isMediaType(m.type)).length + ' media & documents', goAttr('modules', null, ' data-mstat=""')],
+      [mDraft.length + ' draft' + (mDraft.length === 1 ? '' : 's'), 'not yet submitted', goAttr('modules', null, ' data-mstat="open"')],
+      seeAssets && [aIn.length + ' asset' + (aIn.length === 1 ? '' : 's') + ' in review', assets.length + ' in total', goAttr('assets', null, ' data-setf="astat=In Review"')],
+      seeAssets && [assets.filter(x => live(x)).length + ' approved assets', 'with a live version', goAttr('assets', null, ' data-setf="astat=Approved"')],
+      (admin || can(u, ['manage_workflows', 'page_admin'])) && [S.workflows.filter(w => !w.hidden && w.active !== false).length + ' active workflows', '', goAttr('workflows')],
+      (admin || can(u, ['manage_users', 'page_admin'])) && [S.users.filter(x => x.status === 'Active').length + ' active users', S.functions.filter(f => f.active).length + ' functions', goAttr('users')]
+    ].filter(Boolean);
+    return `<section class="hx-kpis" aria-label="Key metrics" style="--n:${list.length}">${list.join('')}</section><nav class="hx-sec" aria-label="More figures">${sec.map(s => `<button type="button" ${s[2]}><b>${s[0]}</b>${s[1] ? `<span>${s[1]}</span>` : ''}</button>`).join('')}</nav>`; });
+
+  /* 2 · My Tasks */
+  const taskBox = homeSafe('My Tasks', 'span8', () => {
+    const byG = TASK_GROUPS.map(g => [g[0], g[1], tasks.filter(t => taskGroup(t) === g[0]).length]);
+    const watching = tasks.length < 4 && !admin ? [...mods, ...assets].filter(o => o.review && !tasks.some(t => t.obj === o) && (fnInfo(u.fn).reviews ? curStep(o).fn === u.fn : sameTeam(u, o))).map(o => ({ kind: 'watch', obj: o, type: kindOf(o), title: nameOf(o), id: o.id, step: curStep(o), since: o.review.stepStartedAt })) : [];
+    const PR = { High: 0, Medium: 1, Normal: 2 };
+    const tq = [...tasks].sort((x, y) => PR[taskInfo(x).priority] - PR[taskInfo(y).priority] || x.since - y.since).slice(0, 6).concat(watching.slice(0, Math.max(0, 4 - tasks.length)));
+    const row = t => { const o = t.obj; const I = taskInfo(t); const nm = t.title;
+      return `<tr class="click" ${goAttr(t.kind === 'watch' ? (t.type === 'Asset' ? 'asset' : 'module') : taskTarget(t), o.id)} tabindex="0"><td><div class="hx-item">${t.type === 'Asset' ? `<span class="type-ico">${icon('layers', 'sm')}</span>` : modThumb(o, latest(o))}<span class="hx-it"><b title="${esc(nm)}">${esc(nm)}</b><span>${esc(o.id)} · ${esc(I.typeName)} · v${latest(o).v}</span></span></div></td><td><span class="hx-step" title="${esc(I.step)}">${t.step ? fnBadge(t.step.fn, 'sm') : ''}<span>${esc(I.step)}</span></span></td><td class="hx-resp" title="${esc(I.responsible)}">${esc(I.responsible)}</td><td class="num"><span class="hx-wait ${PRIO_TONE[I.priority]}" title="${I.priority} priority">${fmtDur(I.wait)}</span></td><td><span class="hx-act ${t.kind}">${esc(I.action)}</span></td></tr>`; };
+    const rows = tq.map((t, i) => (t.kind === 'watch' && (i === 0 || tq[i - 1].kind !== 'watch') ? `<tr class="hx-div"><td colspan="5">${fnInfo(u.fn).reviews ? 'Also in ' + esc(u.fn) + ' review' : 'Your team’s items with reviewers'}</td></tr>` : '') + row(t)).join('');
+    return `<section class="panel hx-p span8" aria-labelledby="hx-t-tasks"><div class="hx-ph"><h3 id="hx-t-tasks">My Tasks</h3><span class="hx-n">${tasks.length}</span><span class="grow"></span>${can(u, 'page_tasks') ? `<button class="hx-link" ${goAttr('tasks')}>View all ${icon('chevron', 'sm')}</button>` : ''}</div>
+      <div class="hx-seg" role="group" aria-label="Tasks by type">${byG.map(g => `<button type="button" class="${g[2] ? '' : 'zero'}" ${goAttr('tasks', null, ` data-tab="${g[0]}"`)}><b>${g[2]}</b>${esc(g[1])}</button>`).join('')}</div>
+      ${!tasks.length && watching.length ? `<div class="hx-note">${icon('check', 'sm')}Nothing needs your action right now.</div>` : ''}
+      ${tq.length ? `<div class="hx-tw"><table class="hx-tbl hx-tasks"><colgroup><col><col style="width:23%"><col style="width:13%"><col style="width:88px"><col style="width:140px"></colgroup><thead><tr><th>Item</th><th>Current step</th><th>Responsible</th><th class="num">Waiting</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="hx-empty">${icon('check', 'sm')}<span>Nothing needs your action.${can(u, 'page_library') ? ' Browse the Approved Library for reusable content.' : ''}</span></div>`}
+      ${tasks.length > 6 ? `<div class="hx-more">${tasks.length - 6} more in <button class="hx-link" ${goAttr('tasks')}>My Tasks</button></div>` : ''}</section>`; });
+
+  /* 3 · Pipeline: where every module is now (expiring is shown apart from approved, so the bar adds up). */
+  const pipe = homeSafe('Approval pipeline', 'span4', () => {
+    const live2 = mLive.length - mExp.length; const st = [['Draft', mDraft.length, 'dim', 'open'], ['In review', mIn.length, 's1', 'In Review'], ['Amendment', mAmend.length, 'warn', 'Amendment Requested'], ['Approved', live2, 'ok', 'live'], ['Approved · expiring', mExp.length, 'bad', 'Expiring']];
+    const tot = st.reduce((s, x) => s + x[1], 0); const inFn = reviewFuncs().map(fn => [fn, mIn.filter(m => curStep(m).fn === fn).length]); const mx = Math.max(1, ...inFn.map(x => x[1]));
+    return `<section class="panel hx-p span4" aria-labelledby="hx-t-pipe"><div class="hx-ph"><h3 id="hx-t-pipe">Approval pipeline</h3><span class="grow"></span><span class="hx-ctx">Modules · ${esc(sc.label)}</span></div><div class="hx-pb">
+      <div class="hx-stack" role="img" aria-label="${esc(st.map(s => s[0] + ' ' + s[1]).join(', '))}">${tot ? st.filter(s => s[1]).map(s => `<span class="mk-${s[2]}" style="flex:${s[1]}" data-tip="${esc(s[0] + ' · ' + s[1] + ' (' + Math.round(100 * s[1] / tot) + '%)')}"></span>`).join('') : '<span class="mk-none" style="flex:1"></span>'}</div>
+      <div class="hx-stages">${st.map(s => `<button type="button" ${goAttr('modules', null, ` data-mstat="${s[3]}"`)}><i class="mk-${s[2]}"></i><span>${s[0]}</span><b>${s[1]}</b><em>${tot ? Math.round(100 * s[1] / tot) : 0}%</em></button>`).join('')}</div>
+      <div class="hx-sub"><span class="hx-cap">In review now, by step</span>${inFn.length ? inFn.map(([fn, n]) => `<div class="hx-bar"><span class="hx-bl">${fnBadge(fn, 'sm')}${esc(fn)}</span><span class="hx-tr"><span class="mk-s1" style="width:${100 * n / mx}%" data-tip="${esc(fn + ' · ' + n + ' in review')}"></span></span><b>${n}</b></div>`).join('') : '<p class="hx-muted">No review functions configured.</p>'}</div></div></section>`; });
+
+  /* 4 · Approval performance (last 90 days) */
+  const perf = homeSafe('Approval performance', 'span8', () => { if (!P) throw new Error('Approval statistics unavailable');
+    const slowFn = [...P.fnAvg].sort((x, y) => y.avg - x.avg)[0]; const inProg = P.n - P.closed; const wk = weeklyApprovals(allCycles().filter(c => sc.f(c.obj)));
+    const S4 = (l, v, unit, sub) => `<div class="hx-st"><span>${l}</span><b>${v}<small>${unit}</small></b><em>${sub}</em></div>`;
+    const mxf = Math.max(1, ...P.fnAvg.map(x => x.avg));
+    return `<section class="panel hx-p span8" aria-labelledby="hx-t-perf"><div class="hx-ph"><h3 id="hx-t-perf">Approval performance</h3><span class="grow"></span><span class="hx-ctx">Last 90 days · ${P.n} cycle${P.n === 1 ? '' : 's'}</span>${can(u, 'view_reports') ? `<button class="hx-link" ${goAttr('reports')}>Reports ${icon('chevron', 'sm')}</button>` : ''}</div>
+      <div class="hx-stats">${S4('Average approval time', P.done.length ? durDays(P.avgApproval) : '—', P.done.length ? ' days' : '', P.done.length + ' approved cycle' + (P.done.length === 1 ? '' : 's'))}${S4('Approval rate', Math.round(100 * P.approvalRate), '%', P.closed + ' closed cycles')}${S4('Amendment rate', Math.round(100 * P.amendmentRate), '%', P.amendCycles + ' of ' + P.n + ' cycles')}${S4('Rejection rate', Math.round(100 * P.rejectionRate), '%', P.rej.length + ' rejected')}</div>
+      <div class="hx-out"><div class="hx-stack thin" role="img" aria-label="${esc('Outcomes: ' + P.done.length + ' approved, ' + P.rej.length + ' rejected, ' + inProg + ' in progress')}">${P.n ? [['Approved', P.done.length, 'ok'], ['Rejected', P.rej.length, 'bad'], ['In progress', inProg, 'warn']].filter(x => x[1]).map(x => `<span class="mk-${x[2]}" style="flex:${x[1]}" data-tip="${x[0]} · ${x[1]}"></span>`).join('') : '<span class="mk-none" style="flex:1"></span>'}</div><div class="hx-leg"><span><i class="mk-ok"></i>Approved <b>${P.done.length}</b></span><span><i class="mk-bad"></i>Rejected <b>${P.rej.length}</b></span><span><i class="mk-warn"></i>In progress <b>${inProg}</b></span></div></div>
+      <div class="hx-perf"><div><span class="hx-cap">Approvals per week · last 12 weeks</span>${miniCols(wk)}</div>
+      <div><span class="hx-cap">Average review time per step · days</span>${P.fnAvg.length ? P.fnAvg.map(x => `<div class="hx-bar"><span class="hx-bl">${fnBadge(x.fn, 'sm')}${esc(x.fn)}</span><span class="hx-tr"><span class="${slowFn && x.fn === slowFn.fn ? 'mk-o2' : 'mk-o1'}" style="width:${100 * x.avg / mxf}%" data-tip="${esc(x.fn + ' · ' + durDays(x.avg) + ' days on average · ' + x.n + ' steps')}"></span></span><b>${durDays(x.avg)}d</b></div>`).join('') : '<p class="hx-muted">No completed review steps in the last 90 days.</p>'}
+      ${P.slow ? `<p class="hx-flag">${icon('alert', 'sm')}<span>Slowest step: <b>${esc(P.slow.fn)} ${esc(levelName(P.slow.level))} ${P.slow.level === 'Lead' ? 'approval' : 'review'}</b> · ${durDays(P.slow.avg)} days on average</span></p>` : ''}</div></div></section>`; });
+
+  /* 5 · Recent activity */
+  const actBox = homeSafe('Recent activity', 'span4', () => {
+    const ACT_RX = /submitted|approv|review|comment|reply|amend|reject|created|version|resolved|uploaded|replaced|withdraw|reinstat/i;
+    const acts = [...S.audit].filter(e => !e.auto && ['Module', 'Asset'].includes(e.objType) && ACT_RX.test(e.action) && (sc.f(objById(e.objType, e.objId) || {}) || e.user === u.id)).sort((x, y) => y.ts - x.ts).slice(0, 7);
+    return `<section class="panel hx-p span4" aria-labelledby="hx-t-act"><div class="hx-ph"><h3 id="hx-t-act">Recent activity</h3><span class="grow"></span>${can(u, 'view_audit') ? `<button class="hx-link" ${goAttr('audit')}>Audit trail ${icon('chevron', 'sm')}</button>` : ''}</div><div class="hx-list">${acts.length ? acts.map(e => { const x = user(e.user); const o = objById(e.objType, e.objId); const on = o ? nameOf(o) : e.objId;
+      return `<button type="button" class="hx-ev" ${goAttr(e.objType === 'Asset' ? 'asset' : 'module', e.objId)}>${avatar(x, 'sm')}<span class="hx-evb"><span class="hx-evt"><b>${esc(x.name)}</b> ${esc(e.action.toLowerCase())}</span><span class="hx-evo" title="${esc(on)}">${esc(on)} · v${e.version}</span></span><time datetime="${new Date(e.ts).toISOString()}" title="${esc(fmtDT(e.ts))}">${ago(e.ts)}</time></button>`; }).join('') : `<div class="hx-empty"><span>No activity yet.</span></div>`}</div></section>`; });
+
+  /* 6 · Recently approved */
+  const recentBox = homeSafe('Recently approved', 'span8', () => {
+    const recent = [...mods.filter(m => live(m) && !m.archived).map(m => ['Module', m]), ...assets.filter(x => live(x)).map(x => ['Asset', x])].sort((x, y) => live(y[1]).approvedAt - live(x[1]).approvedAt).slice(0, 6);
+    const txt = (ids, f) => (ids || []).map(f).join(', ') || '—';
+    return `<section class="panel hx-p span8" aria-labelledby="hx-t-rec"><div class="hx-ph"><h3 id="hx-t-rec">Recently approved</h3><span class="grow"></span>${can(u, 'page_library') ? `<button class="hx-link" ${goAttr('library')}>Approved Library ${icon('chevron', 'sm')}</button>` : ''}</div>${recent.length ? `<div class="hx-tw"><table class="hx-tbl"><colgroup><col><col style="width:17%"><col style="width:13%"><col style="width:14%"><col style="width:56px"><col style="width:92px"></colgroup><thead><tr><th>Name</th><th>Type</th><th>Product</th><th>Countries</th><th>Ver.</th><th class="num">Approved</th></tr></thead><tbody>${recent.map(([k, o]) => { const lv = live(o); const mt = k === 'Module' ? metaOf(o, lv) : o; const nm = k === 'Module' ? mt.title || o.title : o.name; const pr = txt(mt.products || o.products, id => product(id).name); const ct = txt(mt.markets || o.markets, id => id);
+      return `<tr class="click" ${goAttr(k === 'Asset' ? 'asset' : 'module', o.id, ` data-v="${lv.v}"`)} tabindex="0"><td><div class="hx-item">${k === 'Asset' ? `<span class="type-ico">${icon('layers', 'sm')}</span>` : modThumb(o, lv)}<span class="hx-it"><b title="${esc(nm)}">${esc(nm)}</b><span>${o.id}</span></span></div></td><td><span class="hx-2"><span>${esc(k === 'Module' ? mtype(mt.type || o.type).name : mat(o.type).name)}</span><span class="hx-muted">${k}</span></span></td><td class="hx-cut" title="${esc(pr)}">${esc(pr)}</td><td class="hx-cut mono" title="${esc(ct)}">${esc(ct)}</td><td class="mono">v${lv.v}</td><td class="num" title="${esc(fmtD(lv.approvedAt))}">${fmtD(lv.approvedAt).replace(/ \d{4}$/, m => new Date(lv.approvedAt).getFullYear() === now.getFullYear() ? '' : m)}</td></tr>`; }).join('')}</tbody></table></div>` : `<div class="hx-empty"><span>Nothing approved yet.</span></div>`}</section>`; });
+
+  /* 7 · Expiry & review watch — most urgent first */
+  const dueBox = homeSafe('Expiry & review watch', 'span4', () => {
+    const watch = []; mods.filter(m => live(m) && !m.archived).forEach(m => { const mt = liveMeta(m); const de = mt.expiry ? daysTo(mt.expiry) : null, dr = mt.reviewDate ? daysTo(mt.reviewDate) : null;
+      if (de != null && de < 0) watch.push([m, 'Expired', de, mt.expiry, 'bad']); else if (de != null && de <= 90) watch.push([m, 'Expiring', de, mt.expiry, de <= S.settings.expiryWarnDays ? 'warn' : '']);
+      if (dr != null && dr <= 60 && !(de != null && de < 0)) watch.push([m, 'Review due', dr, mt.reviewDate, dr < 0 ? 'bad' : dr <= 30 ? 'warn' : '']); });
+    watch.sort((x, y) => x[2] - y[2]); const wc = k => watch.filter(w => w[1] === k).length;
+    return `<section class="panel hx-p span4" aria-labelledby="hx-t-due"><div class="hx-ph"><h3 id="hx-t-due">Expiry & review watch</h3><span class="grow"></span>${can(u, 'view_audit') ? `<button class="hx-link" ${goAttr('lifecycle')}>Lifecycle ${icon('chevron', 'sm')}</button>` : ''}</div>
+      <div class="hx-wc"><div class="${wc('Expired') ? 'bad' : ''}"><b>${wc('Expired')}</b><span>Expired</span></div><div class="${wc('Expiring') ? 'warn' : ''}"><b>${wc('Expiring')}</b><span>Expiring ≤ 90d</span></div><div><b>${wc('Review due')}</b><span>Review ≤ 60d</span></div></div>
+      <div class="hx-list">${watch.length ? watch.slice(0, 5).map(([m, k, d, at, tone]) => { const nm = liveMeta(m).title || m.title; return `<button type="button" class="hx-due" ${goAttr('module', m.id, ' data-tab="lifecycle"')}><span class="hx-dd ${tone}"><b>${Math.abs(d)}</b>${d < 0 ? 'd late' : 'd'}</span><span class="hx-evb"><b title="${esc(nm)}">${esc(nm)}</b><span>${fmtD(at)} · v${live(m).v}</span></span><span class="hx-tag ${tone}">${k}</span></button>`; }).join('') : `<div class="hx-empty">${icon('check', 'sm')}<span>Nothing expiring or due for review in the next 90 days.</span></div>`}</div>
+      ${watch.length > 5 ? `<div class="hx-more">${watch.length - 5} more in <button class="hx-link" ${goAttr('lifecycle')}>Lifecycle</button></div>` : ''}</section>`; });
+
+  /* 8 · Content overview */
+  const overview = homeSafe('Content overview', 'span12', () => {
+    const ov = (title, body, leg) => `<div class="hx-ov"><div class="hx-ovh"><span class="hx-cap">${title}</span>${leg || ''}</div>${body}</div>`;
+    const bars = (rows, tone, unit) => { const mx = Math.max(1, ...rows.map(r => r[1])); return rows.length ? rows.map(r => `<div class="hx-bar"><span class="hx-bl" title="${esc(r[0])}">${r[3] || esc(r[0])}</span><span class="hx-tr"><span class="mk-${r[2] || tone}" style="width:${100 * r[1] / mx}%" data-tip="${esc(r[0] + ' · ' + r[1] + ' ' + unit)}"></span></span><b>${r[1]}</b></div>`).join('') : '<p class="hx-muted">No content yet.</p>'; };
+    const pair = rows => { const mx = Math.max(1, ...rows.flatMap(r => [r[1], r[2]])); return rows.length ? rows.map(r => `<div class="hx-bar pair"><span class="hx-bl" title="${esc(r[0])}">${esc(r[0])}</span><span class="hx-tr2"><span class="hx-tr"><span class="mk-o1" style="width:${100 * r[1] / mx}%" data-tip="${esc(r[0] + ' · ' + r[1] + ' modules')}"></span></span>${seeAssets ? `<span class="hx-tr"><span class="mk-o2" style="width:${100 * r[2] / mx}%" data-tip="${esc(r[0] + ' · ' + r[2] + ' assets')}"></span></span>` : ''}</span><b>${r[1]}${seeAssets ? `<span class="hx-muted"> · ${r[2]}</span>` : ''}</b></div>`).join('') : '<p class="hx-muted">No content yet.</p>'; };
+    const leg = seeAssets ? `<span class="hx-leg sm"><span><i class="mk-o1"></i>Modules</span><span><i class="mk-o2"></i>Assets</span></span>` : '';
+    const sRows = [['Draft', mDraft.length, 'dim'], ['In review', mIn.length, 's1'], ['Amendment', mAmend.length, 'warn'], ['Rejected', mods.filter(m => statusOf(m) === 'Rejected').length, 'bad'], ['Approved', mLive.length, 'ok'], ['Review required', mods.filter(m => libraryStatus(m) === 'Review Required').length, 'bad']];
+    const reuse = {}; assets.forEach(x => uniq(x.blocks.filter(b => b.kind === 'module').map(b => b.moduleId)).forEach(id => { reuse[id] = (reuse[id] || 0) + 1; }));
+    const top = Object.entries(reuse).filter(([id]) => modById(id)).sort((x, y) => y[1] - x[1]).slice(0, 5);
+    return `<section class="panel hx-p span12" aria-labelledby="hx-t-ov"><div class="hx-ph"><h3 id="hx-t-ov">Content overview</h3><span class="grow"></span><span class="hx-ctx">${esc(sc.label)} · ${mods.length} modules${seeAssets ? ' · ' + assets.length + ' assets' : ''}</span></div><div class="hx-ovg">
+      ${ov('Modules by status', bars(sRows, 's1', 'modules'))}
+      ${ov('Modules by type', bars(S.moduleTypes.map(t => [t.name, mods.filter(m => m.type === t.id).length]).filter(r => r[1]).sort((x, y) => y[1] - x[1]), 's1', 'modules'))}
+      ${ov('Content by product', pair(S.products.filter(p => p.active).map(p => [p.name, mods.filter(m => m.products.includes(p.id)).length, assets.filter(x => x.products.includes(p.id)).length])), leg)}
+      ${ov('Content by country', pair(S.markets.filter(x => x.active).map(x => [x.name, mods.filter(m => m.markets.includes(x.id)).length, assets.filter(y => y.markets.includes(x.id)).length]).filter(r => r[1] || r[2])), leg)}
+      ${seeAssets ? ov('Assets by material type', bars(S.materialTypes.map(t => [t.name, assets.filter(x => x.type === t.id).length]).filter(r => r[1]).sort((x, y) => y[1] - x[1]), 'o2', 'assets')) : ''}
+      ${seeAssets ? ov('Most reused modules · assets using each', top.length ? bars(top.map(([id, n]) => [modById(id).title, n, 's1', `<button type="button" class="linklike" ${goAttr('module', id)}>${esc(modById(id).title)}</button>`]), 's1', 'assets') : '<p class="hx-muted">No modules are used in assets yet.</p>') : ''}
+    </div></section>`; });
+
   const qa = [canCreateModule(u) && can(u, 'page_modules') && goBtn('Create module', 'module-new', null, 'primary', 'plus'), canCreateAsset(u) && seeAssets && btn('Create asset', 'asset-new', '', '', 'layers'), can(u, 'page_library') && goBtn('Approved Library', 'library', null, '', 'book')].filter(Boolean).join('');
-  return `<div class="home hp-home hm">
-  <header class="hp-head"><div><span class="eyebrow">${esc(today)}</span><h1>Welcome, ${esc(first)}</h1><div class="row ink2" style="gap:8px;font-size:13.5px">${esc(roleLabel(u))} <span class="muted">·</span> ${icon(a.final ? 'key' : 'eye', 'sm')} ${esc(a.short)} <span class="muted">·</span> <span class="muted">${esc(sc.label)}</span></div></div><div class="row hp-qa">${qa}</div></header>
-  <div class="hm-strip" style="--n:${metrics.length}">${metrics.join('')}</div>
-  <div class="hp-grid">${taskBox}${pipe}${perf}${dueBox}${recentBox}${actBox}${overview}</div></div>`;
+  return `<div class="home hx">
+  <header class="hx-head"><div><h1>${hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening'}, ${esc(first)}</h1><p class="hx-meta"><span>${esc(roleLabel(u))}</span><span>${icon(a.final ? 'key' : 'eye', 'sm')}${esc(a.short)}</span><span>${esc(sc.label)}</span><span>${esc(today)}</span></p></div><div class="hx-qa">${qa}</div></header>
+  ${kpis}
+  <div class="hx-grid">${taskBox}${pipe}${perf}${dueBox}${recentBox}${actBox}${overview}</div></div>`;
 }
 function taskMeta(t) {
   if (t.kind === 'review') return esc(stepLabel(t.step)) + ' · waiting ' + fmtDur(Date.now() - t.since);
@@ -3425,7 +3724,7 @@ function viewModuleForm() {
   <div class="stack">${wizHead(MSTEPS, D)}
     <section class="panel"${hid(0)}><div class="panel-head"><h3>Module type</h3><span class="grow"></span>${addNew('moduletypes', 'draft:type', 'module type')}</div><div class="panel-body stack">${[['Content modules', t => (t.kind || 'content') === 'content'], ['Media & document modules', t => (t.kind || 'content') !== 'content']].map(([g, f]) => { const ts = activeOf(S.moduleTypes, D.type).filter(f); return ts.length ? `<div><span class="section-title">${g}</span><div class="type-cards" role="radiogroup" aria-label="${g}" style="margin-top:8px">${ts.map(t => `<button type="button" class="type-card ${D.type === t.id ? 'on' : ''}" data-act="d-type" data-v="${t.id}" role="radio" aria-checked="${D.type === t.id}">${typeIco(t.id)}<span><b>${esc(t.name)}</b><span>${esc(t.desc)}</span></span></button>`).join('')}</div></div>` : ''; }).join('')}${err('type')}${m && D.type !== m.type && isMediaType(D.type) !== isMediaType(m.type) ? '<span class="err">A content module cannot become a media module (or the reverse). Create a new module instead.</span>' : ''}</div></section>
     ${MEDIA_K ? `<section class="panel"${hid(1)}><div class="panel-head"><h3>${esc(kindLabel(KIND))} file</h3>${md && md.fileId ? '<span class="grow"></span><span class="chip ok has-ico">' + icon('check', 'sm') + 'Uploaded</span>' : ''}</div><div class="panel-body form">
-      ${md && md.fileId ? `${fileCard(md, `${fileActions(md, 'Draft upload')}<span class="chip ok has-ico">${icon('check', 'sm')}Uploaded</span><span class="muted mono" style="font-size:11px">${esc(md.algo)} ${esc(String(md.checksum).slice(0, 12))}…</span>`)}<div class="media-stage">${mediaView(md)}</div>` : ''}
+      ${md && md.fileId ? `${fileCard(md, `<span class="chip ok has-ico">${icon('check', 'sm')}Uploaded</span><span class="muted mono" style="font-size:11px">${esc(md.algo)} ${esc(String(md.checksum).slice(0, 12))}…</span>`)}<div class="media-stage">${filePreview(md, 'Draft upload — not yet saved')}</div>` : ''}
       <label class="upload ${E.file ? 'invalid' : ''}" for="d-file">${icon('upload')}<b>${D.mediaBusy ? 'Processing file…' : md && md.fileId ? 'Replace file' : 'Choose a file to upload'}</b><span>${esc(MEDIA_ACCEPT[KIND].map(x => x.split('/')[1].replace('svg+xml', 'svg').replace('quicktime', 'mov').toUpperCase()).join(', '))} · up to ${MEDIA_MAX_MB} MB</span><input type="file" id="d-file" accept="${MEDIA_ACCEPT[KIND].join(',')}" data-act-change="d-file" class="sr-only"></label>${err('file')}
       ${KIND === 'video' && md && md.fileId ? `<div class="fgrid"><div class="field"><span class="label">Duration</span><div class="input ro">${fmtSecs(md.duration)} <span class="muted">read from the file</span></div></div><div class="field"><label for="d-format">Format</label><input class="input" id="d-format" data-dm="format" value="${esc(md.format || '')}"></div></div>` : ''}
     </div></section>` : ''}
@@ -3535,10 +3834,10 @@ function metaKV(m, v) {
 function viewModuleOverview(m) {
   const pv = UI.route.p.v ? verOf(m, +UI.route.p.v) : null; const l = pv || latest(m); const other = pv && pv !== latest(m);
   return (other ? `<div class="banner info" style="margin-bottom:14px">${icon('book')}<div class="txt"><b>Viewing the approved version v${l.v}</b><p>Approved ${fmtD(l.approvedAt)} by ${esc(user(l.approvedBy).name)}. The latest version is v${latest(m).v} (${esc(statusOf(m))}).</p></div>${goBtn('Open latest v' + latest(m).v, 'module', m.id, 'sm')}</div>` : '') + `<div class="grid cols-main"><div class="stack"><section class="panel sheet-card"><div class="sheet-strip"><span class="mono">${m.id} · v${l.v}</span><span>${esc(mtype(m.type).name)}</span><span>${esc(productsTxt(m.products))}</span><span class="grow"></span>${chip(lifeStatus(m))}</div>
-    <div class="sheet-body">${isMediaType(m.type) ? `<div class="media-stage">${mediaView(l.media)}</div><div class="row file-row">${fileActions(l.media, m.id + ' · v' + l.v + ' · ' + l.status)}</div><p class="media-desc">${esc(l.body)}</p>${mediaRules(l.media)}` : `<p class="claim ${mtype(m.type).tone === 'headline' ? 'is-headline' : ''}">${esc(l.body)}</p>`}
+    <div class="sheet-body">${isMediaType(m.type) ? `<div class="media-stage">${filePreview(l.media, m.id + ' · v' + l.v + ' · ' + l.status)}</div><p class="media-desc">${esc(l.body)}</p>${mediaRules(l.media)}` : `<p class="claim ${mtype(m.type).tone === 'headline' ? 'is-headline' : ''}">${esc(l.body)}</p>`}
     <div class="footnotes"><span class="fn-title">References</span>${l.refs.length ? `<ol>${l.refs.map(r => { const R = refById(r); return `<li><b>${esc(R.title)}</b> <span>${esc(R.source)} · ${esc(refKind(R.kind))}</span></li>`; }).join('')}</ol>` : '<p class="muted">No references attached.</p>'}</div></div></section>
     ${validationPanel(m, 'Module')}</div>
-  <div class="stack"><section class="panel"><div class="panel-head"><h3>Details</h3></div><div class="panel-body">${metaKV(m, l)}</div></section>${isMediaType(m.type) && l.media ? `<section class="panel"><div class="panel-head"><h3>File</h3><span class="grow"></span>${fileActions(l.media, m.id + ' · v' + l.v + ' · ' + statusOf(m))}</div><div class="panel-body stack" style="gap:12px">${fileCard(l.media, vtag(l.v) + chip(statusOf(m)))}${mediaFactsKV(l.media)}</div></section>` : ''}</div></div>`;
+  <div class="stack"><section class="panel"><div class="panel-head"><h3>Details</h3></div><div class="panel-body">${metaKV(m, l)}</div></section>${isMediaType(m.type) && l.media ? `<section class="panel"><div class="panel-head"><h3>File</h3><span class="grow"></span>${fileMenu(l.media, m.id + ' · v' + l.v + ' · ' + statusOf(m))}</div><div class="panel-body stack" style="gap:12px">${fileCard(l.media, vtag(l.v) + chip(statusOf(m)))}${mediaFactsKV(l.media)}</div></section>` : ''}</div></div>`;
 }
 /* Approval progress for the current (or last) cycle */
 function wfProgress(obj) {
@@ -3625,7 +3924,7 @@ function viewVersions(obj, kind) {
 function versionModalBody(obj, kind, v) {
   const mt = metaOf(obj, v);
   return `<dl class="kv" style="grid-template-columns:120px 1fr;margin-bottom:12px"><dt>Created</dt><dd>${fmtDT(v.createdAt)} · ${esc(user(v.createdBy).name)}</dd><dt>Reason</dt><dd>${esc(v.reason || '—')}</dd><dt>Status</dt><dd>${chip(v.status)}</dd>${v.approvedAt ? `<dt>Approved</dt><dd>${fmtDT(v.approvedAt)} · ${esc(user(v.approvedBy).name)}</dd>` : ''}<dt>Products</dt><dd>${esc(productsTxt(mt.products))}</dd><dt>Countries</dt><dd>${esc(marketsTxt(mt.markets))}</dd>${kind === 'Module' ? `<dt>Channels</dt><dd>${esc(channelsTxt(mt.channels))}</dd>` : `<dt>Channel</dt><dd>${esc(chan(mt.channel).name)}</dd>`}<dt>Audience</dt><dd>${esc(aud(mt.audience).name)}</dd></dl>
-  ${kind === 'Module' && v.media ? `<div class="media-stage sm" style="margin-bottom:10px">${mediaView(v.media)}</div><div class="row file-row">${fileActions(v.media, obj.id + ' · v' + v.v + ' · ' + v.status)}</div>${mediaFactsKV(v.media)}${mediaRules(v.media)}` : ''}
+  ${kind === 'Module' && v.media ? `<div class="media-stage sm" style="margin-bottom:10px">${filePreview(v.media, obj.id + ' · v' + v.v + ' · ' + v.status)}</div>${mediaFactsKV(v.media)}${mediaRules(v.media)}` : ''}
   ${kind === 'Module' ? `<div class="comment" style="margin-bottom:12px"><p style="font-size:13.5px">${esc(v.body)}</p>${v.refs.length ? `<p class="muted" style="font-size:12px;margin-top:6px">References: ${v.refs.map(r => esc(refById(r).title)).join(' · ')}</p>` : ''}</div>` : ''}
   ${v.cycles.length ? v.cycles.map(c => `<div class="cycle"><div class="row" style="gap:8px;margin-bottom:8px"><b>Cycle ${c.n}</b>${chip(c.outcome)}<span class="muted" style="font-size:12px">${esc((wfById(c.wf) || {}).name || c.wf)} · ${fmtD(c.start)}${c.end ? ' → ' + fmtD(c.end) + ' · ' + fmtDur(c.end - c.start) : ''}${c.amendments ? ' · ' + c.amendments + ' amendment' + (c.amendments > 1 ? 's' : '') : ''}</span></div>${decisionsList(c.decisions)}</div>`).join('') : '<p class="muted">Not submitted for review.</p>'}`;
 }
@@ -3656,7 +3955,7 @@ function viewCover() {
     <section class="letter-grid">
       ${[['Material name', esc(isM ? mt.title : mt.name)], ['Material ID', `<span class="mono">${obj.id}</span>`], ['Version', 'v' + v.v + (v.status === 'Superseded' ? ' · superseded' : '')], [isM ? 'Module type' : 'Material type', esc(isM ? mtype(mt.type).name : mat(mt.type).name)], ['Product(s)', esc(productsTxt(mt.products))], ['Country / countries', esc(marketsTxt(mt.markets))], ['Audience', esc(aud(mt.audience).name)], [isM ? 'Channels' : 'Channel', esc(isM ? channelsTxt(mt.channels) : chan(mt.channel).name)], ['Material Owner', esc(user(obj.owner).name)], ['Approval workflow', esc(wf.name)], ['Approval date', fmtDT(v.approvedAt)], ['Approval cycle', 'Cycle ' + cyc.n + ' of ' + v.cycles.length + ' · ' + fmtDur(cyc.end - cyc.start) + (amendments.length ? ' · ' + amendments.length + ' amendment' + (amendments.length > 1 ? 's' : '') : ' · no amendments')], ['Validity', isM ? 'Review by ' + fmtD(mt.reviewDate) + ' · expires ' + fmtD(mt.expiry) : 'Valid while all included modules remain approved'], ['Reason for this version', esc(v.reason || 'Initial version')]].map(([k, val]) => `<div><span>${k}</span><b>${val}</b></div>`).join('')}
     </section>
-    ${isM && v.media ? `<section class="letter-content media-letter"><span class="eyebrow">Approved ${esc(kindLabel(kindOfType(mt.type)).toLowerCase())}</span><div class="letter-media"><div class="media-stage sm">${mediaView(v.media, 'thumb')}</div><div>${mediaFactsKV(v.media)}<div class="no-print file-row">${fileActions(v.media, obj.id + ' · v' + v.v)}</div><p style="font-size:12.5px;margin-top:6px">${esc(v.body)}</p></div></div>${mediaRules(v.media)}<p class="muted" style="font-size:11.5px;margin-top:8px">Approval applies to the file with checksum ${esc(v.media.algo || '')} ${esc(v.media.checksum || '')}.</p></section>` : ''}
+    ${isM && v.media ? `<section class="letter-content media-letter"><span class="eyebrow">Approved ${esc(kindLabel(kindOfType(mt.type)).toLowerCase())}</span><div class="letter-media"><div class="media-stage sm">${filePreview(v.media, obj.id + ' · v' + v.v, 'thumb')}</div><div>${mediaFactsKV(v.media)}<p style="font-size:12.5px;margin-top:6px">${esc(v.body)}</p></div></div>${mediaRules(v.media)}<p class="muted" style="font-size:11.5px;margin-top:8px">Approval applies to the file with checksum ${esc(v.media.algo || '')} ${esc(v.media.checksum || '')}.</p></section>` : ''}
     ${isM && !v.media ? `<section class="letter-content"><span class="eyebrow">Approved content</span><p>${esc(v.body)}</p>${v.refs.length ? `<ol>${v.refs.map(r => `<li>${esc(refById(r).title)} — ${esc(refById(r).source)}</li>`).join('')}</ol>` : ''}</section>` : ''}${isM ? '' : `<section class="letter-content"><span class="eyebrow">Content</span><p>${bl.length} blocks · ${bl.filter(b => b.kind === 'module').length} approved modules (${esc(uniq(bl.filter(b => b.kind === 'module').map(b => b.moduleId + ' v' + b.v)).join(', '))})${bl.some(b => b.kind === 'new') ? ' · ' + bl.filter(b => b.kind === 'new').length + ' new text block(s) approved in this material' : ''}</p>${mt.disclaimer ? `<p style="font-size:12.5px;color:var(--ink-2)">Disclaimer: ${esc(mt.disclaimer)}</p>` : ''}</section>`}
     <section><span class="eyebrow">Approvers and decisions</span>
       <div class="table-wrap"><table class="tbl compact letter-tbl no-pg"><thead><tr><th>Step</th><th>Approver</th><th>Role</th><th>Decision</th><th>Date</th></tr></thead><tbody>${steps.map((x, i) => `<tr><td>${i + 1}. ${esc(x.fn)} ${x.req === 'approve' ? 'approval' : 'review'} · ${esc(levelName(x.level))}</td><td><b>${esc(user(x.by).name)}</b></td><td>${esc(x.role || roleLabel(user(x.by)))}${x.admin ? ' (on behalf of ' + esc(x.fn + ' ' + levelName(x.level)) + ')' : ''}</td><td>${chip(x.decision === 'Approved' ? 'Approved · e-signed' : 'Reviewed')}</td><td class="nw">${fmtDT(x.at)}</td></tr>`).join('')}</tbody></table></div>
@@ -3883,7 +4182,8 @@ function annRegions(obj, v, target, page, editable) {
 
 /* --- tool rail for visual surfaces --- */
 function toolRail(kind) {
-  const U = annUI(); const def = kind === 'document' ? 'text' : kind === 'video' ? 'play' : 'region'; const cur = U.tool || def;
+  const U = annUI();
+  if (kind === 'text') { const H0 = U.hist; return `<div class="an-rail" role="toolbar" aria-label="Annotation tools"><span class="an-rail-hint">${icon('cursor', 'sm')}<span>Select text for Comment · Highlight · Underline · Strike · Insert · Replace · Note</span></span><span class="grow"></span><button type="button" data-act="an-genfocus" title="Add a general comment">${icon('message', 'sm')}<span>General comment</span></button><button type="button" data-act="an-undo" ${H0.u.length ? '' : 'disabled'} title="Undo (Ctrl+Z)" aria-label="Undo">${icon('undo', 'sm')}</button><button type="button" data-act="an-redo" ${H0.r.length ? '' : 'disabled'} title="Redo (Ctrl+Shift+Z)" aria-label="Redo">${icon('redo', 'sm')}</button></div>`; } const def = kind === 'document' ? 'text' : kind === 'video' ? 'play' : 'region'; const cur = U.tool || def;
   const tools = [...(kind === 'document' ? [['text', 'Select text', 'cursor']] : kind === 'video' ? [['play', 'Play / pause', 'cursor']] : []), ['region', 'Area comment', 'square'], ['note', 'Sticky note', 'sticky'], ['ink', 'Freehand', 'pen'], ['rect', 'Rectangle', 'square'], ['ellipse', 'Ellipse', 'circle'], ['arrow', 'Arrow', 'arrowne']];
   const H = U.hist;
   return `<div class="an-rail" role="toolbar" aria-label="Annotation tools">${tools.map(t => `<button type="button" class="${cur === t[0] ? 'on' : ''} ${t[0] === 'region' ? 'dashed' : ''}" data-act="an-tool" data-v="${t[0]}" aria-pressed="${cur === t[0]}" title="${t[1]}">${icon(t[2], 'sm')}<span>${t[1]}</span></button>`).join('')}<span class="grow"></span><button type="button" data-act="an-undo" ${H.u.length ? '' : 'disabled'} title="Undo (Ctrl+Z)" aria-label="Undo">${icon('undo', 'sm')}</button><button type="button" data-act="an-redo" ${H.r.length ? '' : 'disabled'} title="Redo (Ctrl+Shift+Z)" aria-label="Redo">${icon('redo', 'sm')}</button></div>`;
@@ -3905,6 +4205,7 @@ function pdfReview(obj, v, md, editable) {
   return `<div class="pdfr">${R.pages.map((p, i) => `<figure class="pdfr-page" data-page="${i + 1}" style="aspect-ratio:${p.w}/${p.h}"><img src="${p.img}" alt="Page ${i + 1} of ${esc(md.name)}" draggable="false"><div class="textLayer pdf-tl" data-file="${md.fileId}" data-page="${i + 1}" data-an-target="pdf" ${editable ? 'data-an-sel="1"' : ''}></div>${annRegions(obj, v, 'pdf', i + 1, editable)}<figcaption>Page ${i + 1} of ${R.n}${editable ? ` · <button type="button" class="linklike" data-act="an-page" data-page="${i + 1}">Comment on this page</button>` : ''}</figcaption></figure>`).join('')}${R.n > R.pages.length ? `<p class="muted" style="text-align:center;font-size:12px">${R.n - R.pages.length} more pages — preview the file to read them all.</p>` : ''}</div>`;
 }
 function hydrateReview() {
+  const tb = document.querySelector('.topbar'); if (tb) document.documentElement.style.setProperty('--topbar-h', tb.offsetHeight + 'px');
   document.querySelectorAll('[data-pdfr]').forEach(el => { const id = el.dataset.pdfr; if (PDFR[id]) return; PDFR[id] = { loading: true };
     const url = el.dataset.url; const attempt = n => pdfReviewLoad(id, url).then(r => { PDFR[id] = r; renderSoon(); }, () => n < 3 ? setTimeout(() => attempt(n + 1), 1500 * n) : (PDFR[id] = { failed: true }, renderSoon())); attempt(1); });
   document.querySelectorAll('.pdf-tl').forEach(el => { if (el.dataset.done) return; const R = PDFR[el.dataset.file]; if (!R || !R.pages) return; const P = R.pages[+el.dataset.page - 1]; const w = el.parentElement.clientWidth; if (!w) return;
@@ -3937,8 +4238,9 @@ function reviewCanvas(obj, editable) {
     else if (k === 'video') { const ts = annsFor(obj, v.v).filter(a => a.anchor.t != null); const dur = md.duration || Math.max(1, ...ts.map(a => a.anchor.t + 1));
       body = `<div class="an-media"><div class="an-vframe">${mediaView(md)}<div class="an-vlayer ${U.tool && U.tool !== 'play' ? 'tool-on' : ''}">${annRegions(obj, v.v, 'file', 0, editable && U.tool && U.tool !== 'play')}</div></div><div class="an-tl" aria-label="Comment timeline"><span class="an-tl-track">${ts.map(a => `<button type="button" class="an-tl-m s-${a.style} ${a.status === 'resolved' ? 'res' : ''} ${U.focus === a.id ? 'an-focus' : ''}" style="left:${Math.min(100, 100 * a.anchor.t / dur)}%" data-an-tl="${a.id}" data-act="an-go" data-id="${a.id}" title="${esc(fmtSecs(a.anchor.t) + ' — ' + a.text)}">${annNo(obj, a)}</button>`).join('')}</span><span class="an-tl-l"><span>0:00</span><span>${fmtSecs(dur)}</span></span></div>${editable ? `<div class="row" style="gap:8px;margin-top:8px"><button class="btn sm" data-act="an-time">${icon('message', 'sm')}Comment at current time</button><span class="muted" style="font-size:12px">Pause where the comment applies; choose a drawing tool to mark the frame.</span></div>` : ''}</div>`; }
     else body = md ? pdfReview(obj, v.v, md, editable) : mediaView(md);
-    body += `<div class="row file-row">${fileActions(md, obj.id + ' · v' + v.v + ' · ' + v.status)}</div><p class="media-desc">${esc(v.body)}</p>`;
+    body = `<div class="fp-bar">${icon(mediaKindOf(md) === 'image' ? 'image' : mediaKindOf(md) === 'video' ? 'video' : 'file', 'sm')}<b>${esc(md ? md.name : '')}</b><span class="muted">${esc(md ? (md.format || md.mime) + ' · ' + fmtSize(md.size) : '')}</span><span class="grow"></span>${fileMenu(md, obj.id + ' · v' + v.v + ' · ' + v.status)}</div>` + body + `<p class="media-desc">${esc(v.body)}</p>`;
   } else body = `<p class="claim ${mtype(obj.type).tone === 'headline' ? 'is-headline' : ''}">${annText(obj, v.v, 'body', v.body, editable)}</p>`;
+  if (editable && !rail) rail = toolRail('text');
   // Citations are reviewable too: each reference can be selected and commented on.
   const refs = kind === 'Module' && v.refs.length ? `<div class="an-refs"><span class="fn-title">References</span><ol>${v.refs.map(r => { const R = refById(r); return `<li>${annText(obj, v.v, 'ref:' + r, R.title + ' — ' + R.source, editable)}</li>`; }).join('')}</ol></div>` : '';
   const hint = editable ? `<p class="an-hint">${icon('pointer', 'sm')}${kind === 'Asset' ? 'Select text in new content to mark it up, or comment on any block.' : isMediaType(obj.type) ? { image: 'Drag an area to comment, or pick a drawing tool: sticky note, freehand, rectangle, ellipse or arrow.', video: 'Pause and comment at a timestamp; pick a drawing tool to mark the paused frame.', document: 'Select text to comment, highlight, underline, strike through, insert or replace. Drag on empty space for an area comment, or pick a drawing tool.' }[mediaKindOf(v.media)] || '' : 'Select text to comment, highlight, underline, strike through or replace it. Click between words to insert text or add a sticky note.'}</p>` : '';
@@ -3949,7 +4251,7 @@ function assetBlockReview(a, v, b, i, editable) {
   const btnC = editable ? `<button type="button" class="btn ghost sm an-bc" data-act="an-block" data-t="${esc(tgt)}" data-l="${esc(b.kind === 'new' ? b.label || 'New content' : (modById(b.moduleId) || {}).id || 'Module')}">${icon('message', 'sm')}Comment${n ? ' · ' + n : ''}</button>` : n ? `<span class="chip plain">${n} comment${n > 1 ? 's' : ''}</span>` : '';
   if (b.kind === 'new') return `<div class="block new" data-an="${esc(tgt)}"><div class="meta">${icon('edit', 'sm')}${b.approved ? 'Text approved in this asset' : 'New content · requires review'}<span class="grow"></span>${btnC}</div><div class="txt">${annText(a, v.v, tgt, b.text, editable)}</div></div>`;
   const m = modById(b.moduleId); if (!m) return ''; const mv = verOf(m, b.v) || latest(m);
-  return `<div class="block approved" data-an="${esc(tgt)}"><div class="meta">${icon('lock', 'sm')}Approved module · locked · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span><span class="grow"></span>${btnC}</div> ${mv.media ? `<div class="block-media">${mediaView(mv.media)}</div><div class="row file-row">${fileActions(mv.media, m.id + ' · v' + mv.v)}</div>` : `<div class="txt">${esc(mv.body)}</div>`}</div>`;
+  return `<div class="block approved" data-an="${esc(tgt)}"><div class="meta">${icon('lock', 'sm')}Approved module · locked · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span><span class="grow"></span>${btnC}</div> ${mv.media ? `<div class="block-media">${filePreview(mv.media, m.id + ' · v' + mv.v)}</div>` : `<div class="txt">${esc(mv.body)}</div>`}</div>`;
 }
 
 /* --- @mention-aware text field --- */
@@ -3962,10 +4264,29 @@ function menField(id, ph, rows) {
 // Mentioned ids still present in the text, without duplicates.
 function menCollect(id) { const U = annUI(); const t = U.vals[id] || ''; return uniq((U.vals[id + ':m'] || []).filter(x => t.includes('@' + user(x).name))); }
 function menReset(id) { const U = annUI(); delete U.vals[id]; delete U.vals[id + ':m']; if (U.men && U.men.field === id) U.men = null; }
-function notifyMentions(obj, a, ids, where) {
-  if (!ids.length) return; const k = kindOf(obj);
-  log('User mentioned', k, obj, a.version, { cycle: a.cycle, annId: a.id, note: where + ' · ' + annLabel(a), next: mentionNames(ids).join(', '), toIds: [...ids] });
-  S.outbox.push({ id: uid('e'), ts: Date.now(), to: mentionNames(ids), toIds: [...ids], subject: me().name + ' mentioned you on ' + obj.id, objType: k, objId: obj.id });
+/* Mention notifications: one stored, per-recipient record for each new mention event (new comment, new reply, or a person
+   newly added when a comment is edited). Re-saving or repeating a name in the same event never notifies twice.
+   In-app delivery is the stored record shown in the recipient's bell. Email goes through the endpoint configured in Settings;
+   without one, the email is recorded as "not configured" rather than reported as sent. */
+function notifyMentions(obj, a, ids, where, reply) {
+  ids = uniq(ids).filter(id => id !== me().id); if (!ids.length) return;
+  S.notifications = S.notifications || []; const k = kindOf(obj); const sent = [];
+  ids.forEach(id => { const u = S.users.find(x => x.id === id); if (!u || u.status !== 'Active' || !canSeeObj(u, obj)) return;
+    if (S.notifications.some(n => n.to === id && n.annId === a.id && (n.replyId || null) === (reply ? reply.id : null))) return;
+    const n = { id: uid('n'), type: 'mention', to: id, by: me().id, ts: Date.now(), objType: k, objId: obj.id, version: a.version, cycle: a.cycle, annId: a.id, replyId: reply ? reply.id : null, text: reply ? reply.text : a.text, where: annLabel(a), read: false };
+    n.email = S.settings.mentionEmail === false ? { status: 'off' } : { status: S.settings.notifyEndpoint ? 'queued' : 'not configured', to: u.email };
+    S.notifications.push(n); sent.push(n); if (n.email.status === 'queued') deliverEmail(n); });
+  if (!sent.length) return;
+  log('User mentioned', k, obj, a.version, { cycle: a.cycle, annId: a.id, note: where + ' · ' + annLabel(a), next: sent.map(n => user(n.to).name).join(', '), toIds: sent.map(n => n.to), delivery: 'in-app' + (sent[0].email ? ' · email ' + sent[0].email.status : '') });
+}
+// Email integration point: POSTs the notification to the endpoint configured in Settings (your mail service or a relay).
+async function deliverEmail(n) {
+  const u = user(n.to), by = user(n.by); const url = S.settings.notifyEndpoint;
+  const msg = { to: u.email, subject: by.name + ' mentioned you on ' + n.objId, text: by.name + ' mentioned you: “' + n.text + '” (' + n.where + ')', objType: n.objType, objId: n.objId, annotationId: n.annId };
+  try { const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msg) }); n.email.status = r.ok ? 'sent' : 'failed'; n.email.detail = r.ok ? '' : 'HTTP ' + r.status; }
+  catch (e) { n.email.status = 'failed'; n.email.detail = String(e && e.message || e).slice(0, 120); }
+  n.email.at = Date.now(); S.outbox.push({ id: uid('e'), ts: n.email.at, to: [u.email], toIds: [n.to], subject: msg.subject, objType: n.objType, objId: n.objId, status: n.email.status });
+  log(n.email.status === 'sent' ? 'Mention email sent' : 'Mention email failed', n.objType, objById(n.objType, n.objId), n.version, { cycle: n.cycle, annId: n.annId, next: u.email, note: n.email.detail || '' }); save(); renderSoon();
 }
 
 /* --- comments panel --- */
@@ -4041,6 +4362,7 @@ const ANN_ACT = {
   'an-page': el => { const obj = reviewObj(); annUI().comp = { objId: obj.id, anchor: { kind: 'page', page: +el.dataset.page }, style: 'comment' }; menReset('an-text'); render(); setTimeout(() => { const t = document.getElementById('an-text'); t && t.focus(); }, 30); },
   'an-time': () => { const obj = reviewObj(); const vd = document.querySelector('.an-scope video'); const t = vd ? Math.round(vd.currentTime * 10) / 10 : 0; if (vd) vd.pause(); annUI().seek = t; annUI().comp = { objId: obj.id, anchor: { kind: 'time', target: 'file', t }, style: 'comment' }; menReset('an-text'); render(); setTimeout(() => { const x = document.getElementById('an-text'); x && x.focus(); }, 30); },
   'an-tool': el => { const U = annUI(); U.tool = el.dataset.v; U.sel = null; if (U.tool !== 'play') { const vd = document.querySelector('.an-scope video'); if (vd) { vd.pause(); U.seek = vd.currentTime; } } render(); },
+  'an-genfocus': () => { const t = document.getElementById('an-general'); if (t) { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); t.focus({ preventScroll: true }); } },
   'an-undo': () => annUndo(false), 'an-redo': () => annUndo(true),
   'an-focus': el => { const U = annUI(); U.focus = el.dataset.id; render(); const c = document.querySelector(`[data-an-card="${el.dataset.id}"]`); c && c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); },
   'an-go': el => { const U = annUI(); U.focus = el.dataset.id; U.goto = el.dataset.id; render(); },
@@ -4054,7 +4376,7 @@ const ANN_ACT = {
   'an-reply-x': () => { annUI().reply = null; render(); },
   'an-reply-save': el => { const U = annUI(); const a = S.annotations.find(x => x.id === el.dataset.id); const t = (U.vals['an-reply'] || '').trim(); if (!t) return; const u = me(); const ids = menCollect('an-reply');
     annMutate(a, 'edit', x => x.replies.push({ id: uid('r'), author: u.id, role: roleLabel(u), ts: Date.now(), text: t, mentions: ids }));
-    annLog('Reply added', annObj(a), a, { next: t }); notifyMentions(annObj(a), a, ids, 'Reply'); menReset('an-reply'); U.reply = null; save(); render(); },
+    annLog('Reply added', annObj(a), a, { next: t }); notifyMentions(annObj(a), a, ids, 'Reply', a.replies[a.replies.length - 1]); menReset('an-reply'); U.reply = null; save(); render(); },
   'an-status': el => { const a = S.annotations.find(x => x.id === el.dataset.id); const to = a.status === 'open' ? 'resolved' : 'open';
     annMutate(a, 'status', x => { x.status = to; x.resolvedBy = to === 'resolved' ? me().id : null; x.resolvedAt = to === 'resolved' ? Date.now() : null; });
     annLog(to === 'resolved' ? 'Comment resolved' : 'Comment reopened', annObj(a), a, { prev: to === 'resolved' ? 'Open' : 'Resolved', next: to === 'resolved' ? 'Resolved' : 'Open' }); save(); render(); },
@@ -4190,7 +4512,7 @@ function blockHTML(a, b, i, editable, reviewMode) {
   const m = modById(b.moduleId); if (!m) return '';
   const v = verOf(m, b.v) || latest(m); const el = eligibility(m, a); const lv = live(m); const outdated = lv && b.v < lv.v;
   const mt = metaOf(m, v); const k = { headline: 'k-headline', cta: 'k-cta', safety: 'k-safety' }[mtype(mt.type).tone] || '';
-  return `<div class="block approved ${k}" ${editable ? `draggable="true" data-drag="blk" data-i="${i}"` : ''}><div class="meta">${editable ? `<span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span>` : ''}${icon('lock', 'sm')}${reviewMode ? 'Approved module · locked' : esc(mtype(mt.type).name)} · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span>${outdated ? `<span class="chip warn">v${lv.v} available</span>` : ''}${editable ? blockTools(i, a) : ''}</div>${v.media ? `<div class="block-media">${mediaView(v.media)}</div><div class="row file-row">${fileActions(v.media, m.id + ' · v' + v.v)}</div><div class="block-rules">${icon('alert', 'sm')}<span><b>Usage rules:</b> ${esc(v.media.usage || '—')}</span></div>` : `<div class="txt">${esc(v.body)}</div>`}
+  return `<div class="block approved ${k}" ${editable ? `draggable="true" data-drag="blk" data-i="${i}"` : ''}><div class="meta">${editable ? `<span class="grip" aria-hidden="true">${icon('grip', 'sm')}</span>` : ''}${icon('lock', 'sm')}${reviewMode ? 'Approved module · locked' : esc(mtype(mt.type).name)} · <span class="mono" style="text-transform:none">${m.id} v${b.v}</span>${outdated ? `<span class="chip warn">v${lv.v} available</span>` : ''}${editable ? blockTools(i, a) : ''}</div>${v.media ? `<div class="block-media">${filePreview(v.media, m.id + ' · v' + v.v, 'full', { noOpen: editable })}</div><div class="block-rules">${icon('alert', 'sm')}<span><b>Usage rules:</b> ${esc(v.media.usage || '—')}</span></div>` : `<div class="txt">${esc(v.body)}</div>`}
   <div class="checks">${[[el.prodOk ? 'Product match' : 'Different product', el.prodOk], ...el.checks].map(c => `<span class="${c[1] ? '' : 'x'}">${icon(c[1] ? 'check' : 'x', 'sm')} ${esc(c[0])}</span>`).join('')}${outdated && canEditObj(me(), a) && !reviewMode ? `<button class="btn sm" data-act="replace-version" data-asset="${a.id}" data-module="${m.id}">Replace with v${lv.v}</button>` : ''}</div></div>`;
 }
 function blockTools(i, a) { return `<span class="tools"><button data-act="blk-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button data-act="blk-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === a.blocks.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button data-act="blk-del" data-i="${i}" aria-label="Remove">${icon('trash', 'sm')}</button></span>`; }
@@ -4590,10 +4912,6 @@ function roleModal(M) {
 }
 
 /* ===== Organisation & configuration: generated from CONFIG (config.js) ===== */
-const viewTeams = () => viewSettings('teams');
-const viewProducts = () => viewSettings('products');
-const viewMarkets = () => viewSettings('markets');
-const viewMaterials = () => viewSettings('materials');
 
 /* ===== Validation SOPs ===== */
 const typeLabel = id => S.moduleTypes.some(t => t.id === id) ? mtype(id).name : mat(id).name;
@@ -4608,19 +4926,18 @@ function viewSops() {
 
 /* ===== Settings ===== */
 const SETTINGS = [
-  ['Organisation', [['orgName', 'Organisation name', 'text', 'Shown on cover letters and sign-in.']]],
+  ['General', [['orgName', 'Organisation name', 'text', 'Shown on cover letters and sign-in.']]],
   ['Lifecycle rules', [['expiryWarnDays', 'Expiry warning (days)', 'number', 'Approved content is flagged as Expiring this many days before expiry.'], ['reviewReminderDays', 'Periodic review reminder (days)', 'number', 'Owners are reminded this many days before the periodic review date.'], ['defaultValidityMonths', 'Default validity (months)', 'number', 'Pre-filled expiry for new modules.']]],
   ['Approved Library governance', [['libraryShowExpiring', 'Show expiring content in the library', 'bool', 'When off, content inside the expiry warning window is hidden from the library.']]],
+  ['Notifications', [['mentionEmail', 'Email people when they are @mentioned', 'bool', 'In-app notifications are always delivered. Email needs a delivery endpoint below.'], ['notifyEndpoint', 'Email delivery endpoint (HTTPS)', 'url', 'The address of your mail service or relay that accepts a JSON POST {to, subject, text}. Leave empty to deliver in the app only; emails are then recorded as “not configured”.']]],
   ['Approval settings', [['reviewSlaDays', 'Review SLA (days)', 'number', 'My Tasks marks a task High priority once it has waited longer than this, Medium after half of it.'], ['blockOnOpenComments', 'Block approval while comments are open', 'bool', 'Reviewers resolve or answer every open comment on the version before approving.'], ['requireSignature', 'Require password e-signature for approvals', 'bool', 'Approvers re-enter their password to sign.'], ['adminActsOnAnyStep', 'Administrators can act on any approval step', 'bool', 'Decisions are marked “Recorded by Administrator”.'], ['defaultModuleWorkflow', 'Default workflow for new modules', 'wf', ''], ['newVersionWorkflow', 'Default workflow for new versions', 'wf', 'Pre-selected when a new version of an approved module is submitted.'], ['assetStreamWorkflow', 'Workflow for assets made only of approved modules', 'wfa', 'Assets with new text use the workflow of their Material Type.']]]
 ];
 /* Settings: vertical tabs, each with its own management table or form. Every tab reads the same records used elsewhere. */
-const SET_GROUPS = { general: 'Organisation', lifecycle: 'Lifecycle rules', library: 'Approved Library governance', approval: 'Approval settings' };
+const SET_GROUPS = { notifications: 'Notifications', general: 'General', lifecycle: 'Lifecycle rules', library: 'Approved Library governance', approval: 'Approval settings' };
 function settingsTabs() {
   const anyAdmin = [ADMIN_VIEW];
   return [
-    ['WORKSPACE', [['general', 'Organisation', 'settings', 'manage_settings'], ['lifecycle', 'Lifecycle rules', 'clock', 'manage_settings'], ['approval', 'Approval settings', 'shieldcheck', 'manage_settings'], ['library', 'Library governance', 'book', 'manage_settings']]],
-    ['REFERENCE DATA', ['products', 'markets', 'moduletypes', 'materials', 'channels', 'audiences', 'references'].map(k => [k, CONFIG[k].plural, CONFIG[k].icon, CONFIG[k].viewPerm || [CONFIG[k].perm, ...anyAdmin]])],
-    ['ORGANISATION', ['teams', 'functions'].map(k => [k, CONFIG[k].plural, CONFIG[k].icon, [CONFIG[k].perm, ...anyAdmin]])],
+    ['WORKSPACE', [['general', 'General', 'settings', 'manage_settings'], ['lifecycle', 'Lifecycle rules', 'clock', 'manage_settings'], ['approval', 'Approval settings', 'shieldcheck', 'manage_settings'], ['notifications', 'Notifications', 'bell', 'manage_settings'], ['library', 'Library governance', 'book', 'manage_settings']]],
     ['DATA', [['data', 'Workspace data', 'refresh', 'manage_settings']]]
   ].map(([g, items]) => [g, items.filter(t => can(me(), t[3]))]).filter(g => g[1].length);
 }
@@ -4714,10 +5031,10 @@ const cfgUsage = (k, x) => CONFIG[k].usage(x);
 const cfgUseCount = (k, x) => cfgUsage(k, x).reduce((n, g) => n + g[1].length, 0);
 const canManageCfg = k => can(me(), CONFIG[k].perm);
 
-function viewConfig(k) {
+function viewConfig(k, cr) {
   const C = CONFIG[k]; const q = F('cq-' + k).toLowerCase(); const st = F('cs-' + k); const manage = canManageCfg(k);
   const rows = C.coll().filter(x => (!q || JSON.stringify(x).toLowerCase().includes(q)) && (!st || (st === 'Active') === !!x.active));
-  return pageHead(C.plural, C.sub, manage ? btn('Add ' + C.label.toLowerCase(), 'cfg-new', 'primary', `data-k="${k}"`, 'plus') : '') +
+  return pageHead(C.plural, C.sub, manage ? btn('Add ' + C.label.toLowerCase(), 'cfg-new', 'primary', `data-k="${k}"`, 'plus') : '', cr || null) +
   `${filterBar('cfg', `${fsearch('cq-' + k, F('cq-' + k), 'Search ' + C.plural.toLowerCase())}${fsel('cs-' + k, st, ['Active', 'Inactive'], 'Any status')}`, `${rows.length} of ${C.coll().length}`)}
   <section class="panel table-wrap">${rows.length ? `<table class="tbl list-tbl"><thead><tr><th>${esc(C.label)}</th>${C.cols.map(c => `<th>${c[0]}</th>`).join('')}<th>Used by</th><th>Status</th>${manage ? '<th style="text-align:right">Actions</th>' : ''}</tr></thead><tbody>${rows.map(x => { const n = cfgUseCount(k, x);
     return `<tr class="click" ${goAttr('item', x.id, ` data-k="${k}"`)} tabindex="0"><td><div class="title">${esc(cfgName(k, x))}</div>${C.codeId && k !== 'functions' ? '' : `<span class="mono muted">${esc(x.id)}</span>`}</td>${C.cols.map(c => `<td>${c[1](x)}</td>`).join('')}<td class="num">${n ? n + ' item' + (n > 1 ? 's' : '') : '<span class="muted">Not used</span>'}</td><td>${chip(x.active ? 'Active' : 'Inactive')}</td>${manage ? `<td style="text-align:right"><div class="row nowrap" style="justify-content:flex-end;gap:6px"><button class="btn sm ghost" data-act="cfg-edit" data-k="${k}" data-id="${esc(x.id)}">${icon('edit', 'sm')}Edit</button><button class="btn sm" data-act="cfg-toggle" data-k="${k}" data-id="${esc(x.id)}">${x.active ? 'Deactivate' : 'Activate'}</button></div></td>` : ''}</tr>`; }).join('')}</tbody></table>` : `<div class="empty"><h4>No ${C.plural.toLowerCase()} match</h4><p>${manage ? 'Add one with the button above.' : 'Clear the search.'}</p></div>`}</section>`;
@@ -4734,7 +5051,7 @@ function viewConfigItem() {
   const x = C.coll().find(i => i.id === UI.route.p.id); if (!x) return viewMissing(C.label);
   const manage = canManageCfg(k); const use = cfgUsage(k, x); const n = use.reduce((s, g) => s + g[1].length, 0);
   const hist = S.audit.filter(e => e.objType === C.label && e.objId === x.id);
-  return pageHead(esc(cfgName(k, x)), `<span class="row" style="gap:8px">${chip(x.active ? 'Active' : 'Inactive')}<span class="mono">${esc(x.id)}</span><span class="muted">·</span>${esc(C.label)}</span>`, manage ? `${btn('Edit', 'cfg-edit', '', `data-k="${k}" data-id="${esc(x.id)}"`, 'edit')}${btn(x.active ? 'Deactivate' : 'Activate', 'cfg-toggle', x.active ? '' : 'primary', `data-k="${k}" data-id="${esc(x.id)}"`)}${n ? '' : btn('Delete', 'cfg-delete', 'danger', `data-k="${k}" data-id="${esc(x.id)}"`, 'trash')}` : '', [[C.plural, k], [cfgName(k, x)]]) +
+  return pageHead(esc(cfgName(k, x)), `<span class="row" style="gap:8px">${chip(x.active ? 'Active' : 'Inactive')}<span class="mono">${esc(x.id)}</span><span class="muted">·</span>${esc(C.label)}</span>`, manage ? `${btn('Edit', 'cfg-edit', '', `data-k="${k}" data-id="${esc(x.id)}"`, 'edit')}${btn(x.active ? 'Deactivate' : 'Activate', 'cfg-toggle', x.active ? '' : 'primary', `data-k="${k}" data-id="${esc(x.id)}"`)}${n ? '' : btn('Delete', 'cfg-delete', 'danger', `data-k="${k}" data-id="${esc(x.id)}"`, 'trash')}` : '', [...(hubOf(k) ? [[HUBS[hubOf(k)].title, hubOf(k)]] : []), [C.plural, k], [cfgName(k, x)]]) +
   (!x.active ? `<div class="banner" style="margin-bottom:16px">${icon('lock')}<div class="txt"><b>Inactive</b><p>Not offered when creating or editing content. The ${n} existing item${n === 1 ? '' : 's'} that use it keep it.</p></div></div>` : '') +
   `<div class="grid cols-main"><div class="stack"><section class="panel"><div class="panel-head"><h3>Details</h3></div><div class="panel-body"><dl class="kv">${C.fields.map(f => `<dt>${esc(f[1])}</dt><dd>${cfgFieldVal(k, f, x)}</dd>`).join('')}</dl></div></section>
   ${use.map(([title, list]) => `<section class="panel"><div class="panel-head"><h3>${esc(title)}</h3><span class="chip plain">${list.length}</span></div>${list.length ? list.slice(0, 50).map(r => `<button class="task" ${r.route === 'item' ? goAttr('item', r.id, ` data-k="${r.k}"`) : goAttr(r.route, r.id)}><span class="body"><b>${esc(r.label)}</b>${r.extra ? `<span>${esc(r.extra)}</span>` : ''}</span>${icon('chevron', 'sm')}</button>`).join('') : '<div class="empty" style="padding:18px"><p>Not used yet.</p></div>'}</section>`).join('')}</div>
@@ -4787,6 +5104,33 @@ function cfgDelete(k, id) {
   if (cfgUseCount(k, x)) { toast('It is in use — deactivate it instead'); return; }
   list.splice(i, 1); if (k === 'functions') LEVELS.forEach(l => delete S.roles[x.id + '-' + l]);
   log(C.label + ' deleted', C.label, { id }, 1, { prev: cfgName(k, x) }); save(); go(k); toast(C.label + ' deleted');
+}
+
+/* ---------- Reference Data and Organisation: their own sections, outside Settings ----------
+   Each hub has an overview (counts computed from the records) and one management table per entity. */
+const HUBS = {
+  refdata: { title: 'Reference Data', icon: 'database', keys: ['products', 'markets', 'moduletypes', 'materials', 'channels', 'audiences', 'references'], sub: 'The controlled lists offered when modules and assets are created, reviewed and filtered. Changes apply everywhere the list is used.' },
+  org: { title: 'Organisation', icon: 'org', keys: ['teams', 'functions'], sub: 'Teams own content; functions staff the review and approval steps of workflows.' }
+};
+const hubOf = k => Object.keys(HUBS).find(h => HUBS[h].keys.includes(k));
+const cfgViewPerm = k => CONFIG[k].viewPerm ? [...CONFIG[k].viewPerm, CONFIG[k].perm, ADMIN_VIEW] : [CONFIG[k].perm, ADMIN_VIEW];
+const hubKeys = h => HUBS[h].keys.filter(k => can(me(), cfgViewPerm(k)));
+// Route permissions and the sidebar entries follow the entities' own permissions.
+Object.keys(HUBS).forEach(h => { ROUTE_PERM[h] = [...new Set(HUBS[h].keys.flatMap(cfgViewPerm))]; HUBS[h].keys.forEach(k => { ROUTE_PERM[k] = cfgViewPerm(k); NAV_OF[k] = h; }); const n = NAV.find(x => x[0] === h); if (n) n[4] = ROUTE_PERM[h]; });
+function hubLastChange(k) { const L = CONFIG[k].label; let t = 0; S.audit.forEach(e => { if (e.objType === L && e.ts > t) t = e.ts; }); return t; }
+function viewHub(h, tab) {
+  const H = HUBS[h]; const keys = hubKeys(h); if (!keys.length) return `<div class="empty"><h4>Not available for your role</h4></div>`;
+  const cur = keys.includes(tab) ? tab : null;
+  const side = `<nav class="set-nav" aria-label="${H.title} sections"><div class="set-grp">${esc(H.title)}</div><button type="button" class="set-tab ${cur ? '' : 'on'}" ${goAttr(h)} aria-current="${cur ? 'false' : 'page'}">${icon('grid', 'sm')}<span>Overview</span></button>${keys.map(k => `<button type="button" class="set-tab ${k === cur ? 'on' : ''}" ${goAttr(k)} aria-current="${k === cur ? 'page' : 'false'}">${icon(CONFIG[k].icon, 'sm')}<span>${esc(CONFIG[k].plural)}</span><span class="n">${CONFIG[k].coll().length}</span></button>`).join('')}</nav>`;
+  let main;
+  if (cur) main = viewConfig(cur, [[H.title, h], [CONFIG[cur].plural]]);
+  else {
+    const rows = keys.map(k => { const C = CONFIG[k]; const L = C.coll(); const act = L.filter(x => x.active).length; const used = L.filter(x => cfgUseCount(k, x) > 0).length; const t = hubLastChange(k);
+      return `<tr class="click" ${goAttr(k)} tabindex="0"><td><span class="hub-name">${icon(C.icon, 'sm')}<span><b>${esc(C.plural)}</b><span class="muted" title="${esc(C.sub || '')}">${esc(C.sub || '')}</span></span></span></td><td class="num"><b>${L.length}</b></td><td class="num">${act}</td><td class="num">${L.length - act ? L.length - act : '<span class="muted">0</span>'}</td><td class="num">${used}<span class="muted"> / ${L.length}</span></td><td class="muted">${t ? ago(t) : '—'}</td></tr>`; }).join('');
+    const tot = keys.reduce((n, k) => n + CONFIG[k].coll().length, 0);
+    main = pageHead(H.title, H.sub, '', null) + `<section class="panel table-wrap"><table class="tbl list-tbl hub-tbl"><thead><tr><th>List</th><th class="num">Records</th><th class="num">Active</th><th class="num">Inactive</th><th class="num">In use</th><th>Last change</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td><b>${keys.length} list${keys.length === 1 ? '' : 's'}</b></td><td class="num"><b>${tot}</b></td><td colspan="4"></td></tr></tfoot></table></section>`;
+  }
+  return `<div class="set-shell">${side}<div class="set-main">${main}</div></div>`;
 }
 
 /* ===== Workflows ===== */
@@ -4866,7 +5210,7 @@ function notifyFields(s, scope, i) {
 function flowPreview(steps, start, end) {
   return `<div class="flowx">${start ? `<div class="fx-term">${icon('send', 'sm')}<span>${start}</span></div><span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}${steps.map((s, i) => `${isNotify(s) ? `<div class="fx-node notify">${fnBadge('Email', 'lg')}<b>Email</b><span>To ${notifyTo(s).length || 0} ${notifyTo(s).length === 1 ? 'person' : 'people'}</span></div>` : `<div class="fx-node ${s.req === 'approve' ? 'final' : ''}">${fnBadge(s.fn, 'lg')}<b>${esc(s.fn)}</b><span>${s.req === 'approve' ? (isFinalStep({ steps }, i) ? 'Final approval' : 'Approval') : 'Review'}</span>${lvl(s.level)}</div>`}${i < steps.length - 1 || end ? `<span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}`).join('')}${end ? `<div class="fx-term ok">${icon('check', 'sm')}<span>${end}</span></div>` : ''}</div>`;
 }
-function viewWorkflowNew() {
+function viewWorkflowNew(panel) {
   if (!UI.nwf) UI.nwf = { step: 0, maxStep: 0, triedSteps: [], name: '', desc: '', appliesTo: 'Module', steps: [] };
   const D = UI.nwf; const E = wizErrors(D, WSTEPS, validateWf(D)); const who = st => { const a = assigneeFor(st); return a.length ? a.map(x => x.name).join(', ') : 'No active ' + stepWho(st); }; const st = D.step; const hid = i => i === st ? '' : ' hidden';
   const err = k => E[k] ? `<span class="err">${esc(E[k])}</span>` : '';
@@ -4881,10 +5225,12 @@ function viewWorkflowNew() {
     </div>
     <div class="nwf-tools"><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === D.steps.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button type="button" class="btn icon sm danger" data-act="nwf-del" data-i="${i}" aria-label="Remove step">${icon('trash', 'sm')}</button></div>
   </div>`;
-  const back = UI.returnTo || (() => { try { return JSON.parse(sessionStorage.getItem('medlr-return') || 'null'); } catch (e) { return null; } })();
-  return pageHead('New workflow', 'Build a review route step by step. Level and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) +
-  (back ? `<div class="banner info" style="margin-bottom:14px">${icon('layers')}<div class="txt"><b>You came from ${esc(back.draft && back.draft.title ? '“' + back.draft.title + '”' : 'the module form')}</b><p>Your module entries are kept. After you create this workflow you return to the form with it selected.</p></div>${btn('Back without creating', 'wf-return', 'sm')}</div>` : '') +
-  wizBar('workflow', WSTEPS, D) +
+  if (panel) return workflowBuilder(D, E, err, issues, row, hid, st, who, 'data-act="modal-close"');
+  return pageHead('New workflow', 'Build a review route step by step. Level and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) + workflowBuilder(D, E, err, issues, row, hid, st, who, goAttr('workflows'));
+}
+// The workflow wizard. Used on the New workflow page and in the side panel opened from Create Module (cancelAttr decides where Cancel goes).
+function workflowBuilder(D, E, err, issues, row, hid, st, who, cancelAttr) {
+  return   wizBar('workflow', WSTEPS, D) +
   `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="workflow" novalidate><div class="stack">${wizHead(WSTEPS, D)}
   <section class="panel"${hid(0)}><div class="panel-head"><h3>Workflow details</h3></div><div class="panel-body form">
     <div class="field"><label for="w-name">Workflow name</label><input class="input ${E.name ? 'invalid' : ''}" id="w-name" data-w="name" value="${esc(D.name)}" placeholder="e.g. Medical education — Lead only">${err('name')}</div>
@@ -4900,7 +5246,7 @@ function viewWorkflowNew() {
   ${st === WSTEPS.length - 1 ? `${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} item${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b><p>Use Edit to go back to that step.</p></div></div>` : ''}
   ${sumGroup('workflow', 0, 'Details', sumRow('Name', esc(D.name)) + sumRow('Applies to', D.appliesTo === 'Asset' ? 'Assets' : 'Modules') + sumRow('Description', esc(D.desc)))}
   <section class="panel sum"><div class="panel-head"><h3>Review flow</h3><span class="grow"></span><button type="button" class="btn ghost sm" data-act="wiz-go" data-form="workflow" data-i="1">${icon('edit', 'sm')}Edit</button></div><div class="panel-body">${flowPreview(D.steps, 'Submitted', 'Approved')}</div></section>` : ''}
-  ${wizFoot('workflow', WSTEPS, D, goAttr('workflows'), 'Create workflow')}</div>
+  ${wizFoot('workflow', WSTEPS, D, cancelAttr, 'Create workflow')}</div>
   <aside class="stack" style="position:sticky;top:84px">
     <section class="panel"><div class="panel-head"><h3>Review flow preview</h3></div><div class="panel-body">${D.steps.length ? `<div class="wf">${D.steps.map((s, i) => isNotify(s) ? `<div class="wf-step notify"><div class="wf-dot">${icon('mail', 'sm')}</div><div><div class="t">${fnBadge('Email', 'sm')}Email notification</div><div class="s">To ${esc(notifyTo(s).join(', ') || 'no one yet')}</div></div></div>` : `<div class="wf-step"><div class="wf-dot">${reviewPos(D, i)}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? (isFinalStep(D, i) ? 'Final approval' : 'Approval') : 'Review'} ${lvl(s.level)}</div><div class="s">${esc(stepTeamTxt(s))} · ${esc(who(s))}</div></div></div>`).join('')}</div>` : '<p class="muted">Steps appear here as you add them.</p>'}</div></section>
     <section class="panel"><div class="panel-head"><h3>Checks</h3></div><div class="panel-body stack" style="gap:8px">${!D.steps.length ? `<div class="check-row"><span class="no">${icon('x', 'sm')}</span>Add at least one step</div>` : issues.length ? issues.map(([t, msg]) => `<div class="check-row"><span class="${t === 'bad' ? 'no' : 'ok'}" style="${t === 'warn' ? 'color:var(--warn)' : ''}">${icon(t === 'bad' ? 'x' : 'alert', 'sm')}</span>${esc(msg)}</div>`).join('') : `<div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Route is valid</div>`}</div></section>
@@ -4920,12 +5266,13 @@ function wfIssues(D) {
 
 
 /* ---------- Controller: routing, modals, actions ---------- */
-const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, references: () => viewSettings('references'), moduletypes: () => viewSettings('moduletypes'), channels: () => viewSettings('channels'), audiences: () => viewSettings('audiences'), functions: () => viewSettings('functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
+const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, roles: viewRoles, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, refdata: () => viewHub('refdata'), org: () => viewHub('org'), products: () => viewHub('refdata', 'products'), markets: () => viewHub('refdata', 'markets'), moduletypes: () => viewHub('refdata', 'moduletypes'), materials: () => viewHub('refdata', 'materials'), channels: () => viewHub('refdata', 'channels'), audiences: () => viewHub('refdata', 'audiences'), references: () => viewHub('refdata', 'references'), teams: () => viewHub('org', 'teams'), functions: () => viewHub('org', 'functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
 const app = document.getElementById('app');
 
 function go(name, p = {}) {
+  if (name === 'settings' && p.tab && typeof hubOf === 'function' && hubOf(p.tab)) { name = p.tab; p = {}; } // old Settings links to moved lists
   if (name === 'login' || name === 'forgot') { UI.modal = null; UI.f.resetSent = null; UI.f.forgotErr = null; UI.f.loginErr = null; }
-  if ((name === 'module-edit' || name === 'module-new') && (UI.route.name !== name || UI.route.p.id !== p.id) && !UI.restoring) UI.draft = null;
+  if ((name === 'module-edit' || name === 'module-new') && (UI.route.name !== name || UI.route.p.id !== p.id)) UI.draft = null;
   if (name === 'user-new' || name === 'user-edit') UI.udraft = null;
   if (name !== 'workflow') UI.wfDraft = null;
   if (name === 'workflow-new' && UI.route.name !== 'workflow-new') UI.nwf = null;
@@ -4935,6 +5282,38 @@ function go(name, p = {}) {
   save(); render(); window.scrollTo(0, 0);
 }
 
+/* In-place DOM patching. Re-rendering used to replace the whole app with innerHTML, which destroyed and rebuilt every
+   element on each interaction (images and PDF pages redrawn, videos restarted, panel scroll reset) — it looked like a reload.
+   patchDOM keeps every node that is still the same and only changes what differs. */
+function patchDOM(root, html) {
+  const tpl = document.createElement('template'); tpl.innerHTML = html;
+  try { patchChildren(root, tpl.content); } catch (e) { root.innerHTML = html; }
+}
+const sameNode = (a, b) => a.nodeType === b.nodeType && a.nodeName === b.nodeName && (a.nodeType !== 1 || ((a.id || '') === (b.id || '') && (a.getAttribute('data-key') || '') === (b.getAttribute('data-key') || '') && !(a.nodeName === 'INPUT' && a.type !== b.getAttribute('type') && (b.getAttribute('type') || 'text') !== a.type)));
+function patchChildren(from, to) {
+  // Text layers and other containers filled after render keep their content while the new markup leaves them empty.
+  if (from.nodeType === 1 && from.dataset && from.dataset.done && !to.firstChild) return;
+  const a = [...from.childNodes], b = [...to.childNodes];
+  for (let i = 0; i < b.length; i++) {
+    const nb = b[i], na = from.childNodes[i];
+    if (!na) { from.appendChild(nb.cloneNode(true)); continue; }
+    if (!sameNode(na, nb)) { from.replaceChild(nb.cloneNode(true), na); continue; }
+    if (na.nodeType === 3 || na.nodeType === 8) { if (na.nodeValue !== nb.nodeValue) na.nodeValue = nb.nodeValue; continue; }
+    patchEl(na, nb);
+  }
+  while (from.childNodes.length > b.length) from.removeChild(from.lastChild);
+}
+function patchEl(a, b) {
+  // media keeps playing or showing when its source is unchanged
+  if ((a.nodeName === 'VIDEO' || a.nodeName === 'IFRAME' || a.nodeName === 'OBJECT') && a.outerHTML !== b.outerHTML && a.innerHTML !== b.innerHTML) { a.replaceWith(b.cloneNode(true)); return; }
+  for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
+  for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
+  if (a.nodeName === 'INPUT') { const v = b.getAttribute('value') || ''; if (a.type === 'checkbox' || a.type === 'radio') a.checked = b.hasAttribute('checked'); else if (a.type !== 'file' && a.value !== v) a.value = v; return; }
+  if (a.nodeName === 'TEXTAREA') { const v = b.textContent; if (a.value !== v) a.value = v; return; }
+  if (a.nodeName === 'VIDEO') return;
+  patchChildren(a, b);
+  if (a.nodeName === 'SELECT') { const o = [...b.options].findIndex(x => x.hasAttribute('selected')); a.selectedIndex = o >= 0 ? o : 0; }
+}
 // A field that commits on blur can fire 'change' while the page is being replaced; defer that nested render.
 let rendering = false;
 function render() {
@@ -4952,7 +5331,7 @@ function renderNow() {
     html = viewShell(inner);
   }
   html += UI.modal ? viewModal() : '';
-  app.innerHTML = html;
+  patchDOM(app, html);
   paginateTables(); hydratePdfs(); hydrateReview();
   const rk = UI.route.name + JSON.stringify(UI.route.p || {}) + (S.signedIn ? 1 : 0);
   if (rk !== UI._rk) { UI._rk = rk; const c = document.getElementById('content'); if (c) { c.classList.add('enter'); countUp(c); } }
@@ -5023,6 +5402,7 @@ function viewModal() {
   if (M.type === 'role') return roleModal(M);
   if (M.type === 'compare') return roleCompareModal(M);
   if (M.type === 'file') return fileViewerModal(M);
+  if (M.type === 'wf-panel') return `<div class="scrim drawer-scrim" data-act="modal-bg"><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title"><header class="drawer-head"><div><span class="eyebrow">Create Module · ${esc((UI.draft && UI.draft.title) || 'new module')}</span><h2 id="dr-title">New workflow</h2><p class="muted">Your module entries stay as they are. The workflow is selected when you create it.</p></div><button type="button" class="btn icon" data-act="modal-close" aria-label="Close">${icon('x')}</button></header><div class="drawer-body">${viewWorkflowNew(true)}</div></aside></div>`;
   if (M.type === 'version') {
     const obj = objById(M.kind, M.id); const v = verOf(obj, +M.v);
     return modalShell('history', '', `Version ${v.v} · approval history`, `${esc(nameOf(obj))} · <span class="mono">${obj.id}</span>`, versionModalBody(obj, M.kind, v), `${v.approvedAt ? goBtn('Cover letter', 'cover', obj.id, '', 'award', ` data-k="${M.kind}" data-v="${v.v}"`) : ''}${btn('Close', 'modal-close', 'primary')}`, true);
@@ -5152,9 +5532,8 @@ const ACT = {
   'sop-bulk': el => { const D = UI.modal.d; const k = el.dataset.k; D[k] = el.dataset.v === 'all' ? (k === 'types' ? [...S.moduleTypes, ...S.materialTypes] : k === 'products' ? S.products : S.markets).map(x => x.id) : []; render(); },
   'cfg-quick': el => { const k = el.dataset.k; UI.modal = { type: 'cfg', k, d: cfgBlank(k), quick: el.dataset.field, back: UI.modal || null }; UI.msel = null; render(); setTimeout(() => { const f = document.querySelector('.modal [data-cfg]'); f && f.focus(); }, 30); },
   'd-wf': el => { UI.draft.workflow = el.dataset.v; UI.msel = null; UI.mselq = ''; render(); },
-  // Leave the module form for Workflow Management and come back with every entry kept.
-  'wf-addnew': () => { UI.returnTo = { name: UI.route.name, p: { ...UI.route.p }, draft: UI.draft, field: 'workflow' }; try { sessionStorage.setItem('medlr-return', JSON.stringify(UI.returnTo)); } catch (e) { /* the in-memory copy is enough */ } go('workflow-new'); UI.nwf.appliesTo = 'Module'; render(); },
-  'wf-return': () => { returnToForm(null); },
+  // Create a workflow in a side panel over the module form: the form is never left, so every entry and upload stays as it is.
+  'wf-addnew': () => { if (!UI.nwf || !UI.nwf._panel) UI.nwf = { step: 0, maxStep: 0, triedSteps: [], name: '', desc: '', appliesTo: 'Module', steps: [], _panel: true }; UI.modal = { type: 'wf-panel', field: 'draft:workflow', back: UI.modal || null }; UI.msel = null; render(); setTimeout(() => { const f = document.getElementById('w-name'); f && f.focus(); }, 30); },
   'file-open': el => { UI.modal = { type: 'file', id: el.dataset.file, z: 1, back: UI.modal && UI.modal.type !== 'file' ? UI.modal : null }; render(); },
   'fv-zoom': el => { const M = UI.modal; const d = +el.dataset.v; M.z = d === 0 ? 1 : Math.max(0.25, Math.min(4, Math.round((M.z + d * 0.25) * 100) / 100)); render(); },
   'role-edit': el => { UI.modal = { type: 'role', id: el.dataset.role }; render(); },
@@ -5173,7 +5552,13 @@ const ACT = {
   'flt-rm': el => { UI.f[el.dataset.k] = el.dataset.def || ''; render(); },
   'flt-clear': el => { (FILTERS[el.dataset.id] || []).forEach(x => { UI.f[x.k] = x.def || ''; }); render(); },
   'tl-step': el => { UI.modal = { type: 'step', kind: el.dataset.kind, id: el.dataset.id, v: el.dataset.v, c: el.dataset.c, i: el.dataset.i }; render(); },
-  pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') S.notifSeen = Date.now(); render(); },
+  pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') { S.notifSeenBy = { ...(S.notifSeenBy || {}), [me().id]: Date.now() }; save(); } render(); },
+  // Open a mention: mark it read and go straight to the comment (review screen when the user acts on the step).
+  'notif-open': el => { const n = (S.notifications || []).find(x => x.id === el.dataset.id); if (!n) return; n.read = true; n.readAt = Date.now(); save(); UI.pop = null;
+    const o = objById(n.objType, n.objId); const asset = n.objType === 'Asset'; if (!o || !canSeeObj(me(), o)) { toast('You no longer have access to this item'); render(); return; }
+    if (o.review && canActOn(me(), o)) go(asset ? 'asset-review' : 'review', { id: o.id }); else go(asset ? 'asset' : 'module', { id: o.id, tab: 'comments' });
+    const U = annUI(); U.focus = n.annId; U.goto = n.annId; render(); },
+  'notif-readall': () => { (S.notifications || []).forEach(n => { if (n.to === me().id && !n.read) { n.read = true; n.readAt = Date.now(); } }); S.notifSeenBy = { ...(S.notifSeenBy || {}), [me().id]: Date.now() }; save(); render(); },
   logout: () => { log('Signed out', 'User', me(), 1); S.signedIn = false; save(); UI.modal = null; go('login'); },
   'modal-close': () => { UI.modal = (UI.modal && UI.modal.back) || null; UI.msel = null; render(); },
   'msel-open': el => { UI.msel = UI.msel === el.dataset.id ? null : el.dataset.id; UI.mselq = ''; render(); setTimeout(() => { const i = document.getElementById('mselq-' + el.dataset.id); i && i.focus(); }, 20); },
@@ -5337,8 +5722,10 @@ const ACT = {
   /* settings */
   'set-bool': el => { UI.setDraft[el.dataset.k] = !UI.setDraft[el.dataset.k]; render(); },
   'set-discard': () => { UI.setDraft = null; render(); },
+  'home-retry': () => render(),
   'set-save': () => {
     const D = UI.setDraft; let n = 0;
+    const ep = String(D.notifyEndpoint || '').trim(); if (ep && !/^https:\/\/[^\s/]+\.[^\s]+$/i.test(ep)) { toast('Email delivery endpoint must be a full https:// address', 'err'); return; } if ('notifyEndpoint' in D) D.notifyEndpoint = ep;
     SETTINGS.forEach(([, fields]) => fields.forEach(([k, label, type]) => { let val = D[k]; if (type === 'number') val = Math.max(1, Math.round(+val || 1)); if (String(val) !== String(S.settings[k])) { const show = x => type === 'bool' ? (x ? 'On' : 'Off') : type === 'wf' || type === 'wfa' ? (wfById(x) || {}).name : String(x); logAdmin('Setting changed', 'Settings', 'settings', { note: label, prev: show(S.settings[k]), next: show(val) }); S.settings[k] = val; n++; } }));
     UI.setDraft = null; save(); render(); toast(n ? n + ' setting' + (n > 1 ? 's' : '') + ' saved' : 'No changes');
   },
@@ -5566,19 +5953,11 @@ function saveModuleForm() {
   S.modules.push(m); if (D.media && D.media.fileId) log('Media uploaded', 'Module', m, 1, { next: D.media.name + ' · ' + fmtSize(D.media.size), note: (D.media.algo || '') + ' ' + D.media.checksum });
   log('Module created', 'Module', m, 1, { next: 'Draft', note: mtype(m.type).name + ' · ' + productsTxt(m.products) + ' · ' + m.markets.join(', ') + ' · owner ' + user(m.owner).name }); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
 }
-// Back to the form that asked for a new record, with its entries restored and the new record selected.
-function returnToForm(newId) {
-  let R = UI.returnTo; if (!R) { try { R = JSON.parse(sessionStorage.getItem('medlr-return') || 'null'); } catch (e) { R = null; } }
-  UI.returnTo = null; try { sessionStorage.removeItem('medlr-return'); } catch (e) { /* nothing stored */ }
-  if (!R) { go('modules'); return; }
-  UI.restoring = true; go(R.name, R.p); UI.restoring = false; UI.draft = R.draft; if (newId && R.field) UI.draft[R.field] = newId; render();
-  toast(newId ? 'Workflow created and selected — your module entries are kept' : 'Back to your module — entries kept');
-}
 function saveWorkflowForm() {
   if (!wizAdvance('workflow')) return;
   const D = UI.nwf; const w = { id: uid('WF'), name: D.name.trim(), desc: D.desc.trim(), appliesTo: D.appliesTo || 'Module', active: true, steps: D.steps.map(s => ({ ...s })) };
   S.workflows.push(w); logAdmin('Workflow created', 'Workflow', w.id, { next: w.steps.filter(s => !isNotify(s)).map(stepLabel).join(' → '), note: w.name }); save(); UI.nwf = null;
-  if (UI.returnTo || sessionStorage.getItem('medlr-return')) { returnToForm(w.appliesTo === 'Module' ? w.id : null); return; }
+  if (UI.modal && UI.modal.type === 'wf-panel') { const M = UI.modal; const ok = w.appliesTo === 'Module' && UI.draft; if (ok) UI.draft.workflow = w.id; UI.modal = M.back || null; render(); toast(ok ? 'Workflow “' + w.name + '” created and selected — your module entries are unchanged' : 'Workflow created'); return; }
   go('workflow', { id: w.id }); toast('Workflow created · ' + reviewSteps(w).length + ' steps');
 }
 function saveUserForm() {

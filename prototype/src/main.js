@@ -1,10 +1,11 @@
 /* ---------- Controller: routing, modals, actions ---------- */
-const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, references: () => viewSettings('references'), moduletypes: () => viewSettings('moduletypes'), channels: () => viewSettings('channels'), audiences: () => viewSettings('audiences'), functions: () => viewSettings('functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
+const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, roles: viewRoles, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, refdata: () => viewHub('refdata'), org: () => viewHub('org'), products: () => viewHub('refdata', 'products'), markets: () => viewHub('refdata', 'markets'), moduletypes: () => viewHub('refdata', 'moduletypes'), materials: () => viewHub('refdata', 'materials'), channels: () => viewHub('refdata', 'channels'), audiences: () => viewHub('refdata', 'audiences'), references: () => viewHub('refdata', 'references'), teams: () => viewHub('org', 'teams'), functions: () => viewHub('org', 'functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
 const app = document.getElementById('app');
 
 function go(name, p = {}) {
+  if (name === 'settings' && p.tab && typeof hubOf === 'function' && hubOf(p.tab)) { name = p.tab; p = {}; } // old Settings links to moved lists
   if (name === 'login' || name === 'forgot') { UI.modal = null; UI.f.resetSent = null; UI.f.forgotErr = null; UI.f.loginErr = null; }
-  if ((name === 'module-edit' || name === 'module-new') && (UI.route.name !== name || UI.route.p.id !== p.id) && !UI.restoring) UI.draft = null;
+  if ((name === 'module-edit' || name === 'module-new') && (UI.route.name !== name || UI.route.p.id !== p.id)) UI.draft = null;
   if (name === 'user-new' || name === 'user-edit') UI.udraft = null;
   if (name !== 'workflow') UI.wfDraft = null;
   if (name === 'workflow-new' && UI.route.name !== 'workflow-new') UI.nwf = null;
@@ -14,6 +15,38 @@ function go(name, p = {}) {
   save(); render(); window.scrollTo(0, 0);
 }
 
+/* In-place DOM patching. Re-rendering used to replace the whole app with innerHTML, which destroyed and rebuilt every
+   element on each interaction (images and PDF pages redrawn, videos restarted, panel scroll reset) — it looked like a reload.
+   patchDOM keeps every node that is still the same and only changes what differs. */
+function patchDOM(root, html) {
+  const tpl = document.createElement('template'); tpl.innerHTML = html;
+  try { patchChildren(root, tpl.content); } catch (e) { root.innerHTML = html; }
+}
+const sameNode = (a, b) => a.nodeType === b.nodeType && a.nodeName === b.nodeName && (a.nodeType !== 1 || ((a.id || '') === (b.id || '') && (a.getAttribute('data-key') || '') === (b.getAttribute('data-key') || '') && !(a.nodeName === 'INPUT' && a.type !== b.getAttribute('type') && (b.getAttribute('type') || 'text') !== a.type)));
+function patchChildren(from, to) {
+  // Text layers and other containers filled after render keep their content while the new markup leaves them empty.
+  if (from.nodeType === 1 && from.dataset && from.dataset.done && !to.firstChild) return;
+  const a = [...from.childNodes], b = [...to.childNodes];
+  for (let i = 0; i < b.length; i++) {
+    const nb = b[i], na = from.childNodes[i];
+    if (!na) { from.appendChild(nb.cloneNode(true)); continue; }
+    if (!sameNode(na, nb)) { from.replaceChild(nb.cloneNode(true), na); continue; }
+    if (na.nodeType === 3 || na.nodeType === 8) { if (na.nodeValue !== nb.nodeValue) na.nodeValue = nb.nodeValue; continue; }
+    patchEl(na, nb);
+  }
+  while (from.childNodes.length > b.length) from.removeChild(from.lastChild);
+}
+function patchEl(a, b) {
+  // media keeps playing or showing when its source is unchanged
+  if ((a.nodeName === 'VIDEO' || a.nodeName === 'IFRAME' || a.nodeName === 'OBJECT') && a.outerHTML !== b.outerHTML && a.innerHTML !== b.innerHTML) { a.replaceWith(b.cloneNode(true)); return; }
+  for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
+  for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
+  if (a.nodeName === 'INPUT') { const v = b.getAttribute('value') || ''; if (a.type === 'checkbox' || a.type === 'radio') a.checked = b.hasAttribute('checked'); else if (a.type !== 'file' && a.value !== v) a.value = v; return; }
+  if (a.nodeName === 'TEXTAREA') { const v = b.textContent; if (a.value !== v) a.value = v; return; }
+  if (a.nodeName === 'VIDEO') return;
+  patchChildren(a, b);
+  if (a.nodeName === 'SELECT') { const o = [...b.options].findIndex(x => x.hasAttribute('selected')); a.selectedIndex = o >= 0 ? o : 0; }
+}
 // A field that commits on blur can fire 'change' while the page is being replaced; defer that nested render.
 let rendering = false;
 function render() {
@@ -31,7 +64,7 @@ function renderNow() {
     html = viewShell(inner);
   }
   html += UI.modal ? viewModal() : '';
-  app.innerHTML = html;
+  patchDOM(app, html);
   paginateTables(); hydratePdfs(); hydrateReview();
   const rk = UI.route.name + JSON.stringify(UI.route.p || {}) + (S.signedIn ? 1 : 0);
   if (rk !== UI._rk) { UI._rk = rk; const c = document.getElementById('content'); if (c) { c.classList.add('enter'); countUp(c); } }
@@ -102,6 +135,7 @@ function viewModal() {
   if (M.type === 'role') return roleModal(M);
   if (M.type === 'compare') return roleCompareModal(M);
   if (M.type === 'file') return fileViewerModal(M);
+  if (M.type === 'wf-panel') return `<div class="scrim drawer-scrim" data-act="modal-bg"><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title"><header class="drawer-head"><div><span class="eyebrow">Create Module · ${esc((UI.draft && UI.draft.title) || 'new module')}</span><h2 id="dr-title">New workflow</h2><p class="muted">Your module entries stay as they are. The workflow is selected when you create it.</p></div><button type="button" class="btn icon" data-act="modal-close" aria-label="Close">${icon('x')}</button></header><div class="drawer-body">${viewWorkflowNew(true)}</div></aside></div>`;
   if (M.type === 'version') {
     const obj = objById(M.kind, M.id); const v = verOf(obj, +M.v);
     return modalShell('history', '', `Version ${v.v} · approval history`, `${esc(nameOf(obj))} · <span class="mono">${obj.id}</span>`, versionModalBody(obj, M.kind, v), `${v.approvedAt ? goBtn('Cover letter', 'cover', obj.id, '', 'award', ` data-k="${M.kind}" data-v="${v.v}"`) : ''}${btn('Close', 'modal-close', 'primary')}`, true);
@@ -231,9 +265,8 @@ const ACT = {
   'sop-bulk': el => { const D = UI.modal.d; const k = el.dataset.k; D[k] = el.dataset.v === 'all' ? (k === 'types' ? [...S.moduleTypes, ...S.materialTypes] : k === 'products' ? S.products : S.markets).map(x => x.id) : []; render(); },
   'cfg-quick': el => { const k = el.dataset.k; UI.modal = { type: 'cfg', k, d: cfgBlank(k), quick: el.dataset.field, back: UI.modal || null }; UI.msel = null; render(); setTimeout(() => { const f = document.querySelector('.modal [data-cfg]'); f && f.focus(); }, 30); },
   'd-wf': el => { UI.draft.workflow = el.dataset.v; UI.msel = null; UI.mselq = ''; render(); },
-  // Leave the module form for Workflow Management and come back with every entry kept.
-  'wf-addnew': () => { UI.returnTo = { name: UI.route.name, p: { ...UI.route.p }, draft: UI.draft, field: 'workflow' }; try { sessionStorage.setItem('medlr-return', JSON.stringify(UI.returnTo)); } catch (e) { /* the in-memory copy is enough */ } go('workflow-new'); UI.nwf.appliesTo = 'Module'; render(); },
-  'wf-return': () => { returnToForm(null); },
+  // Create a workflow in a side panel over the module form: the form is never left, so every entry and upload stays as it is.
+  'wf-addnew': () => { if (!UI.nwf || !UI.nwf._panel) UI.nwf = { step: 0, maxStep: 0, triedSteps: [], name: '', desc: '', appliesTo: 'Module', steps: [], _panel: true }; UI.modal = { type: 'wf-panel', field: 'draft:workflow', back: UI.modal || null }; UI.msel = null; render(); setTimeout(() => { const f = document.getElementById('w-name'); f && f.focus(); }, 30); },
   'file-open': el => { UI.modal = { type: 'file', id: el.dataset.file, z: 1, back: UI.modal && UI.modal.type !== 'file' ? UI.modal : null }; render(); },
   'fv-zoom': el => { const M = UI.modal; const d = +el.dataset.v; M.z = d === 0 ? 1 : Math.max(0.25, Math.min(4, Math.round((M.z + d * 0.25) * 100) / 100)); render(); },
   'role-edit': el => { UI.modal = { type: 'role', id: el.dataset.role }; render(); },
@@ -252,7 +285,13 @@ const ACT = {
   'flt-rm': el => { UI.f[el.dataset.k] = el.dataset.def || ''; render(); },
   'flt-clear': el => { (FILTERS[el.dataset.id] || []).forEach(x => { UI.f[x.k] = x.def || ''; }); render(); },
   'tl-step': el => { UI.modal = { type: 'step', kind: el.dataset.kind, id: el.dataset.id, v: el.dataset.v, c: el.dataset.c, i: el.dataset.i }; render(); },
-  pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') S.notifSeen = Date.now(); render(); },
+  pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') { S.notifSeenBy = { ...(S.notifSeenBy || {}), [me().id]: Date.now() }; save(); } render(); },
+  // Open a mention: mark it read and go straight to the comment (review screen when the user acts on the step).
+  'notif-open': el => { const n = (S.notifications || []).find(x => x.id === el.dataset.id); if (!n) return; n.read = true; n.readAt = Date.now(); save(); UI.pop = null;
+    const o = objById(n.objType, n.objId); const asset = n.objType === 'Asset'; if (!o || !canSeeObj(me(), o)) { toast('You no longer have access to this item'); render(); return; }
+    if (o.review && canActOn(me(), o)) go(asset ? 'asset-review' : 'review', { id: o.id }); else go(asset ? 'asset' : 'module', { id: o.id, tab: 'comments' });
+    const U = annUI(); U.focus = n.annId; U.goto = n.annId; render(); },
+  'notif-readall': () => { (S.notifications || []).forEach(n => { if (n.to === me().id && !n.read) { n.read = true; n.readAt = Date.now(); } }); S.notifSeenBy = { ...(S.notifSeenBy || {}), [me().id]: Date.now() }; save(); render(); },
   logout: () => { log('Signed out', 'User', me(), 1); S.signedIn = false; save(); UI.modal = null; go('login'); },
   'modal-close': () => { UI.modal = (UI.modal && UI.modal.back) || null; UI.msel = null; render(); },
   'msel-open': el => { UI.msel = UI.msel === el.dataset.id ? null : el.dataset.id; UI.mselq = ''; render(); setTimeout(() => { const i = document.getElementById('mselq-' + el.dataset.id); i && i.focus(); }, 20); },
@@ -416,8 +455,10 @@ const ACT = {
   /* settings */
   'set-bool': el => { UI.setDraft[el.dataset.k] = !UI.setDraft[el.dataset.k]; render(); },
   'set-discard': () => { UI.setDraft = null; render(); },
+  'home-retry': () => render(),
   'set-save': () => {
     const D = UI.setDraft; let n = 0;
+    const ep = String(D.notifyEndpoint || '').trim(); if (ep && !/^https:\/\/[^\s/]+\.[^\s]+$/i.test(ep)) { toast('Email delivery endpoint must be a full https:// address', 'err'); return; } if ('notifyEndpoint' in D) D.notifyEndpoint = ep;
     SETTINGS.forEach(([, fields]) => fields.forEach(([k, label, type]) => { let val = D[k]; if (type === 'number') val = Math.max(1, Math.round(+val || 1)); if (String(val) !== String(S.settings[k])) { const show = x => type === 'bool' ? (x ? 'On' : 'Off') : type === 'wf' || type === 'wfa' ? (wfById(x) || {}).name : String(x); logAdmin('Setting changed', 'Settings', 'settings', { note: label, prev: show(S.settings[k]), next: show(val) }); S.settings[k] = val; n++; } }));
     UI.setDraft = null; save(); render(); toast(n ? n + ' setting' + (n > 1 ? 's' : '') + ' saved' : 'No changes');
   },
@@ -645,19 +686,11 @@ function saveModuleForm() {
   S.modules.push(m); if (D.media && D.media.fileId) log('Media uploaded', 'Module', m, 1, { next: D.media.name + ' · ' + fmtSize(D.media.size), note: (D.media.algo || '') + ' ' + D.media.checksum });
   log('Module created', 'Module', m, 1, { next: 'Draft', note: mtype(m.type).name + ' · ' + productsTxt(m.products) + ' · ' + m.markets.join(', ') + ' · owner ' + user(m.owner).name }); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
 }
-// Back to the form that asked for a new record, with its entries restored and the new record selected.
-function returnToForm(newId) {
-  let R = UI.returnTo; if (!R) { try { R = JSON.parse(sessionStorage.getItem('medlr-return') || 'null'); } catch (e) { R = null; } }
-  UI.returnTo = null; try { sessionStorage.removeItem('medlr-return'); } catch (e) { /* nothing stored */ }
-  if (!R) { go('modules'); return; }
-  UI.restoring = true; go(R.name, R.p); UI.restoring = false; UI.draft = R.draft; if (newId && R.field) UI.draft[R.field] = newId; render();
-  toast(newId ? 'Workflow created and selected — your module entries are kept' : 'Back to your module — entries kept');
-}
 function saveWorkflowForm() {
   if (!wizAdvance('workflow')) return;
   const D = UI.nwf; const w = { id: uid('WF'), name: D.name.trim(), desc: D.desc.trim(), appliesTo: D.appliesTo || 'Module', active: true, steps: D.steps.map(s => ({ ...s })) };
   S.workflows.push(w); logAdmin('Workflow created', 'Workflow', w.id, { next: w.steps.filter(s => !isNotify(s)).map(stepLabel).join(' → '), note: w.name }); save(); UI.nwf = null;
-  if (UI.returnTo || sessionStorage.getItem('medlr-return')) { returnToForm(w.appliesTo === 'Module' ? w.id : null); return; }
+  if (UI.modal && UI.modal.type === 'wf-panel') { const M = UI.modal; const ok = w.appliesTo === 'Module' && UI.draft; if (ok) UI.draft.workflow = w.id; UI.modal = M.back || null; render(); toast(ok ? 'Workflow “' + w.name + '” created and selected — your module entries are unchanged' : 'Workflow created'); return; }
   go('workflow', { id: w.id }); toast('Workflow created · ' + reviewSteps(w).length + ' steps');
 }
 function saveUserForm() {

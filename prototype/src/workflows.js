@@ -75,7 +75,7 @@ function notifyFields(s, scope, i) {
 function flowPreview(steps, start, end) {
   return `<div class="flowx">${start ? `<div class="fx-term">${icon('send', 'sm')}<span>${start}</span></div><span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}${steps.map((s, i) => `${isNotify(s) ? `<div class="fx-node notify">${fnBadge('Email', 'lg')}<b>Email</b><span>To ${notifyTo(s).length || 0} ${notifyTo(s).length === 1 ? 'person' : 'people'}</span></div>` : `<div class="fx-node ${s.req === 'approve' ? 'final' : ''}">${fnBadge(s.fn, 'lg')}<b>${esc(s.fn)}</b><span>${s.req === 'approve' ? (isFinalStep({ steps }, i) ? 'Final approval' : 'Approval') : 'Review'}</span>${lvl(s.level)}</div>`}${i < steps.length - 1 || end ? `<span class="fx-arrow">${icon('chevron', 'sm')}</span>` : ''}`).join('')}${end ? `<div class="fx-term ok">${icon('check', 'sm')}<span>${end}</span></div>` : ''}</div>`;
 }
-function viewWorkflowNew() {
+function viewWorkflowNew(panel) {
   if (!UI.nwf) UI.nwf = { step: 0, maxStep: 0, triedSteps: [], name: '', desc: '', appliesTo: 'Module', steps: [] };
   const D = UI.nwf; const E = wizErrors(D, WSTEPS, validateWf(D)); const who = st => { const a = assigneeFor(st); return a.length ? a.map(x => x.name).join(', ') : 'No active ' + stepWho(st); }; const st = D.step; const hid = i => i === st ? '' : ' hidden';
   const err = k => E[k] ? `<span class="err">${esc(E[k])}</span>` : '';
@@ -90,10 +90,12 @@ function viewWorkflowNew() {
     </div>
     <div class="nwf-tools"><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === D.steps.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button type="button" class="btn icon sm danger" data-act="nwf-del" data-i="${i}" aria-label="Remove step">${icon('trash', 'sm')}</button></div>
   </div>`;
-  const back = UI.returnTo || (() => { try { return JSON.parse(sessionStorage.getItem('medlr-return') || 'null'); } catch (e) { return null; } })();
-  return pageHead('New workflow', 'Build a review route step by step. Level and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) +
-  (back ? `<div class="banner info" style="margin-bottom:14px">${icon('layers')}<div class="txt"><b>You came from ${esc(back.draft && back.draft.title ? '“' + back.draft.title + '”' : 'the module form')}</b><p>Your module entries are kept. After you create this workflow you return to the form with it selected.</p></div>${btn('Back without creating', 'wf-return', 'sm')}</div>` : '') +
-  wizBar('workflow', WSTEPS, D) +
+  if (panel) return workflowBuilder(D, E, err, issues, row, hid, st, who, 'data-act="modal-close"');
+  return pageHead('New workflow', 'Build a review route step by step. Level and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) + workflowBuilder(D, E, err, issues, row, hid, st, who, goAttr('workflows'));
+}
+// The workflow wizard. Used on the New workflow page and in the side panel opened from Create Module (cancelAttr decides where Cancel goes).
+function workflowBuilder(D, E, err, issues, row, hid, st, who, cancelAttr) {
+  return   wizBar('workflow', WSTEPS, D) +
   `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="workflow" novalidate><div class="stack">${wizHead(WSTEPS, D)}
   <section class="panel"${hid(0)}><div class="panel-head"><h3>Workflow details</h3></div><div class="panel-body form">
     <div class="field"><label for="w-name">Workflow name</label><input class="input ${E.name ? 'invalid' : ''}" id="w-name" data-w="name" value="${esc(D.name)}" placeholder="e.g. Medical education — Lead only">${err('name')}</div>
@@ -109,7 +111,7 @@ function viewWorkflowNew() {
   ${st === WSTEPS.length - 1 ? `${D.tried && Object.keys(E).length ? `<div class="banner bad">${icon('alert')}<div class="txt"><b>${Object.keys(E).length} item${Object.keys(E).length > 1 ? 's need' : ' needs'} attention</b><p>Use Edit to go back to that step.</p></div></div>` : ''}
   ${sumGroup('workflow', 0, 'Details', sumRow('Name', esc(D.name)) + sumRow('Applies to', D.appliesTo === 'Asset' ? 'Assets' : 'Modules') + sumRow('Description', esc(D.desc)))}
   <section class="panel sum"><div class="panel-head"><h3>Review flow</h3><span class="grow"></span><button type="button" class="btn ghost sm" data-act="wiz-go" data-form="workflow" data-i="1">${icon('edit', 'sm')}Edit</button></div><div class="panel-body">${flowPreview(D.steps, 'Submitted', 'Approved')}</div></section>` : ''}
-  ${wizFoot('workflow', WSTEPS, D, goAttr('workflows'), 'Create workflow')}</div>
+  ${wizFoot('workflow', WSTEPS, D, cancelAttr, 'Create workflow')}</div>
   <aside class="stack" style="position:sticky;top:84px">
     <section class="panel"><div class="panel-head"><h3>Review flow preview</h3></div><div class="panel-body">${D.steps.length ? `<div class="wf">${D.steps.map((s, i) => isNotify(s) ? `<div class="wf-step notify"><div class="wf-dot">${icon('mail', 'sm')}</div><div><div class="t">${fnBadge('Email', 'sm')}Email notification</div><div class="s">To ${esc(notifyTo(s).join(', ') || 'no one yet')}</div></div></div>` : `<div class="wf-step"><div class="wf-dot">${reviewPos(D, i)}</div><div><div class="t">${fnBadge(s.fn, 'sm')}${esc(s.fn)} <span class="muted">·</span> ${s.req === 'approve' ? (isFinalStep(D, i) ? 'Final approval' : 'Approval') : 'Review'} ${lvl(s.level)}</div><div class="s">${esc(stepTeamTxt(s))} · ${esc(who(s))}</div></div></div>`).join('')}</div>` : '<p class="muted">Steps appear here as you add them.</p>'}</div></section>
     <section class="panel"><div class="panel-head"><h3>Checks</h3></div><div class="panel-body stack" style="gap:8px">${!D.steps.length ? `<div class="check-row"><span class="no">${icon('x', 'sm')}</span>Add at least one step</div>` : issues.length ? issues.map(([t, msg]) => `<div class="check-row"><span class="${t === 'bad' ? 'no' : 'ok'}" style="${t === 'warn' ? 'color:var(--warn)' : ''}">${icon(t === 'bad' ? 'x' : 'alert', 'sm')}</span>${esc(msg)}</div>`).join('') : `<div class="check-row"><span class="ok">${icon('check', 'sm')}</span>Route is valid</div>`}</div></section>

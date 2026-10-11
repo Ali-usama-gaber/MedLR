@@ -9,7 +9,11 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   ok(!(await E(() => document.documentElement.innerHTML.includes('Open PDF'))), 'no action is labelled “Open PDF”');
   // PDF
   await E(() => go('module', { id: 'MOD-C-010' })); await W(800);
-  ok((await p.locator('[data-act=file-open]').count()) >= 1 && (await p.locator('a[data-file-dl]').count()) >= 1, 'PDF module offers Preview and Download');
+  ok((await p.locator('[data-act=file-open]').count()) >= 1 && !(await p.$('.fp a[data-file-dl], .fp [data-act=file-dl]')), 'PDF preview opens on click; no Preview/Download buttons beside it');
+  ok(await E(() => [...document.querySelectorAll('button, a')].every(b => !/^(Preview|Download)$/.test(b.textContent.trim()))), 'no standalone Preview/Download buttons on the module page');
+  await p.locator('.fmenu-btn').first().click(); await W();
+  ok(await p.isVisible('.fmenu-pop a[data-file-dl]') && await p.isVisible('.fmenu-pop [data-act=file-open]'), 'file actions menu offers Open in viewer and Download original');
+  await p.keyboard.press('Escape'); await E(() => { UI.pop = null; render(); }); await W();
   await p.locator('[data-act=file-open]').first().click(); await W(300);
   ok(await p.isVisible('.modal .fv'), 'Preview opens the in-app viewer');
   try { await p.waitForSelector('.fv-pages img', { timeout: 90000 }); ok(true, 'PDF pages render inside the app'); } catch (e) { ok(await p.isVisible('.fv-frame'), 'PDF falls back to the in-app browser viewer'); }

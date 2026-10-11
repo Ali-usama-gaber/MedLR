@@ -29,11 +29,15 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   await p.keyboard.press('Escape'); await W();
   await next(); ok(await E(() => UI.draft.step === 3) && (await p.textContent('.wfp + .err, .panel')).length > 0 && await E(() => !!document.querySelector('.wfp.invalid')), 'cannot continue without choosing a workflow (nothing is selected silently)');
   // ---- + Add new workflow: leave, create, come back with entries kept and the workflow selected
-  await p.click('[data-act=wf-addnew]'); await W(300); ok(await E(() => UI.route.name === 'workflow-new') && (await p.textContent('#content')).includes('Workflow picker test'), 'Add new workflow opens Workflow Management with a way back');
-  await p.fill('[data-w=name]', 'Oncology — fast track'); await p.fill('[data-w=desc]', 'Lead-only route for oncology congress claims'); await p.click('button[type=submit]'); await W();
-  await p.click('[data-act=nwf-tpl][data-v=std]'); await W(); await p.click('button[type=submit]'); await W(); await p.click('button[type=submit]'); await W(400);
+  const sy = await E(() => { const f = document.querySelector('#content form'); f._marker = 'kept'; window.scrollTo(0, 200); return window.scrollY; });
+  await p.click('[data-act=wf-addnew]'); await W(300);
+  ok(await E(() => UI.route.name === 'module-new' && UI.modal && UI.modal.type === 'wf-panel' && !!document.querySelector('.drawer')), 'Add new workflow opens a side panel over the form (no navigation)');
+  ok(await E(() => document.querySelector('#content form')._marker === 'kept'), 'the module form stays mounted underneath (same DOM node, not re-created)');
+  await p.fill('.drawer [data-w=name]', 'Oncology — fast track'); await p.fill('.drawer [data-w=desc]', 'Lead-only route for oncology congress claims'); await p.click('.drawer button[type=submit]'); await W();
+  await p.click('.drawer [data-act=nwf-tpl][data-v=std]'); await W(); await p.click('.drawer button[type=submit]'); await W(); await p.click('.drawer button[type=submit]'); await W(400);
   const NW = await E(() => S.workflows.find(w => w.name === 'Oncology — fast track').id);
-  ok(await E(nw => UI.route.name === 'module-new' && UI.draft.workflow === nw && UI.draft.title === 'Clinical Claim — Workflow picker test' && UI.draft.refs.includes('REF-A-01') && UI.draft.channels.length === 1, NW), 'back in Create Module: entries kept and the new workflow selected');
+  ok(await E(nw => UI.route.name === 'module-new' && !UI.modal && UI.draft.workflow === nw && UI.draft.title === 'Clinical Claim — Workflow picker test' && UI.draft.refs.includes('REF-A-01') && UI.draft.channels.length === 1, NW), 'panel closes: entries kept and the new workflow auto-selected');
+  ok(await E(() => document.querySelector('#content form')._marker === 'kept' && !sessionStorage.length), 'form never re-mounted; nothing written to browser session storage');
   await p.click('[data-act=msel-open][data-id=d-wf]'); await W(); ok(await E(nw => !!document.querySelector(`.wfp-opt[data-v="${nw}"]`), NW), 'new workflow available immediately in the dropdown'); await p.keyboard.press('Escape'); await W();
   await next(); await next(); await W(300); const MID = await E(() => UI.route.p.id);
   ok(await E(([id, nw]) => modById(id).workflow === nw && S.audit.some(e => e.objId === id && e.action === 'Module created'), [MID, NW]), 'module saved with its workflow relationship');
@@ -66,10 +70,10 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   await p.click('[data-act=role-compare]'); await W(); await p.click('[data-act=cmp-tab][data-v=review]'); await W(); await p.click('[data-act=cmp-diff]'); await W();
   ok(await E(() => [...document.querySelectorAll('.cmp-tbl tbody tr')].length < cmpKeys('review').length + 1), '“Only show differences” narrows the rows'); await p.click('[data-act=cmp-cancel]'); await W();
   // ---- Settings tabs
-  await G('settings'); ok((await p.locator('.set-tab').count()) >= 12, 'Settings shows vertical tabs (' + (await p.locator('.set-tab').count()) + ')');
-  await p.click('.set-tab[data-tab=products]'); await W(300); ok(await E(() => UI.route.p.tab === 'products' && document.querySelectorAll('.set-main table tbody tr').length === S.products.length), 'Products tab shows the products table');
-  await G('settings', { tab: 'markets' }); ok((await p.textContent('.set-main h1')).includes('Countries'), 'deep link to the Countries tab');
-  await G('channels'); ok(await E(() => !!document.querySelector('.set-tab.on[data-tab=channels]')), 'old Channels link opens inside the Settings tabs');
+  await G('settings'); ok((await p.locator('.set-tab').count()) === 6, 'Settings keeps its 6 preference tabs (' + (await p.locator('.set-tab').count()) + ')');
+  await G('refdata'); await p.click('.set-tab:has-text("Products")'); await W(300); ok(await E(() => UI.route.name === 'products' && document.querySelectorAll('.set-main table tbody tr').length === S.products.length), 'Products table opens inside Reference Data');
+  await G('markets'); ok((await p.textContent('.set-main h1')).includes('Countries'), 'deep link to Countries');
+  await G('channels'); ok(await E(() => !!document.querySelector('.set-tab.on') && document.querySelector('.set-tab.on').textContent.includes('Channels') && document.querySelector('.side .nav-item.active').title === 'Reference Data'), 'old Channels link opens inside Reference Data');
   await G('settings', { tab: 'lifecycle' }); ok(await p.isVisible('#st-expiryWarnDays'), 'Lifecycle rules tab shows its settings');
   // ---- permissions: add-new hidden or disabled with a reason
   await login('hana.zaki@saja.com'); await G('module-new'); await p.click('[data-act=d-type][data-v=TY-CLAIM]'); await next(); await p.fill('#d-title', 'x'); await p.fill('#d-body', 'Some content body'); await next();
