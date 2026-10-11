@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- SAJA MedLR build 2026-10-11 12:56 UTC -->
+<!-- SAJA MedLR build 2026-10-11 14:27 UTC -->
 <title>SAJA MedLR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1434,7 +1434,7 @@ td.late { color: #b3261e; font-weight: 700; }
 .fn-content { color: #4d5b55; } .fn-marketing { color: #2f5fa6; } .fn-admin { color: #24342d; }
 .obj-card { align-items: center; }
 .audit-tbl .pn { overflow-wrap: anywhere; }
-@media (min-width: 761px) { .audit-tbl { min-width: 1180px; } }
+@media (min-width: 821px) { .audit-tbl { min-width: 1180px; } }
 .audit-tbl .act-line { white-space: nowrap; }
 .audit-tbl td:nth-child(6) { min-width: 200px; }
 .audit-tbl td:nth-child(4) { min-width: 150px; }
@@ -2522,7 +2522,7 @@ mark.an-pt[data-n]::before { content: none; }
 .kpi .k-label { font-size: 11.5px; font-weight: 600; color: var(--ink-2); letter-spacing: 0; text-transform: none; }
 .kpis .kpi + .kpi { border-left: 1px solid var(--line); }
 /* tables */
-@media (min-width: 761px) {
+@media (min-width: 821px) {
   .tbl th { background: #fafbfa; font: var(--cap); letter-spacing: .08em; color: var(--ink-3); padding: 10px 16px; border-bottom: 1px solid var(--line); }
   .tbl td { padding: 12px 16px; border-bottom: 1px solid var(--line); }
   .tbl tr:last-child td { border-bottom: 0; }
@@ -2606,6 +2606,23 @@ mark.an-pt[data-n]::before { content: none; }
 .page-head::after { border-radius: inherit; }
 .page-head + .kpis.strip { position: relative; z-index: 4; }
 @media (max-width: 760px) { .itip-pop { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 95; box-shadow: 0 24px 60px -10px rgba(16, 24, 20, .45), 0 0 0 1px rgba(16, 24, 20, .06); } }
+/* QA fixes: background scroll lock, popovers flip upwards, long label links wrap */
+html { scrollbar-gutter: stable; }
+html.ov-open, html.ov-open body { overflow: hidden; }
+.pop.up { top: auto !important; bottom: calc(100% + 8px); }
+.label-row { flex-wrap: wrap; row-gap: 4px; }
+.label-row > span:last-child, .label-row > button:last-child { max-width: 100%; }
+.drawer { width: min(1040px, 100%); height: 100%; }
+.msel-pop.up { top: auto !important; bottom: calc(100% + 6px); }
+@media (max-width: 520px) { .wiz-foot { flex-wrap: wrap; gap: 8px; } .wiz-foot .grow { display: none; } .wiz-foot .btn { flex: 1 1 auto; padding: 0 12px; } .wiz-foot .btn.primary { min-width: 0; flex-basis: 100%; order: 3; } }
+@media (max-width: 760px) {
+  .page-head + .kpis.strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; margin-inline: 0; scroll-snap-type: none; }
+  .page-head + .kpis.strip .kpi { min-width: 0; border-left: 0; border-top: 1px solid var(--hz-line); padding: 12px 16px; }
+  .page-head + .kpis.strip .kpi:nth-child(2n) { border-left: 1px solid var(--hz-line); }
+  .page-head + .kpis.strip .kpi:nth-child(-n + 2) { border-top: 0; }
+  .page-head + .kpis.strip .kpi:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .page-head + .kpis.strip .kpi b { font-size: 24px; }
+}
 
 </style>
 </head>
@@ -3823,7 +3840,7 @@ const PRIO_TONE = { High: 'bad', Medium: 'warn', Normal: 'dim' };
 function homeScope(u) {
   if (isAdmin(u)) return { label: 'System-wide', f: () => true };
   if (fnInfo(u.fn).reviews) return { label: 'All content in MLR review', f: () => true };
-  return { label: 'Your team’s content', f: o => sameTeam(u, o) || (!!o.blocks && o.blocks.some(b => b.moduleId && sameTeam(u, modById(b.moduleId)))) };
+  return { label: 'Your team’s content', team: true, f: o => sameTeam(u, o) || (!!o.blocks && o.blocks.some(b => b.moduleId && sameTeam(u, modById(b.moduleId)))) };
 }
 /* Each Home section renders on its own: if one fails, it shows an inline error and the rest of the page still works. */
 function homeSafe(name, cls, fn) { try { return fn(); } catch (e) { console.error('Home section failed:', name, e); return `<section class="hz-card ${cls} hx-err" role="alert"><header class="hz-h"><h3>${esc(name)}</h3></header><div class="hx-empty">${icon('alert', 'sm')}<span>This section could not be loaded. The rest of Home is unaffected.</span><button type="button" class="btn sm" data-act="home-retry">Try again</button></div></section>`; } }
@@ -3849,7 +3866,7 @@ function hzStepper(o) {
 function viewHome() {
   const u = me(); const tasks = tasksFor(u); const a = authority(u.fn, u.level); const first = u.name.split(' ')[0]; const admin = isAdmin(u);
   const now = new Date(); const NOW = now.getTime(); const today = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const sc = homeScope(u); const mods = S.modules.filter(sc.f); const seeAssets = can(u, 'page_assets'); const assets = seeAssets ? S.assets.filter(sc.f) : [];
+  const sc = homeScope(u); const mGo = extra => goAttr('modules', null, extra + (sc.team ? ' data-setf="mscope=team"' : '')); const aGo = f => goAttr('assets', null, ` data-setf="${f}${sc.team ? '&ascope=team' : ''}"`); const mods = S.modules.filter(sc.f); const seeAssets = can(u, 'page_assets'); const assets = seeAssets ? S.assets.filter(sc.f) : [];
   const libOk = m => ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '');
   const mIn = mods.filter(m => m.review), mDraft = mods.filter(m => ['Draft', 'Awaiting Lead submission'].includes(statusOf(m))), mAmend = mods.filter(m => statusOf(m) === 'Amendment Requested');
   const aAmend = assets.filter(x => statusOf(x) === 'Amendment Requested'); const aIn = assets.filter(x => x.review); const mLive = mods.filter(libOk); const mExp = mods.filter(m => libraryStatus(m) === 'Expiring');
@@ -3877,10 +3894,10 @@ function viewHome() {
     const buckets = [[0, 30], [31, 60], [61, 90]].map(([lo, hi]) => mods.filter(m => live(m) && !m.archived && liveMeta(m).expiry && daysTo(liveMeta(m).expiry) >= lo && daysTo(liveMeta(m).expiry) <= hi).length);
     const kp = [
       can(u, 'page_tasks') && K('tasks', 'My tasks', tasks.length, '', high ? `<b>${high}</b> high priority` : tasks.length ? 'None past SLA' : 'Nothing waiting', prio, goAttr('tasks'), high ? 'bad' : ''),
-      K('inreview', 'Modules in review', mIn.length, '', mIn.length ? 'Oldest step ' + fmtDur(NOW - Math.min(...mIn.map(m => m.review.stepStartedAt))) : 'None waiting', hzSpark(inRevS, wkLab, 'in review'), goAttr('modules', null, ' data-mstat="In Review"')),
-      K('amend', 'Amendment requests', mAmend.length + aAmend.length, '', mAmend.length + ' module' + (mAmend.length === 1 ? '' : 's') + (seeAssets ? ' · ' + aAmend.length + ' asset' + (aAmend.length === 1 ? '' : 's') : ''), hzSpark(amendS, wkLab, 'requested', 'bars'), goAttr('modules', null, ' data-mstat="Amendment Requested"'), mAmend.length + aAmend.length ? 'warn' : ''),
-      K('approved', 'Approved modules', mLive.length, '', (() => { const d = mLive.length - apprS[7]; return d > 0 ? `<b>+${d}</b> in 4 weeks` : 'Live in the library'; })(), hzSpark(apprS, wkLab, 'approved'), goAttr('modules', null, ' data-mstat="live"')),
-      K('expiring', 'Expiring soon', mExp.length, '', (expired ? `<b>${expired}</b> expired · ` : '') + '≤ ' + S.settings.expiryWarnDays + ' days', `<span class="hz-runw" aria-hidden="true">${buckets.map((n, i) => `<i data-tip="${['0–30', '31–60', '61–90'][i]} days · ${n} expiring" style="--h:${Math.min(100, 18 + n * 28)}%" class="${n ? 'on' : ''}"></i>`).join('')}<em>0–90 d</em></span>`, goAttr('modules', null, ' data-mstat="Expiring"'), mExp.length || expired ? 'warn' : ''),
+      K('inreview', 'Modules in review', mIn.length, '', mIn.length ? 'Oldest step ' + fmtDur(NOW - Math.min(...mIn.map(m => m.review.stepStartedAt))) : 'None waiting', hzSpark(inRevS, wkLab, 'in review (estimated from review dates)'), mGo(' data-mstat="In Review"')),
+      K('amend', 'Amendment requests', mAmend.length + aAmend.length, '', mAmend.length + ' module' + (mAmend.length === 1 ? '' : 's') + (seeAssets ? ' · ' + aAmend.length + ' asset' + (aAmend.length === 1 ? '' : 's') : ''), hzSpark(amendS, wkLab, 'requested', 'bars'), mGo(' data-mstat="Amendment Requested"'), mAmend.length + aAmend.length ? 'warn' : ''),
+      K('approved', 'Approved modules', mLive.length, '', (() => { const d = mLive.length - apprS[7]; return d > 0 ? `<b>+${d}</b> in 4 weeks` : 'Live in the library'; })(), hzSpark(apprS, wkLab, 'approved (estimated from approval dates)'), mGo(' data-mstat="live"')),
+      K('expiring', 'Expiring soon', mExp.length, '', (expired ? `<b>${expired}</b> expired · ` : '') + '≤ ' + S.settings.expiryWarnDays + ' days', `<span class="hz-runw" aria-hidden="true">${buckets.map((n, i) => `<i data-tip="${['0–30', '31–60', '61–90'][i]} days · ${n} expiring" style="--h:${Math.min(100, 18 + n * 28)}%" class="${n ? 'on' : ''}"></i>`).join('')}<em>0–90 d</em></span>`, mGo(' data-mstat="Expiring"'), mExp.length || expired ? 'warn' : ''),
       !P ? K('avg', 'Avg. approval time', '—', '', 'Unavailable', '', '') : K('avg', 'Avg. approval time', P.done.length ? durDays(P.avgApproval) : '—', P.done.length ? 'days' : '', P.n ? Math.round(100 * P.approvalRate) + '% approval rate · 90 d' : 'No cycles in 90 days', hzSpark(weeklyApprovals(cycAll).map(w => w.n), wkLab, 'approvals', 'bars'), can(u, 'view_reports') ? goAttr('reports') : '')
     ].filter(Boolean);
     const qa = [canCreateModule(u) && can(u, 'page_modules') && `<button class="hz-btn pri" ${goAttr('module-new')}>${icon('plus', 'sm')}Create module</button>`, canCreateAsset(u) && seeAssets && `<button class="hz-btn" data-act="asset-new">${icon('layers', 'sm')}Create asset</button>`, can(u, 'page_library') && `<button class="hz-btn" ${goAttr('library')}>${icon('book', 'sm')}Approved Library</button>`].filter(Boolean).join('');
@@ -3889,12 +3906,12 @@ function viewHome() {
 
   /* Secondary inventory — every figure links to its list */
   const inv = homeSafe('Workspace', 'span12', () => { const sec = [
-      ['grid', mods.length, 'modules', mods.filter(m => isMediaType(m.type)).length + ' media & docs', goAttr('modules', null, ' data-mstat=""')],
-      ['file', mDraft.length, mDraft.length === 1 ? 'draft' : 'drafts', '', goAttr('modules', null, ' data-mstat="open"')],
-      seeAssets && ['layers', aIn.length, aIn.length === 1 ? 'asset in review' : 'assets in review', 'of ' + assets.length, goAttr('assets', null, ' data-setf="astat=In Review"')],
-      seeAssets && ['check', assets.filter(x => live(x)).length, 'approved assets', '', goAttr('assets', null, ' data-setf="astat=Approved"')],
+      ['grid', mods.length, 'modules', mods.filter(m => isMediaType(m.type)).length + ' media & docs', mGo(' data-mstat=""')],
+      ['file', mDraft.length, mDraft.length === 1 ? 'draft' : 'drafts', '', mGo(' data-mstat="open"')],
+      seeAssets && ['layers', aIn.length, aIn.length === 1 ? 'asset in review' : 'assets in review', 'of ' + assets.length, aGo('astat=In Review')],
+      seeAssets && ['check', assets.filter(x => live(x)).length, 'approved assets', '', aGo('astat=Approved')],
       (admin || can(u, ['manage_workflows', 'page_admin'])) && ['workflow', S.workflows.filter(w => !w.hidden && w.active !== false).length, 'active workflows', '', goAttr('workflows')],
-      (admin || can(u, ['manage_users', 'page_admin'])) && ['users', S.users.filter(x => x.status === 'Active').length, 'active users', S.functions.filter(f => f.active).length + ' functions', goAttr('users')]
+      (admin || can(u, ['manage_users', 'page_admin'])) && ['users', S.users.filter(x => x.status === 'Active').length, 'active users', S.functions.filter(f => f.active).length + ' functions', goAttr('users', null, ' data-setf="usst=Active"')]
     ].filter(Boolean);
     return `<nav class="hx-sec hz-inv" aria-label="Workspace figures">${sec.map(s => `<button type="button" ${s[4]}>${icon(s[0], 'sm')}<b>${s[1]} ${s[2]}</b>${s[3] ? `<span>${s[3]}</span>` : ''}</button>`).join('')}</nav>`; });
 
@@ -3927,8 +3944,8 @@ function viewHome() {
     const st = [['Draft', mDraft.length, 'dim', 'open', 'edit', 'Being prepared'], ['In review', mIn.length, 's1', 'In Review', 'shieldcheck', 'With MLR reviewers'], ['Amendment', mAmend.length, 'warn', 'Amendment Requested', 'undo', 'Back with the owner'], ['Approved', live2, 'ok', 'live', 'check', 'Live in the library'], ['Approved · expiring', mExp.length, 'bad', 'Expiring', 'clock', 'Within ' + S.settings.expiryWarnDays + ' days of expiry']];
     const tot = st.reduce((s, x) => s + x[1], 0); const inFn = reviewFuncs().map(fn => [fn, mIn.filter(m => curStep(m).fn === fn).length]);
     return `<section class="hz-card span4" aria-labelledby="hx-t-pipe"><header class="hz-h"><h3 id="hx-t-pipe">Approval pipeline</h3><span class="grow"></span><span class="hz-ctx">${tot} modules</span></header>
-      <ol class="hz-flow">${st.map(s => `<li><button type="button" ${goAttr('modules', null, ` data-mstat="${s[3]}"`)} class="t-${s[2]}"><span class="hz-node">${icon(s[4], 'sm')}</span><span class="hz-fl"><span class="hz-fn"><b>${s[0]}</b><em>${s[5]}</em></span><span class="hz-ft"><i style="width:${tot ? 100 * s[1] / tot : 0}%" data-tip="${esc(s[0] + ' · ' + s[1] + ' of ' + tot + ' modules')}"></i></span></span><span class="hz-fv"><b>${s[1]}</b><em>${tot ? Math.round(100 * s[1] / tot) : 0}%</em></span></button></li>`).join('')}</ol>
-      <div class="hz-chain"><span class="hz-cap">In review now · by step</span><div class="hz-chain-r">${inFn.length ? inFn.map(([fn, n], i) => `${i ? `<span class="hz-arrow" aria-hidden="true"></span>` : ''}<button type="button" class="hz-cn ${n ? 'on' : ''}" ${goAttr('modules', null, ' data-mstat="In Review"')} data-tip="${esc(fn + ' · ' + n + ' module' + (n === 1 ? '' : 's') + ' at this step')}">${fnBadge(fn, 'sm')}<b>${n}</b><span>${esc(fn)}</span></button>`).join('') : '<p class="hx-muted">No review functions configured.</p>'}</div></div></section>`; });
+      <ol class="hz-flow">${st.map(s => `<li><button type="button" ${mGo(` data-mstat="${s[3]}"`)} class="t-${s[2]}"><span class="hz-node">${icon(s[4], 'sm')}</span><span class="hz-fl"><span class="hz-fn"><b>${s[0]}</b><em>${s[5]}</em></span><span class="hz-ft"><i style="width:${tot ? 100 * s[1] / tot : 0}%" data-tip="${esc(s[0] + ' · ' + s[1] + ' of ' + tot + ' modules')}"></i></span></span><span class="hz-fv"><b>${s[1]}</b><em>${tot ? Math.round(100 * s[1] / tot) : 0}%</em></span></button></li>`).join('')}</ol>
+      <div class="hz-chain"><span class="hz-cap">In review now · by step</span><div class="hz-chain-r">${inFn.length ? inFn.map(([fn, n], i) => `${i ? `<span class="hz-arrow" aria-hidden="true"></span>` : ''}<button type="button" class="hz-cn ${n ? 'on' : ''}" ${mGo(' data-mstat="In Review"')} data-tip="${esc(fn + ' · ' + n + ' module' + (n === 1 ? '' : 's') + ' at this step')}">${fnBadge(fn, 'sm')}<b>${n}</b><span>${esc(fn)}</span></button>`).join('') : '<p class="hx-muted">No review functions configured.</p>'}</div></div></section>`; });
 
   /* ---- Approval performance ---- */
   const perf = homeSafe('Approval performance', 'span8', () => { if (!P) throw new Error('Approval statistics unavailable');
@@ -4029,11 +4046,11 @@ function viewTimeline(list, compact) {
 const MOD_STATUSES = ['Draft', 'Awaiting Lead submission', 'In Review', 'Amendment Requested', 'Rejected', 'Approved', 'Active', 'Expiring', 'Review Required', 'Archived'];
 function viewModules() {
   const u = me(); const q = F('mq').toLowerCase(); const ls = m => lifeStatus(m);
-  const rows = S.modules.filter(m => (!q || modText(m).includes(q)) && (!F('mcat') || (F('mcat') === 'media') === isMediaType(m.type)) && (!F('mprod') || m.products.includes(F('mprod'))) && (!F('mtype') || m.type === F('mtype')) && (!F('mmkt') || m.markets.includes(F('mmkt'))) && (!F('mstat') || ls(m) === F('mstat') || (F('mstat') === 'live' && ['Approved', 'Active'].includes(ls(m))) || (F('mstat') === 'open' && ['Draft', 'Awaiting Lead submission'].includes(ls(m))) || (F('mstat') === 'issues' && ['Draft', 'Awaiting Lead submission', 'Amendment Requested', 'In Review'].includes(ls(m)) && validationIssues(m, 'Module').length)) && (!F('maud') || m.audience === F('maud')) && (!F('mch') || m.channels.includes(F('mch'))) && (!F('mown') || m.owner === F('mown')) && (!F('mwf') || (lastWf(m) || {}).id === F('mwf')) && (!F('mupd') || m.updatedAt > Date.now() - +F('mupd') * DAY) && (!F('mexp') || (F('mexp') === 'rev90' ? m.reviewDate && daysTo(m.reviewDate) <= 90 : F('mexp') === 'past' ? m.expiry && m.expiry < Date.now() : m.expiry && daysTo(m.expiry) >= 0 && daysTo(m.expiry) <= +F('mexp')))).sort((a, b) => b.updatedAt - a.updatedAt);
+  const rows = S.modules.filter(m => (!q || modText(m).includes(q)) && (!F('mscope') || homeScope(me()).f(m)) && (!F('mcat') || (F('mcat') === 'media') === isMediaType(m.type)) && (!F('mprod') || m.products.includes(F('mprod'))) && (!F('mtype') || m.type === F('mtype')) && (!F('mmkt') || m.markets.includes(F('mmkt'))) && (!F('mstat') || ls(m) === F('mstat') || (F('mstat') === 'live' && ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '')) || (F('mstat') === 'open' && ['Draft', 'Awaiting Lead submission'].includes(ls(m))) || (F('mstat') === 'issues' && ['Draft', 'Awaiting Lead submission', 'Amendment Requested', 'In Review'].includes(ls(m)) && validationIssues(m, 'Module').length)) && (!F('maud') || m.audience === F('maud')) && (!F('mch') || m.channels.includes(F('mch'))) && (!F('mown') || m.owner === F('mown')) && (!F('mwf') || (lastWf(m) || {}).id === F('mwf')) && (!F('mupd') || m.updatedAt > Date.now() - +F('mupd') * DAY) && (!F('mexp') || (F('mexp') === 'rev90' ? m.reviewDate && daysTo(m.reviewDate) <= 90 : F('mexp') === 'past' ? m.expiry && m.expiry < Date.now() : m.expiry && daysTo(m.expiry) >= 0 && daysTo(m.expiry) <= +F('mexp')))).sort((a, b) => b.updatedAt - a.updatedAt);
   const n = f => S.modules.filter(f).length;
   return pageHead('Modules', 'The reusable content units of SAJA MedLR. Each module is approved once through MLR review and then reused in every eligible material.', canCreateModule(u) ? goBtn('Create module', 'module-new', null, 'primary', 'plus') : '') +
-  statStrip([['In the Approved Library', n(m => ['Approved', 'Active'].includes(ls(m))), 'ok', 'Open the library →', 'go', 'library'], ['In review', n(m => ls(m) === 'In Review'), 'warn', 'With MLR reviewers', 'mstat', 'In Review'], ['Amendment requested', n(m => ls(m) === 'Amendment Requested'), 'warn', 'Resume after update', 'mstat', 'Amendment Requested'], ['Rejected', n(m => ls(m) === 'Rejected'), 'bad', 'New version needed', 'mstat', 'Rejected'], ['Expiring', n(m => ls(m) === 'Expiring'), 'warn', 'Within ' + S.settings.expiryWarnDays + ' days', 'mstat', 'Expiring'], ['Draft', n(m => ['Draft', 'Awaiting Lead submission'].includes(ls(m))), 'dim', 'Not submitted', 'mstat', 'open']]) +
-  `${filterBar('modules', `${fsearch('mq', F('mq'), 'Search title, ID or text')}${fsel('mprod', F('mprod'), S.products.map(p => [p.id, p.name]), 'All products')}${fsel('mmkt', F('mmkt'), S.markets.map(m => [m.id, m.name]), 'All countries')}${fsel('mcat', F('mcat'), [['content', 'Content modules'], ['media', 'Media & document modules']], 'All categories')}${fsel('mtype', F('mtype'), S.moduleTypes.map(t => [t.id, t.name]), 'All module types')}${fsel('mstat', F('mstat'), [...MOD_STATUSES, ['live', 'Approved & active'], ['open', 'Not submitted'], ['issues', 'Failing validation']], 'All statuses')}${fsel('maud', F('maud'), S.audiences.map(a => [a.id, a.name]), 'All audiences')}${fsel('mch', F('mch'), S.channels.map(c => [c.id, c.name]), 'All channels')}${fsel('mown', F('mown'), uniq(S.modules.map(m => m.owner)).map(id => [id, user(id).name]), 'All owners')}${fsel('mwf', F('mwf'), S.workflows.filter(w => !w.hidden && w.appliesTo === 'Module').map(w => [w.id, w.name]), 'All workflows')}${fsel('mupd', F('mupd'), [['7', 'Updated in last 7 days'], ['30', 'Updated in last 30 days'], ['90', 'Updated in last 90 days']], 'Any time')}${fsel('mexp', F('mexp'), [['30', 'Expires within 30 days'], ['90', 'Expires within 90 days'], ['rev90', 'Review due within 90 days'], ['past', 'Expired']], 'Any expiry / review')}`, `${rows.length} of ${S.modules.length}`)}
+  statStrip([['In the Approved Library', n(m => ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '')), 'ok', 'Open the library →', 'go', 'library'], ['In review', n(m => ls(m) === 'In Review'), 'warn', 'With MLR reviewers', 'mstat', 'In Review'], ['Amendment requested', n(m => ls(m) === 'Amendment Requested'), 'warn', 'Resume after update', 'mstat', 'Amendment Requested'], ['Rejected', n(m => ls(m) === 'Rejected'), 'bad', 'New version needed', 'mstat', 'Rejected'], ['Expiring', n(m => ls(m) === 'Expiring'), 'warn', 'Within ' + S.settings.expiryWarnDays + ' days', 'mstat', 'Expiring'], ['Draft', n(m => ['Draft', 'Awaiting Lead submission'].includes(ls(m))), 'dim', 'Not submitted', 'mstat', 'open']]) +
+  `${filterBar('modules', `${fsearch('mq', F('mq'), 'Search title, ID or text')}${fsel('mscope', F('mscope'), [['team', 'Your team’s content']], 'All content', 'Scope')}${fsel('mprod', F('mprod'), S.products.map(p => [p.id, p.name]), 'All products')}${fsel('mmkt', F('mmkt'), S.markets.map(m => [m.id, m.name]), 'All countries')}${fsel('mcat', F('mcat'), [['content', 'Content modules'], ['media', 'Media & document modules']], 'All categories')}${fsel('mtype', F('mtype'), S.moduleTypes.map(t => [t.id, t.name]), 'All module types')}${fsel('mstat', F('mstat'), [...MOD_STATUSES, ['live', 'In the Approved Library'], ['open', 'Not submitted'], ['issues', 'Failing validation']], 'All statuses')}${fsel('maud', F('maud'), S.audiences.map(a => [a.id, a.name]), 'All audiences')}${fsel('mch', F('mch'), S.channels.map(c => [c.id, c.name]), 'All channels')}${fsel('mown', F('mown'), uniq(S.modules.map(m => m.owner)).map(id => [id, user(id).name]), 'All owners')}${fsel('mwf', F('mwf'), S.workflows.filter(w => !w.hidden && w.appliesTo === 'Module').map(w => [w.id, w.name]), 'All workflows')}${fsel('mupd', F('mupd'), [['7', 'Updated in last 7 days'], ['30', 'Updated in last 30 days'], ['90', 'Updated in last 90 days']], 'Any time')}${fsel('mexp', F('mexp'), [['30', 'Expires within 30 days'], ['90', 'Expires within 90 days'], ['rev90', 'Review due within 90 days'], ['past', 'Expired']], 'Any expiry / review')}`, `${rows.length} of ${S.modules.length}`)}
   <section class="panel table-wrap">${rows.length ? `<table class="tbl list-tbl"><thead><tr><th>Module</th><th>Products</th><th>Countries</th><th>Version</th><th>Status</th><th>Owner</th><th>Updated</th></tr></thead><tbody>
   ${rows.map(m => { const l = latest(m), lv = live(m); return `<tr class="click" ${goAttr('module', m.id)} tabindex="0"><td><div class="cell-title">${modThumb(m, latest(m))}<div><div class="title">${esc(m.title)}</div><span class="mono muted">${m.id} · ${esc(mtype(m.type).name)}</span></div></div></td><td>${tagList(m.products, 'p')}</td><td>${tagList(m.markets)}</td><td class="nw">${vtag(l.v)}${lv && lv.v !== l.v ? ` <span class="muted" style="font-size:11.5px">v${lv.v} live</span>` : ''}</td><td>${chip(lifeStatus(m))}</td><td>${userCell(m.owner)}</td><td class="muted num nw">${ago(m.updatedAt)}</td></tr>`; }).join('')}
   </tbody></table>` : `<div class="empty"><h4>No modules match these filters</h4><p>Clear a filter or search for a different term.</p></div>`}</section>`;
@@ -4862,11 +4879,11 @@ const isOutdated = a => a.blocks.some(b => { const mm = b.kind === 'module' && m
 const assetTarget = a => a.review && canActOn(me(), a) ? 'asset-review' : 'asset';
 function viewAssets() {
   const u = me(); const q = F('aq').toLowerCase();
-  const rows = S.assets.filter(a => (!q || (a.name + a.id).toLowerCase().includes(q)) && (!F('aprod') || a.products.includes(F('aprod'))) && (!F('amkt') || a.markets.includes(F('amkt'))) && (!F('atype') || a.type === F('atype')) && (!F('astat') || statusOf(a) === F('astat') || (F('astat') === 'outdated' && isOutdated(a)) || (F('astat') === 'open' && ['Draft', 'Awaiting Lead submission'].includes(statusOf(a)))) && (!F('aaud') || a.audience === F('aaud')) && (!F('ach') || a.channel === F('ach')) && (!F('aown') || a.owner === F('aown'))).sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
+  const rows = S.assets.filter(a => (!q || (a.name + a.id).toLowerCase().includes(q)) && (!F('ascope') || homeScope(me()).f(a)) && (!F('aprod') || a.products.includes(F('aprod'))) && (!F('amkt') || a.markets.includes(F('amkt'))) && (!F('atype') || a.type === F('atype')) && (!F('astat') || statusOf(a) === F('astat') || (F('astat') === 'outdated' && isOutdated(a)) || (F('astat') === 'open' && ['Draft', 'Awaiting Lead submission'].includes(statusOf(a)))) && (!F('aaud') || a.audience === F('aaud')) && (!F('ach') || a.channel === F('ach')) && (!F('aown') || a.owner === F('aown'))).sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
   const n = f => S.assets.filter(f).length;
   return pageHead('Assets', 'Materials assembled from approved modules. Any text that is not an approved module is flagged as new content and goes through full MLR review.', canCreateAsset(u) ? btn('Create asset', 'asset-new', 'primary', '', 'plus') : '') +
   statStrip([['Approved', n(a => statusOf(a) === 'Approved'), 'ok', 'Ready to use', 'astat', 'Approved'], ['In review', n(a => statusOf(a) === 'In Review'), 'warn', 'With MLR reviewers', 'astat', 'In Review'], ['Amendment requested', n(a => statusOf(a) === 'Amendment Requested'), 'warn', 'Resume after update', 'astat', 'Amendment Requested'], ['Needs update', n(isOutdated), 'bad', 'Uses an older module version', 'astat', 'outdated'], ['Draft', n(a => ['Draft', 'Awaiting Lead submission'].includes(statusOf(a))), 'dim', 'Being assembled', 'astat', 'open']]) +
-  `${filterBar('assets', `${fsearch('aq', F('aq'), 'Search assets')}${fsel('aprod', F('aprod'), S.products.map(p => [p.id, p.name]), 'All products')}${fsel('amkt', F('amkt'), S.markets.map(m => [m.id, m.name]), 'All countries')}${fsel('atype', F('atype'), S.materialTypes.map(t => [t.id, t.name]), 'All material types')}${fsel('astat', F('astat'), ['Draft', 'Awaiting Lead submission', 'In Review', 'Amendment Requested', 'Rejected', 'Approved', ['outdated', 'Needs update'], ['open', 'Not submitted']], 'All statuses')}${fsel('aaud', F('aaud'), S.audiences.map(x => [x.id, x.name]), 'All audiences')}${fsel('ach', F('ach'), S.channels.map(c => [c.id, c.name]), 'All channels')}${fsel('aown', F('aown'), uniq(S.assets.map(x => x.owner)).map(id => [id, user(id).name]), 'All owners')}`, `${rows.length} of ${S.assets.length}`)}
+  `${filterBar('assets', `${fsearch('aq', F('aq'), 'Search assets')}${fsel('ascope', F('ascope'), [['team', 'Your team’s content']], 'All content', 'Scope')}${fsel('aprod', F('aprod'), S.products.map(p => [p.id, p.name]), 'All products')}${fsel('amkt', F('amkt'), S.markets.map(m => [m.id, m.name]), 'All countries')}${fsel('atype', F('atype'), S.materialTypes.map(t => [t.id, t.name]), 'All material types')}${fsel('astat', F('astat'), ['Draft', 'Awaiting Lead submission', 'In Review', 'Amendment Requested', 'Rejected', 'Approved', ['outdated', 'Needs update'], ['open', 'Not submitted']], 'All statuses')}${fsel('aaud', F('aaud'), S.audiences.map(x => [x.id, x.name]), 'All audiences')}${fsel('ach', F('ach'), S.channels.map(c => [c.id, c.name]), 'All channels')}${fsel('aown', F('aown'), uniq(S.assets.map(x => x.owner)).map(id => [id, user(id).name]), 'All owners')}`, `${rows.length} of ${S.assets.length}`)}
   <section class="panel table-wrap">${rows.length ? `<table class="tbl list-tbl"><thead><tr><th>Asset</th><th>Products</th><th>Countries</th><th>Channel</th><th>Content</th><th>Version</th><th>Status</th><th>Owner</th></tr></thead><tbody>${rows.map(a => { const nNew = a.blocks.filter(b => b.kind === 'new').length;
     return `<tr class="click" ${goAttr(assetTarget(a), a.id)} tabindex="0"><td><div class="cell-title"><span class="type-ico">${icon('layers', 'sm')}</span><div><div class="title">${esc(a.name)}</div><span class="mono muted">${a.id} · ${esc(mat(a.type).name)}</span></div></div></td><td>${tagList(a.products, 'p')}</td><td>${tagList(a.markets)}</td><td class="nw">${esc(chan(a.channel).name)}</td><td><div class="content-mix"><span><span class="k-dot ok"></span>${a.blocks.length - nNew} approved</span>${nNew ? `<span><span class="k-dot warn"></span>${nNew} new text</span>` : ''}${isOutdated(a) ? `<span><span class="k-dot bad"></span>Older version</span>` : ''}</div></td><td>${vtag(latest(a).v)}</td><td>${chip(statusOf(a))}</td><td>${userCell(a.owner)}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty"><h4>No assets match these filters</h4><p>Clear a filter or create a new asset.</p></div>'}</section>`;
 }
@@ -5144,7 +5161,7 @@ function viewUsers(cr) {
   const nF = f => S.users.filter(x => x.fn === f && x.status === 'Active').length;
   const lastAct = id => { const e = S.audit.filter(a => a.user === id).sort((a, b) => b.ts - a.ts)[0]; return e ? ago(e.ts) : '—'; };
   return pageHead('Users', 'Everyone who can sign in, with their function, level and team.', can(me(), 'manage_users') ? goBtn('Create user', 'user-new', null, 'primary', 'plus') : '', cr || null, ['users', 'Membership vs. permissions', '<p><b>Team and function</b> say where a person belongs in the organisation.</p><p><b>Role</b> (function + Member or Lead) decides what they can do in MedLR. Role permissions are managed in Roles &amp; Permissions.</p>']) +
-  statStrip([...funcIds().map(f => [esc(f), nF(f), '', 'Active', 'ufn', f]), ['Administrators', nF('Administrator'), '', 'Full control', 'ufn', 'Administrator'], ['Inactive', S.users.filter(x => x.status !== 'Active').length, 'dim', 'Cannot sign in', 'usst', 'Inactive']]) +
+  statStrip([...funcIds().map(f => [esc(f), S.users.filter(x => x.fn === f).length, '', nF(f) + ' active', 'ufn', f]), ['Administrators', S.users.filter(x => x.fn === 'Administrator').length, '', nF('Administrator') + ' active · full control', 'ufn', 'Administrator'], ['Inactive', S.users.filter(x => x.status !== 'Active').length, 'dim', 'Cannot sign in', 'usst', 'Inactive']]) +
   `${filterBar('users', `${fsearch('usq', F('usq'), 'Search name, email or role')}${fsel('ufn', F('ufn'), [...funcIds(true), 'Administrator'], 'All functions')}${fsel('ulvl', F('ulvl'), LEVELS.map(l => [l, levelName(l)]), 'Any level')}${fsel('usst', F('usst'), ['Active', 'Inactive'], 'Any status')}`, `${rows.length} of ${S.users.length}`)}
   <section class="panel table-wrap"><table class="tbl list-tbl"><thead><tr><th>Name</th><th>Role</th><th>Team</th><th>Authority</th><th>Permissions</th><th>Last activity</th><th>Status</th></tr></thead><tbody>${rows.map(x => { const a = authority(x.fn, x.level);
     return `<tr class="click" ${goAttr('user', x.id)} tabindex="0"><td><div class="row nowrap">${avatar(x)}<div><div class="title">${esc(x.name)}</div><span class="muted email">${esc(x.email)}</span></div></div></td><td><div class="row nowrap" style="gap:6px">${fnBadge(isAdmin(x) ? 'Admin' : x.fn, 'sm')}${esc(isAdmin(x) ? 'Administrator' : x.fn)} ${lvl(x.level)}</div></td><td class="nw">${esc(team(x.team).name)}</td><td style="font-size:12.5px"><span class="row nowrap" style="gap:6px">${icon(a.final ? 'key' : 'eye', 'sm')}${esc(a.short)}</span></td><td class="num">${(S.roles[roleId(x)] || []).length} of ${PERMS.length}</td><td class="nw muted">${lastAct(x.id)}</td><td>${chip(x.status === 'Active' ? 'Active' : 'Inactive')}</td></tr>`; }).join('')}</tbody></table></section>`;
@@ -5678,13 +5695,35 @@ function patchChildren(from, to) {
   }
   while (from.childNodes.length > b.length) from.removeChild(from.lastChild);
 }
+// Popovers and dropdowns stay on screen: shifted sideways when they would cross an edge, and opened
+// upwards when there is no room below but room above.
+function fitPops() {
+  document.querySelectorAll('.pop, .msel-pop').forEach(el => {
+    if (getComputedStyle(el).position === 'fixed') return;
+    el.style.transform = ''; el.style.maxHeight = ''; el.classList.remove('up');
+    let r = el.getBoundingClientRect(); const vw = document.documentElement.clientWidth, vh = window.innerHeight, m = 8;
+    const anchor = el.parentElement.getBoundingClientRect(); const below = vh - m - r.top, above = anchor.top - 8 - m;
+    if (r.bottom > vh - m) {
+      if (above > below && above > 160) { el.classList.add('up'); if (r.height > above) el.style.maxHeight = above + 'px'; }
+      else el.style.maxHeight = Math.max(160, below) + 'px';
+      if (el.style.maxHeight) el.style.overflowY = 'auto';
+      r = el.getBoundingClientRect();
+    }
+    let dx = 0; if (r.right > vw - m) dx = vw - m - r.right; if (r.left + dx < m) dx = m - r.left;
+    if (dx) { const base = getComputedStyle(el).transform; el.style.transform = (base && base !== 'none' ? base + ' ' : '') + `translateX(${Math.round(dx)}px)`; }
+  });
+}
+window.addEventListener('resize', () => fitPops());
 function patchEl(a, b) {
   // media keeps playing or showing when its source is unchanged
   if ((a.nodeName === 'VIDEO' || a.nodeName === 'IFRAME' || a.nodeName === 'OBJECT') && a.outerHTML !== b.outerHTML && a.innerHTML !== b.innerHTML) { a.replaceWith(b.cloneNode(true)); return; }
+  // A field keeps what the person typed unless the app itself now renders a different value for it,
+  // so a background re-render (toast, timer, notification) never wipes unsaved input.
+  const prevV = a.nodeName === 'INPUT' ? a.getAttribute('value') || '' : a.nodeName === 'TEXTAREA' ? a.defaultValue : null;
   for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
   for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
-  if (a.nodeName === 'INPUT') { const v = b.getAttribute('value') || ''; if (a.type === 'checkbox' || a.type === 'radio') a.checked = b.hasAttribute('checked'); else if (a.type !== 'file' && a.value !== v) a.value = v; return; }
-  if (a.nodeName === 'TEXTAREA') { const v = b.textContent; if (a.value !== v) a.value = v; return; }
+  if (a.nodeName === 'INPUT') { const v = b.getAttribute('value') || ''; if (a.type === 'checkbox' || a.type === 'radio') a.checked = b.hasAttribute('checked'); else if (a.type !== 'file' && v !== prevV && a.value !== v) a.value = v; return; }
+  if (a.nodeName === 'TEXTAREA') { const v = b.textContent; if (v !== prevV) { a.defaultValue = v; if (a.value !== v) a.value = v; } return; }
   if (a.nodeName === 'VIDEO') return;
   patchChildren(a, b);
   if (a.nodeName === 'SELECT') { const o = [...b.options].findIndex(x => x.hasAttribute('selected')); a.selectedIndex = o >= 0 ? o : 0; }
@@ -5707,7 +5746,9 @@ function renderNow() {
   }
   html += UI.modal ? viewModal() : '';
   patchDOM(app, html);
-  paginateTables(); hydratePdfs(); hydrateReview();
+  // While a dialog or side panel is open the page behind it does not scroll.
+  document.documentElement.classList.toggle('ov-open', !!UI.modal);
+  paginateTables(); hydratePdfs(); hydrateReview(); fitPops();
   const rk = UI.route.name + JSON.stringify(UI.route.p || {}) + (S.signedIn ? 1 : 0);
   if (rk !== UI._rk) { UI._rk = rk; const c = document.getElementById('content'); if (c) { c.classList.add('enter'); countUp(c); } }
   app.querySelectorAll('table.tbl').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (hs[i]) td.setAttribute('data-label', hs[i]); })); });
@@ -6030,7 +6071,7 @@ const ACT = {
   },
   'a-toggle': el => { const a = assetById(el.dataset.id); const k = el.dataset.k; const prev = [...a[k]]; const i = a[k].indexOf(el.dataset.v); i >= 0 ? a[k].splice(i, 1) : a[k].push(el.dataset.v);
     log(k === 'products' ? 'Product changed' : 'Country changed', 'Asset', a, null, { prev: k === 'products' ? productsTxt(prev) : prev.join(', '), next: k === 'products' ? productsTxt(a[k]) : a[k].join(', ') }); a.updatedAt = Date.now(); save(); render(); },
-  'blk-add': el => { const a = assetById(el.dataset.id); const m = modById(el.dataset.module); if (a.blocks.some(b => b.moduleId === m.id)) return; a.blocks.push({ id: uid('b'), kind: 'module', moduleId: m.id, v: live(m).v }); log('Module reused', 'Asset', a, null, { note: m.id + ' v' + live(m).v + ' added' }); a.updatedAt = Date.now(); save(); render(); toast('Added ' + m.type + ' · ' + m.id + ' v' + live(m).v); },
+  'blk-add': el => { const a = assetById(el.dataset.id); const m = modById(el.dataset.module); if (!a || !m || !live(m) || a.blocks.some(b => b.moduleId === m.id)) return; if (!eligibility(m, a).ok) { toast('This module cannot be used in this asset'); return; } a.blocks.push({ id: uid('b'), kind: 'module', moduleId: m.id, v: live(m).v }); log('Module reused', 'Asset', a, null, { note: m.id + ' v' + live(m).v + ' added' }); a.updatedAt = Date.now(); save(); render(); toast('Added ' + m.type + ' · ' + m.id + ' v' + live(m).v); },
   'blk-move': el => { const a = curAsset(); const i = +el.dataset.i, j = i + +el.dataset.dir; if (j < 0 || j >= a.blocks.length) return; [a.blocks[i], a.blocks[j]] = [a.blocks[j], a.blocks[i]]; save(); render(); },
   'blk-del': el => { const a = curAsset(); const [b] = a.blocks.splice(+el.dataset.i, 1); log('Asset updated', 'Asset', a, null, { note: 'Removed ' + (b.kind === 'module' ? b.moduleId + ' v' + b.v : 'new text block'), prev: b.kind === 'module' ? b.moduleId : trunc(b.text, 40) }); a.updatedAt = Date.now(); save(); render(); },
   'new-text': el => { UI.modal = { type: 'new-text', id: el.dataset.id }; render(); setTimeout(() => { const t = document.getElementById('nt-text'); t && t.focus(); }, 30); },
@@ -6149,7 +6190,30 @@ const ACT = {
 /* Write actions on admin pages need the matching manage permission; Administration view access alone is read-only. */
 const ACT_PERM = { 'cmp-toggle': 'manage_users', 'cmp-save': 'manage_users', 'user-status': 'manage_users', 'perm-toggle': 'manage_users', 'role-save': 'manage_users', 'sop-new': 'manage_sops', 'sop-edit': 'manage_sops', 'sop-save': 'manage_sops', 'sop-active': 'manage_sops', 'wf-new': 'manage_workflows', 'wf-save': 'manage_workflows', 'wf-del': 'manage_workflows', 'wf-add': 'manage_workflows', 'wf-add-mail': 'manage_workflows', 'wf-active': 'manage_workflows', 'wf-open': 'manage_workflows', 'audit-export': 'export' };
 const ACT_ADMIN = ['cfg-new', 'cfg-edit', 'cfg-toggle', 'cfg-delete', 'cfg-save'];
+/* Object-level rules for actions that change records. They mirror the conditions the pages use to show each
+   button, so a hidden or forged control cannot do what the role or the workflow step does not allow. */
+const actObj = el => { const M = UI.modal || {}; return objById(el.dataset.kind || M.kind || 'Module', el.dataset.id || M.id); };
+const actAsset = el => assetById(el.dataset.asset || el.dataset.id || (UI.modal && UI.modal.id)) || curAsset();
+const decideOk = (u, o, d) => { const st = o && curStep(o); if (!st || !canActOn(u, o)) return false; if (d === 'reject') return can(u, 'reject'); if (d === 'amend') return can(u, 'request_amend'); if (d === 'return') return st.level === 'Lead' && memberStepIndex(o) >= 0; return st.req !== 'approve'; };
+const signOk = (u, o) => { const st = o && curStep(o); return !!st && st.req === 'approve' && canActOn(u, o); };
+const editAsset = el => { const a = actAsset(el); return !!a && canEditObj(me(), a); };
+const ACT_GUARD = {
+  'roles-reset': () => can(me(), 'manage_users'),
+  'reset-open': () => can(me(), 'manage_settings'), 'reset-confirm': () => can(me(), 'manage_settings'),
+  'set-save': () => can(me(), 'manage_settings'), 'set-bool': () => can(me(), 'manage_settings'),
+  'sop-save': () => can(me(), 'manage_sops'),
+  decide: el => decideOk(me(), actObj(el), el.dataset.d), 'decide-confirm': () => { const M = UI.modal || {}; return M.type === 'decide' && decideOk(me(), objById(M.kind, M.id), M.d); },
+  sign: el => signOk(me(), actObj(el)), 'sign-confirm': () => { const M = UI.modal || {}; return M.type === 'sign' && signOk(me(), objById(M.kind, M.id)); },
+  'submit-open': el => { const m = modById(el.dataset.id); return !!m && canEditObj(me(), m) && can(me(), ['submit', 'edit']); },
+  'submit-confirm': () => { const m = modById((UI.modal || {}).id); return !!m && canEditObj(me(), m) && can(me(), ['submit', 'edit']); },
+  'resubmit-open': el => { const o = actObj(el); return !!o && canAmendObj(me(), o); }, 'resubmit-confirm': () => { const M = UI.modal || {}; const o = objById(M.kind, M.id); return !!o && canAmendObj(me(), o); },
+  'new-version': el => { const m = modById(el.dataset.id); return !!m && canEditObj(me(), m) && can(me(), 'create_version'); },
+  'asset-new': () => canCreateAsset(me()), 'asset-create': () => canCreateAsset(me()),
+  'asset-version': el => editAsset(el) && can(me(), 'create_version'), 'asset-version-confirm': el => editAsset(el) && can(me(), 'create_version'),
+  'asset-save': editAsset, 'asset-submit': editAsset, 'asset-submit-confirm': editAsset, 'a-toggle': editAsset, 'blk-add': editAsset, 'blk-move': editAsset, 'blk-del': editAsset, 'new-text': editAsset, 'new-text-confirm': editAsset, 'replace-version': editAsset
+};
 function actAllowed(act, el) {
+  if (ACT_GUARD[act] && !ACT_GUARD[act](el)) return false;
   if (ACT_PERM[act]) return can(me(), ACT_PERM[act]);
   if (ACT_ADMIN.includes(act)) { const k = el.dataset.k || (UI.modal && UI.modal.k); return !CONFIG[k] || can(me(), CONFIG[k].perm); }
   return true;
@@ -6171,7 +6235,7 @@ document.addEventListener('click', ev => {
   if (UI.search && !ev.target.closest('.search')) { UI.search = ''; if (!actEl && !goEl) { render(); return; } }
   if (actEl && (!goEl || actEl === goEl || goEl.contains(actEl))) {
     if (actEl.disabled) return;
-    const fn = ACT[actEl.dataset.act]; if (fn && !actAllowed(actEl.dataset.act, actEl)) { ev.preventDefault(); toast('Your role can view this page but not change it'); return; }
+    const fn = ACT[actEl.dataset.act]; if (fn && !actAllowed(actEl.dataset.act, actEl)) { ev.preventDefault(); toast(ACT_GUARD[actEl.dataset.act] ? 'You are not allowed to do this' : 'Your role can view this page but not change it'); return; }
     if (fn) { if (actEl.dataset.act !== 'modal-bg') ev.preventDefault(); fn(actEl, ev); return; }
   }
   if (goEl) { ev.preventDefault(); const p = {}; ['id', 'tab', 'k', 'v'].forEach(k => { if (goEl.dataset[k]) p[k] = goEl.dataset[k]; }); if (!['cover', 'module', 'asset'].includes(goEl.dataset.go)) delete p.v; if (!['cover', 'item'].includes(goEl.dataset.go)) delete p.k; if (goEl.dataset.mstat != null) UI.f.mstat = goEl.dataset.mstat; if (goEl.dataset.setf) goEl.dataset.setf.split('&').forEach(kv => { const [k, v] = kv.split('='); UI.f[k] = v; }); UI.modal = null; go(goEl.dataset.go, p); }
@@ -6206,7 +6270,7 @@ document.addEventListener('change', ev => {
   if (t.dataset.filter) { UI.f[t.dataset.filter] = t.value; render(); return; }
   if (t.dataset.fd && UI.modal && UI.modal.d) { UI.modal.d[t.dataset.fd] = t.value; if (t.tagName === 'SELECT') render(); return; }
   if (t.dataset.assetProp) {
-    const a = assetById(t.dataset.id); const k = t.dataset.assetProp; const prev = a[k] || ''; if (prev === t.value) return; a[k] = t.value; a.updatedAt = Date.now();
+    const a = assetById(t.dataset.id); if (!a || !canEditObj(me(), a)) { render(); return; } const k = t.dataset.assetProp; const prev = a[k] || ''; if (prev === t.value) return; a[k] = t.value; a.updatedAt = Date.now();
     if (k === 'type') { const mt = mat(t.value); if (mt && !a.blocks.length) a.channel = mt.channel; }
     const shown = v => k === 'type' ? mat(v).name : k === 'channel' ? chan(v).name : k === 'audience' ? aud(v).name : k === 'owner' ? user(v).name : v;
     log(k === 'owner' ? 'Owner changed' : 'Asset updated', 'Asset', a, null, { note: ({ name: 'Name', type: 'Material type', channel: 'Channel', audience: 'Audience', disclaimer: 'Local disclaimer', owner: 'Material Owner' })[k] + ' changed', prev: trunc(shown(prev), 60), next: trunc(shown(t.value), 60) }); save(); render(); return;
@@ -6390,7 +6454,7 @@ document.addEventListener('drop', ev => {
     const st = UI.wfDraft.steps; const [x] = st.splice(src.i, 1); if (src.i < to) to--; st.splice(to, 0, x); UI.wfSel = to;
     if (src.i !== to) toast('Step moved to position ' + (to + 1));
   } else {
-    const a = assetById(zone.dataset.id); if (!a) return;
+    const a = assetById(zone.dataset.id); if (!a || !canEditObj(me(), a)) return;
     if (src.kind === 'mod') {
       const m = modById(src.module); if (!m || !live(m) || a.blocks.some(b => b.moduleId === m.id) || !eligibility(m, a).ok) return;
       a.blocks.splice(to, 0, { id: uid('b'), kind: 'module', moduleId: m.id, v: live(m).v }); log('Module reused', 'Asset', a, null, { note: m.id + ' v' + live(m).v + ' added' }); toast('Added ' + m.type + ' · ' + m.id + ' v' + live(m).v);

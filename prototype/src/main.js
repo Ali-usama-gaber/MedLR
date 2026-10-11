@@ -36,13 +36,35 @@ function patchChildren(from, to) {
   }
   while (from.childNodes.length > b.length) from.removeChild(from.lastChild);
 }
+// Popovers and dropdowns stay on screen: shifted sideways when they would cross an edge, and opened
+// upwards when there is no room below but room above.
+function fitPops() {
+  document.querySelectorAll('.pop, .msel-pop').forEach(el => {
+    if (getComputedStyle(el).position === 'fixed') return;
+    el.style.transform = ''; el.style.maxHeight = ''; el.classList.remove('up');
+    let r = el.getBoundingClientRect(); const vw = document.documentElement.clientWidth, vh = window.innerHeight, m = 8;
+    const anchor = el.parentElement.getBoundingClientRect(); const below = vh - m - r.top, above = anchor.top - 8 - m;
+    if (r.bottom > vh - m) {
+      if (above > below && above > 160) { el.classList.add('up'); if (r.height > above) el.style.maxHeight = above + 'px'; }
+      else el.style.maxHeight = Math.max(160, below) + 'px';
+      if (el.style.maxHeight) el.style.overflowY = 'auto';
+      r = el.getBoundingClientRect();
+    }
+    let dx = 0; if (r.right > vw - m) dx = vw - m - r.right; if (r.left + dx < m) dx = m - r.left;
+    if (dx) { const base = getComputedStyle(el).transform; el.style.transform = (base && base !== 'none' ? base + ' ' : '') + `translateX(${Math.round(dx)}px)`; }
+  });
+}
+window.addEventListener('resize', () => fitPops());
 function patchEl(a, b) {
   // media keeps playing or showing when its source is unchanged
   if ((a.nodeName === 'VIDEO' || a.nodeName === 'IFRAME' || a.nodeName === 'OBJECT') && a.outerHTML !== b.outerHTML && a.innerHTML !== b.innerHTML) { a.replaceWith(b.cloneNode(true)); return; }
+  // A field keeps what the person typed unless the app itself now renders a different value for it,
+  // so a background re-render (toast, timer, notification) never wipes unsaved input.
+  const prevV = a.nodeName === 'INPUT' ? a.getAttribute('value') || '' : a.nodeName === 'TEXTAREA' ? a.defaultValue : null;
   for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
   for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
-  if (a.nodeName === 'INPUT') { const v = b.getAttribute('value') || ''; if (a.type === 'checkbox' || a.type === 'radio') a.checked = b.hasAttribute('checked'); else if (a.type !== 'file' && a.value !== v) a.value = v; return; }
-  if (a.nodeName === 'TEXTAREA') { const v = b.textContent; if (a.value !== v) a.value = v; return; }
+  if (a.nodeName === 'INPUT') { const v = b.getAttribute('value') || ''; if (a.type === 'checkbox' || a.type === 'radio') a.checked = b.hasAttribute('checked'); else if (a.type !== 'file' && v !== prevV && a.value !== v) a.value = v; return; }
+  if (a.nodeName === 'TEXTAREA') { const v = b.textContent; if (v !== prevV) { a.defaultValue = v; if (a.value !== v) a.value = v; } return; }
   if (a.nodeName === 'VIDEO') return;
   patchChildren(a, b);
   if (a.nodeName === 'SELECT') { const o = [...b.options].findIndex(x => x.hasAttribute('selected')); a.selectedIndex = o >= 0 ? o : 0; }
@@ -65,7 +87,9 @@ function renderNow() {
   }
   html += UI.modal ? viewModal() : '';
   patchDOM(app, html);
-  paginateTables(); hydratePdfs(); hydrateReview();
+  // While a dialog or side panel is open the page behind it does not scroll.
+  document.documentElement.classList.toggle('ov-open', !!UI.modal);
+  paginateTables(); hydratePdfs(); hydrateReview(); fitPops();
   const rk = UI.route.name + JSON.stringify(UI.route.p || {}) + (S.signedIn ? 1 : 0);
   if (rk !== UI._rk) { UI._rk = rk; const c = document.getElementById('content'); if (c) { c.classList.add('enter'); countUp(c); } }
   app.querySelectorAll('table.tbl').forEach(t => { const hs = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (hs[i]) td.setAttribute('data-label', hs[i]); })); });
@@ -388,7 +412,7 @@ const ACT = {
   },
   'a-toggle': el => { const a = assetById(el.dataset.id); const k = el.dataset.k; const prev = [...a[k]]; const i = a[k].indexOf(el.dataset.v); i >= 0 ? a[k].splice(i, 1) : a[k].push(el.dataset.v);
     log(k === 'products' ? 'Product changed' : 'Country changed', 'Asset', a, null, { prev: k === 'products' ? productsTxt(prev) : prev.join(', '), next: k === 'products' ? productsTxt(a[k]) : a[k].join(', ') }); a.updatedAt = Date.now(); save(); render(); },
-  'blk-add': el => { const a = assetById(el.dataset.id); const m = modById(el.dataset.module); if (a.blocks.some(b => b.moduleId === m.id)) return; a.blocks.push({ id: uid('b'), kind: 'module', moduleId: m.id, v: live(m).v }); log('Module reused', 'Asset', a, null, { note: m.id + ' v' + live(m).v + ' added' }); a.updatedAt = Date.now(); save(); render(); toast('Added ' + m.type + ' · ' + m.id + ' v' + live(m).v); },
+  'blk-add': el => { const a = assetById(el.dataset.id); const m = modById(el.dataset.module); if (!a || !m || !live(m) || a.blocks.some(b => b.moduleId === m.id)) return; if (!eligibility(m, a).ok) { toast('This module cannot be used in this asset'); return; } a.blocks.push({ id: uid('b'), kind: 'module', moduleId: m.id, v: live(m).v }); log('Module reused', 'Asset', a, null, { note: m.id + ' v' + live(m).v + ' added' }); a.updatedAt = Date.now(); save(); render(); toast('Added ' + m.type + ' · ' + m.id + ' v' + live(m).v); },
   'blk-move': el => { const a = curAsset(); const i = +el.dataset.i, j = i + +el.dataset.dir; if (j < 0 || j >= a.blocks.length) return; [a.blocks[i], a.blocks[j]] = [a.blocks[j], a.blocks[i]]; save(); render(); },
   'blk-del': el => { const a = curAsset(); const [b] = a.blocks.splice(+el.dataset.i, 1); log('Asset updated', 'Asset', a, null, { note: 'Removed ' + (b.kind === 'module' ? b.moduleId + ' v' + b.v : 'new text block'), prev: b.kind === 'module' ? b.moduleId : trunc(b.text, 40) }); a.updatedAt = Date.now(); save(); render(); },
   'new-text': el => { UI.modal = { type: 'new-text', id: el.dataset.id }; render(); setTimeout(() => { const t = document.getElementById('nt-text'); t && t.focus(); }, 30); },
@@ -507,7 +531,30 @@ const ACT = {
 /* Write actions on admin pages need the matching manage permission; Administration view access alone is read-only. */
 const ACT_PERM = { 'cmp-toggle': 'manage_users', 'cmp-save': 'manage_users', 'user-status': 'manage_users', 'perm-toggle': 'manage_users', 'role-save': 'manage_users', 'sop-new': 'manage_sops', 'sop-edit': 'manage_sops', 'sop-save': 'manage_sops', 'sop-active': 'manage_sops', 'wf-new': 'manage_workflows', 'wf-save': 'manage_workflows', 'wf-del': 'manage_workflows', 'wf-add': 'manage_workflows', 'wf-add-mail': 'manage_workflows', 'wf-active': 'manage_workflows', 'wf-open': 'manage_workflows', 'audit-export': 'export' };
 const ACT_ADMIN = ['cfg-new', 'cfg-edit', 'cfg-toggle', 'cfg-delete', 'cfg-save'];
+/* Object-level rules for actions that change records. They mirror the conditions the pages use to show each
+   button, so a hidden or forged control cannot do what the role or the workflow step does not allow. */
+const actObj = el => { const M = UI.modal || {}; return objById(el.dataset.kind || M.kind || 'Module', el.dataset.id || M.id); };
+const actAsset = el => assetById(el.dataset.asset || el.dataset.id || (UI.modal && UI.modal.id)) || curAsset();
+const decideOk = (u, o, d) => { const st = o && curStep(o); if (!st || !canActOn(u, o)) return false; if (d === 'reject') return can(u, 'reject'); if (d === 'amend') return can(u, 'request_amend'); if (d === 'return') return st.level === 'Lead' && memberStepIndex(o) >= 0; return st.req !== 'approve'; };
+const signOk = (u, o) => { const st = o && curStep(o); return !!st && st.req === 'approve' && canActOn(u, o); };
+const editAsset = el => { const a = actAsset(el); return !!a && canEditObj(me(), a); };
+const ACT_GUARD = {
+  'roles-reset': () => can(me(), 'manage_users'),
+  'reset-open': () => can(me(), 'manage_settings'), 'reset-confirm': () => can(me(), 'manage_settings'),
+  'set-save': () => can(me(), 'manage_settings'), 'set-bool': () => can(me(), 'manage_settings'),
+  'sop-save': () => can(me(), 'manage_sops'),
+  decide: el => decideOk(me(), actObj(el), el.dataset.d), 'decide-confirm': () => { const M = UI.modal || {}; return M.type === 'decide' && decideOk(me(), objById(M.kind, M.id), M.d); },
+  sign: el => signOk(me(), actObj(el)), 'sign-confirm': () => { const M = UI.modal || {}; return M.type === 'sign' && signOk(me(), objById(M.kind, M.id)); },
+  'submit-open': el => { const m = modById(el.dataset.id); return !!m && canEditObj(me(), m) && can(me(), ['submit', 'edit']); },
+  'submit-confirm': () => { const m = modById((UI.modal || {}).id); return !!m && canEditObj(me(), m) && can(me(), ['submit', 'edit']); },
+  'resubmit-open': el => { const o = actObj(el); return !!o && canAmendObj(me(), o); }, 'resubmit-confirm': () => { const M = UI.modal || {}; const o = objById(M.kind, M.id); return !!o && canAmendObj(me(), o); },
+  'new-version': el => { const m = modById(el.dataset.id); return !!m && canEditObj(me(), m) && can(me(), 'create_version'); },
+  'asset-new': () => canCreateAsset(me()), 'asset-create': () => canCreateAsset(me()),
+  'asset-version': el => editAsset(el) && can(me(), 'create_version'), 'asset-version-confirm': el => editAsset(el) && can(me(), 'create_version'),
+  'asset-save': editAsset, 'asset-submit': editAsset, 'asset-submit-confirm': editAsset, 'a-toggle': editAsset, 'blk-add': editAsset, 'blk-move': editAsset, 'blk-del': editAsset, 'new-text': editAsset, 'new-text-confirm': editAsset, 'replace-version': editAsset
+};
 function actAllowed(act, el) {
+  if (ACT_GUARD[act] && !ACT_GUARD[act](el)) return false;
   if (ACT_PERM[act]) return can(me(), ACT_PERM[act]);
   if (ACT_ADMIN.includes(act)) { const k = el.dataset.k || (UI.modal && UI.modal.k); return !CONFIG[k] || can(me(), CONFIG[k].perm); }
   return true;
@@ -529,7 +576,7 @@ document.addEventListener('click', ev => {
   if (UI.search && !ev.target.closest('.search')) { UI.search = ''; if (!actEl && !goEl) { render(); return; } }
   if (actEl && (!goEl || actEl === goEl || goEl.contains(actEl))) {
     if (actEl.disabled) return;
-    const fn = ACT[actEl.dataset.act]; if (fn && !actAllowed(actEl.dataset.act, actEl)) { ev.preventDefault(); toast('Your role can view this page but not change it'); return; }
+    const fn = ACT[actEl.dataset.act]; if (fn && !actAllowed(actEl.dataset.act, actEl)) { ev.preventDefault(); toast(ACT_GUARD[actEl.dataset.act] ? 'You are not allowed to do this' : 'Your role can view this page but not change it'); return; }
     if (fn) { if (actEl.dataset.act !== 'modal-bg') ev.preventDefault(); fn(actEl, ev); return; }
   }
   if (goEl) { ev.preventDefault(); const p = {}; ['id', 'tab', 'k', 'v'].forEach(k => { if (goEl.dataset[k]) p[k] = goEl.dataset[k]; }); if (!['cover', 'module', 'asset'].includes(goEl.dataset.go)) delete p.v; if (!['cover', 'item'].includes(goEl.dataset.go)) delete p.k; if (goEl.dataset.mstat != null) UI.f.mstat = goEl.dataset.mstat; if (goEl.dataset.setf) goEl.dataset.setf.split('&').forEach(kv => { const [k, v] = kv.split('='); UI.f[k] = v; }); UI.modal = null; go(goEl.dataset.go, p); }
@@ -564,7 +611,7 @@ document.addEventListener('change', ev => {
   if (t.dataset.filter) { UI.f[t.dataset.filter] = t.value; render(); return; }
   if (t.dataset.fd && UI.modal && UI.modal.d) { UI.modal.d[t.dataset.fd] = t.value; if (t.tagName === 'SELECT') render(); return; }
   if (t.dataset.assetProp) {
-    const a = assetById(t.dataset.id); const k = t.dataset.assetProp; const prev = a[k] || ''; if (prev === t.value) return; a[k] = t.value; a.updatedAt = Date.now();
+    const a = assetById(t.dataset.id); if (!a || !canEditObj(me(), a)) { render(); return; } const k = t.dataset.assetProp; const prev = a[k] || ''; if (prev === t.value) return; a[k] = t.value; a.updatedAt = Date.now();
     if (k === 'type') { const mt = mat(t.value); if (mt && !a.blocks.length) a.channel = mt.channel; }
     const shown = v => k === 'type' ? mat(v).name : k === 'channel' ? chan(v).name : k === 'audience' ? aud(v).name : k === 'owner' ? user(v).name : v;
     log(k === 'owner' ? 'Owner changed' : 'Asset updated', 'Asset', a, null, { note: ({ name: 'Name', type: 'Material type', channel: 'Channel', audience: 'Audience', disclaimer: 'Local disclaimer', owner: 'Material Owner' })[k] + ' changed', prev: trunc(shown(prev), 60), next: trunc(shown(t.value), 60) }); save(); render(); return;
@@ -748,7 +795,7 @@ document.addEventListener('drop', ev => {
     const st = UI.wfDraft.steps; const [x] = st.splice(src.i, 1); if (src.i < to) to--; st.splice(to, 0, x); UI.wfSel = to;
     if (src.i !== to) toast('Step moved to position ' + (to + 1));
   } else {
-    const a = assetById(zone.dataset.id); if (!a) return;
+    const a = assetById(zone.dataset.id); if (!a || !canEditObj(me(), a)) return;
     if (src.kind === 'mod') {
       const m = modById(src.module); if (!m || !live(m) || a.blocks.some(b => b.moduleId === m.id) || !eligibility(m, a).ok) return;
       a.blocks.splice(to, 0, { id: uid('b'), kind: 'module', moduleId: m.id, v: live(m).v }); log('Module reused', 'Asset', a, null, { note: m.id + ' v' + live(m).v + ' added' }); toast('Added ' + m.type + ' · ' + m.id + ' v' + live(m).v);
