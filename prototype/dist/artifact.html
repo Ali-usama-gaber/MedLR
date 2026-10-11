@@ -1,4 +1,4 @@
-<!-- SAJA MedLR build 2026-10-11 11:41 UTC -->
+<!-- SAJA MedLR build 2026-10-11 12:32 UTC -->
 <title>SAJA MedLR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2124,179 +2124,317 @@ mark.an-pt[data-n]::before { content: none; }
 .hub-tbl tfoot td { border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: 10px; }
 @media (max-width: 760px) { .hub-tbl th:nth-child(4), .hub-tbl td:nth-child(4), .hub-tbl th:nth-child(6), .hub-tbl td:nth-child(6) { display: none; } .hub-name .muted { display: none; } }
 
-/* ===== Home (design checkpoint) — flat panels, hairlines, tabular figures, colour only for status ===== */
-.hx { display: flex; flex-direction: column; gap: 12px; }
+/* Home: shared bits (status marks, bars, legends, states) */
 .mk-ok { background: var(--mk-ok); } .mk-warn { background: var(--mk-warn); } .mk-bad { background: var(--mk-bad); } .mk-dim { background: var(--mk-dim); } .mk-s1 { background: var(--mk-s1); } .mk-o1 { background: var(--mk-o1); } .mk-o2 { background: var(--mk-o2); } .mk-none { background: var(--surface-2); }
-.hx-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; padding: 2px 0 4px; }
-.hx-head h1 { font-size: 22px; line-height: 1.2; margin: 0 0 4px; letter-spacing: -.01em; }
-.hx-meta { display: flex; flex-wrap: wrap; gap: 4px 0; margin: 0; font-size: 12.5px; color: var(--ink-2); }
-.hx-meta > span { display: inline-flex; align-items: center; gap: 5px; }
-.hx-meta > span + span::before { content: ""; width: 3px; height: 3px; border-radius: 50%; background: var(--ink-3); margin: 0 9px; opacity: .6; }
-.hx-meta > span:last-child { color: var(--ink-3); }
-.hx-qa { display: flex; gap: 8px; flex-wrap: wrap; }
-.hx-qa .btn { height: 34px; font-size: 13px; }
-/* key metrics */
-.hx-kpis { display: grid; grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.hx-k { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 12px 16px 13px; border: 0; border-left: 1px solid var(--line); background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; transition: background .15s; }
-.hx-k:first-child { border-left: 0; }
-.hx-k:hover:not(:disabled) { background: var(--surface-2); }
-.hx-k:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.hx-k:disabled { cursor: default; }
-.hx-kl { font-size: 12px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-kv { font-size: 26px; font-weight: 700; line-height: 1.15; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
-.hx-kv small { font-size: 12.5px; font-weight: 600; color: var(--ink-3); letter-spacing: 0; margin-left: 3px; }
-.hx-kc { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-kc.bad { color: #a8322d; font-weight: 600; } .hx-kc.warn { color: #87600e; font-weight: 600; }
-.hx-kc .k-dot { flex: none; }
-.hx-sec { display: flex; flex-wrap: wrap; gap: 2px 20px; margin-top: -4px; padding: 0 2px; }
-.hx-sec button { display: inline-flex; align-items: baseline; gap: 5px; border: 0; background: none; padding: 3px 0; font: inherit; font-size: 12px; color: var(--ink-2); cursor: pointer; }
-.hx-sec b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
-.hx-sec span { color: var(--ink-3); }
-.hx-sec button:hover b { color: var(--accent-ink); text-decoration: underline; }
-/* grid + panels */
-.hx-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
-.hx-p { display: flex; flex-direction: column; min-width: 0; border-radius: 12px; box-shadow: none; border: 1px solid var(--line); overflow: hidden; }
-.hx-p.span8 { grid-column: span 8; } .hx-p.span4 { grid-column: span 4; } .hx-p.span12 { grid-column: span 12; }
-.hx-ph { display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 16px; border-bottom: 1px solid var(--line); }
-.hx-ph .grow { flex: 1; }
-.hx-ph h3 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: -.005em; }
-.hx-n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--surface-2); font-size: 11.5px; font-weight: 700; display: inline-grid; place-items: center; font-variant-numeric: tabular-nums; color: var(--ink-2); }
-.hx-ctx { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-link { display: inline-flex; align-items: center; gap: 2px; border: 0; background: none; padding: 4px 0 4px 6px; font: inherit; font-size: 12px; font-weight: 600; color: var(--accent-ink); cursor: pointer; white-space: nowrap; }
-.hx-link:hover { text-decoration: underline; }
-.hx-link .ico { width: 14px; height: 14px; }
-.hx-cap { display: block; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
 .hx-muted { color: var(--ink-3); font-size: 12px; margin: 0; }
-.hx-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 22px 16px; font-size: 12.5px; color: var(--ink-3); text-align: center; flex-wrap: wrap; }
+.hx-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 22px 16px; font-size: 12.5px; color: var(--ink-3); text-align: center; }
 .hx-err .hx-empty { color: #a8322d; }
 .hx-more { margin-top: auto; padding: 8px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-3); }
-.hx-more .hx-link { padding: 0; }
-.hx-note { display: flex; align-items: center; gap: 6px; margin: 0 16px 8px; font-size: 12px; color: var(--ink-2); }
-/* tables */
-.hx-tw { overflow-x: auto; }
-.hx-tbl { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12.5px; }
-.hx-tbl th { padding: 7px 10px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-3); text-align: left; background: var(--surface-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-tbl th:first-child, .hx-tbl td:first-child { padding-left: 16px; } .hx-tbl th:last-child, .hx-tbl td:last-child { padding-right: 16px; }
-.hx-tbl td { padding: 7px 10px; border-top: 1px solid var(--line); vertical-align: middle; height: 46px; }
-.hx-tbl tr.click { cursor: pointer; } .hx-tbl tr.click:hover td { background: var(--surface-2); }
-.hx-tbl tr.click:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.hx-tbl .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.hx-cut { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-item { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.hx-item .type-ico { width: 28px; height: 28px; border-radius: 7px; }
-.hx-item .mthumb { width: 38px; height: 28px; }
-.hx-it { display: flex; flex-direction: column; min-width: 0; }
-.hx-it b { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-it span { font-size: 11px; color: var(--ink-3); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-2 { display: flex; flex-direction: column; line-height: 1.3; } .hx-2 span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hx-2 .hx-muted { font-size: 11px; }
-.hx-step { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.hx-step > span:last-child { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }
-.hx-resp { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
-.hx-wait { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
-.hx-wait::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--mk-dim); }
-.hx-wait.bad::before { background: var(--mk-bad); } .hx-wait.warn::before { background: var(--mk-warn); }
-.hx-wait.bad { color: #a8322d; }
-.hx-act { display: inline-block; max-width: 100%; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--accent-soft); color: var(--accent-ink); }
-.hx-act.amend, .hx-act.rejected { background: #fbf2e0; color: #7a560d; }
-.hx-act.watch, .hx-act.submit, .hx-act.draft { background: var(--surface-2); color: var(--ink-2); }
-.hx-div td { height: auto; padding: 6px 16px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-3); background: var(--surface-2); }
-.hx-seg { display: flex; gap: 0; margin: 10px 16px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.hx-seg button { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; padding: 6px 10px; border: 0; border-left: 1px solid var(--line); background: none; font: inherit; font-size: 12px; color: var(--ink-2); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-seg button:first-child { border-left: 0; }
-.hx-seg button b { font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.hx-seg button.zero { color: var(--ink-3); } .hx-seg button.zero b { color: var(--ink-3); font-weight: 600; }
-.hx-seg button:hover { background: var(--surface-2); }
-/* pipeline + bars */
-.hx-pb { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
-.hx-stack { display: flex; gap: 2px; height: 10px; border-radius: 3px; overflow: hidden; }
-.hx-stack.thin { height: 8px; }
-.hx-stack > span { min-width: 3px; }
-.hx-stages { display: flex; flex-direction: column; }
-.hx-stages button { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto 40px; align-items: center; gap: 8px; padding: 6px 0; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; font-size: 12.5px; color: var(--ink); text-align: left; cursor: pointer; }
-.hx-stages button:first-child { border-top: 0; }
-.hx-stages button:hover span { color: var(--accent-ink); text-decoration: underline; }
-.hx-stages i { width: 10px; height: 10px; border-radius: 2px; }
-.hx-stages b { font-variant-numeric: tabular-nums; }
-.hx-stages em { font-style: normal; font-size: 11.5px; color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
-.hx-sub { padding-top: 12px; border-top: 1px solid var(--line); }
-.hx-bar { display: grid; grid-template-columns: minmax(0, 118px) minmax(0, 1fr) 40px; align-items: center; gap: 10px; min-height: 24px; font-size: 12.5px; }
+.hx-sec { display: flex; flex-wrap: wrap; }
+.hx-sec button { display: inline-flex; align-items: baseline; gap: 5px; border: 0; background: none; font: inherit; font-size: 12px; color: var(--ink-2); cursor: pointer; }
+.hx-sec b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; } .hx-sec span { color: var(--ink-3); }
+.hx-bar { display: grid; grid-template-columns: minmax(0, 118px) minmax(0, 1fr) 40px; align-items: center; gap: 10px; min-height: 25px; font-size: 12.5px; }
 .hx-bl { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
 .hx-bl .linklike { color: var(--ink-2); }
-.hx-tr { position: relative; display: block; height: 8px; border-radius: 0 3px 3px 0; background: var(--surface-2); }
-.hx-tr > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 3px 3px 0; min-width: 2px; transition: width .4s ease; }
-.hx-tr2 { display: flex; flex-direction: column; gap: 2px; } .hx-tr2 .hx-tr { height: 6px; }
+.hx-tr { position: relative; display: block; height: 8px; border-radius: 0 4px 4px 0; background: var(--surface-2); }
+.hx-tr > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; min-width: 2px; transition: width .4s ease; }
 .hx-bar b { text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.hx-bar.pair { grid-template-columns: minmax(0, 104px) minmax(0, 1fr) 52px; }
 .hx-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); }
 .hx-leg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
 .hx-leg b { margin-left: 3px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.hx-leg.sm { font-size: 11px; gap: 10px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.hx-leg.sm { font-size: 11px; gap: 10px; }
+
+/* ===== Home — premium redesign (design checkpoint 2) =====
+   One dark SAJA-green command band as the focal point; below it, sections with their own form
+   (workspace list, stage flow, split analytics, runway, ledger, timeline, heatmap) on calm white surfaces. */
+.hz { --hz-ink: #0f2419; --hz-band: #0f2a1d; --hz-band-2: #143726; --hz-line: rgba(255, 255, 255, .09); --hz-soft: rgba(233, 246, 238, .66); --hz-dim: rgba(233, 246, 238, .46); --hz-mint: #7fe0aa;
+  display: flex; flex-direction: column; gap: 14px; }
+.hz h1, .hz h3, .hz-kv, .hz-big, .hz-wc b, .hz-stamp b, .hz-fv b, .hz-cn b { font-family: var(--display); }
+/* command band */
+.hz-band { position: relative; overflow: hidden; border-radius: 18px; color: #fff; background: radial-gradient(120% 140% at 100% 0%, #1b4a33 0%, rgba(27, 74, 51, 0) 55%), linear-gradient(160deg, var(--hz-band-2), var(--hz-band) 60%); box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 22px 44px -28px rgba(10, 34, 22, .55); }
+.hz-band::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px); background-size: 28px 28px; mask-image: linear-gradient(100deg, transparent 35%, #000 100%); -webkit-mask-image: linear-gradient(100deg, transparent 35%, #000 100%); }
+.hz-band > * { position: relative; z-index: 1; }
+.hz-band-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; padding: 22px 24px 18px; }
+.hz-date { display: block; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--hz-mint); margin-bottom: 6px; }
+.hz-hello h1 { font-size: 30px; line-height: 1.1; font-weight: 700; letter-spacing: -.025em; margin: 0 0 8px; color: #fff; }
+.hz-who { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.hz-who > span { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); font-size: 12px; font-weight: 600; color: var(--hz-soft); }
+.hz-who .ico { width: 13px; height: 13px; color: var(--hz-mint); }
+.hz-qa { display: flex; gap: 8px; flex-wrap: wrap; }
+.hz-btn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .06); color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s, border-color .15s, transform .15s; }
+.hz-btn:hover { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .28); }
+.hz-btn.pri { background: #fff; color: var(--accent-ink); border-color: #fff; box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .5); }
+.hz-btn.pri:hover { background: #eef8f2; }
+.hz-btn .ico { width: 15px; height: 15px; }
+.hz-band-main { display: grid; grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); border-top: 1px solid var(--hz-line); }
+.hz-next { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; margin: 14px 0 14px 14px; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(127, 224, 170, .22); background: linear-gradient(180deg, rgba(127, 224, 170, .12), rgba(127, 224, 170, .04)); color: #fff; text-align: left; font: inherit; cursor: pointer; transition: border-color .15s, background .15s; }
+.hz-next:hover { border-color: rgba(127, 224, 170, .5); background: linear-gradient(180deg, rgba(127, 224, 170, .18), rgba(127, 224, 170, .06)); }
+.hz-next.calm { cursor: default; }
+.hz-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--hz-mint); }
+.hz-eyebrow .ico { width: 13px; height: 13px; }
+.hz-next-t { max-width: 100%; font-size: 15px; font-weight: 700; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.hz-next-m { font-size: 11.5px; color: var(--hz-dim); }
+.hz-next-s { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--hz-soft); max-width: 100%; }
+.hz-next-s > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-next-s .fn-badge { background: rgba(255, 255, 255, .1); color: var(--hz-mint); border-color: transparent; }
+.hz-next-f { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; margin-top: auto; padding-top: 8px; }
+.hz-next-w { font-size: 12px; color: var(--hz-soft); } .hz-next-w b { font-family: var(--display); font-size: 15px; color: #fff; }
+.hz-next-cta { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 8px; background: var(--hz-mint); color: #0b2416; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.hz-next-cta .ico { width: 13px; height: 13px; }
+.hz-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hz-k { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "l z" "v z" "c c"; align-items: end; gap: 2px 12px; min-width: 0; padding: 16px 18px 14px; border: 0; border-left: 1px solid var(--hz-line); background: none; color: #fff; text-align: left; font: inherit; cursor: pointer; transition: background .15s; }
+.hz-k:hover:not(:disabled) { background: rgba(255, 255, 255, .045); }
+.hz-k:disabled { cursor: default; }
+.hz-k:focus-visible { outline: 2px solid var(--hz-mint); outline-offset: -2px; }
+.hz-kl { font-size: 11.5px; font-weight: 600; color: var(--hz-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-kv { font-size: 34px; font-weight: 700; line-height: 1.05; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.hz-kv small { font-family: var(--font); font-size: 12.5px; font-weight: 600; letter-spacing: 0; color: var(--hz-dim); margin-left: 4px; }
+.hz-kc { font-size: 11.5px; color: var(--hz-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-kc b { color: #fff; font-weight: 700; }
+.hz-kc.bad b { color: #ffb4ab; } .hz-kc.warn b, .hz-kc.warn { color: #f3d08a; }
+.hz-kl { grid-area: l; } .hz-kv { grid-area: v; } .hz-kc { grid-area: c; margin-top: 2px; }
+.hz-k:nth-child(n + 4) { border-top: 1px solid var(--hz-line); } .hz-k:nth-child(3n + 1) { border-left: 1px solid var(--hz-line); }
+.hz-kz { grid-area: z; align-self: end; display: flex; width: 100px; min-height: 34px; align-items: flex-end; padding-bottom: 4px; }
+.hz-spark { width: 100%; max-width: 132px; height: 34px; overflow: visible; }
+.hz-spark polyline { fill: none; stroke: var(--hz-mint); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.hz-spark .a { fill: rgba(127, 224, 170, .14); stroke: none; }
+.hz-spark circle { fill: #fff; stroke: var(--hz-mint); stroke-width: 2; }
+.hz-spark.bars rect:not(.ch-hit) { fill: rgba(127, 224, 170, .45); } .hz-spark.bars rect.z { fill: rgba(255, 255, 255, .22); } .hz-spark.bars rect.cur:not(.z) { fill: var(--hz-mint); }
+.hz-spark .ch-hit { fill: transparent; stroke: none; } .hz-spark .ch-hit:hover { fill: rgba(255, 255, 255, .06); }
+.hz-prio { display: flex; gap: 2px; width: 100%; max-width: 132px; height: 8px; border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+.hz-prio i { display: block; min-width: 3px; } .hz-prio i.bad { background: #ff8a7a; } .hz-prio i.warn { background: #f3c66b; } .hz-prio i.dim, .hz-prio i.none { background: rgba(255, 255, 255, .2); }
+.hz-runw { position: relative; display: flex; align-items: flex-end; gap: 4px; width: 100%; max-width: 132px; height: 30px; }
+.hz-runw i { flex: 1; height: var(--h); border-radius: 3px 3px 1px 1px; background: rgba(255, 255, 255, .14); }
+.hz-runw i.on { background: #f3c66b; }
+.hz-runw em { position: absolute; right: 0; top: -14px; font-style: normal; font-size: 10px; color: var(--hz-dim); }
+/* inventory ribbon */
+.hz-inv { gap: 4px 6px; margin: 0; padding: 0; }
+.hz-inv button { gap: 6px; padding: 5px 10px 5px 8px; border-radius: 8px; color: var(--ink-2); transition: background .15s; }
+.hz-inv button:hover { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.hz-inv button:hover b { text-decoration: none; }
+.hz-inv .ico { width: 14px; height: 14px; color: var(--ink-3); align-self: center; }
+/* cards */
+.hz-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+.hz-card { display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 1px 2px rgba(16, 24, 20, .04), 0 10px 26px -20px rgba(16, 24, 20, .18); overflow: hidden; }
+.hz-card.span8 { grid-column: span 8; } .hz-card.span4 { grid-column: span 4; } .hz-card.span12 { grid-column: span 12; } .hz-card.span7 { grid-column: span 7; } .hz-card.span5 { grid-column: span 5; }
+.hz-h { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 18px; }
+.hz-h h3 { font-size: 16px; font-weight: 700; letter-spacing: -.015em; white-space: nowrap; margin: 0; }
+.hz-h .grow { flex: 1; }
+.hz-n { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 11px; background: var(--hz-ink); color: #fff; font-size: 11.5px; font-weight: 800; display: inline-grid; place-items: center; font-variant-numeric: tabular-nums; }
+.hz-ctx { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.hz-link { display: inline-flex; align-items: center; gap: 2px; border: 0; background: none; padding: 4px 0 4px 6px; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--accent-ink); cursor: pointer; white-space: nowrap; }
+.hz-link:hover { text-decoration: underline; } .hz-link .ico { width: 14px; height: 14px; }
+.hz-cap { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+/* tasks workspace */
+.hz-tabs { display: flex; gap: 4px; padding: 0 14px 10px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line); }
+.hz-tabs::-webkit-scrollbar { display: none; }
+.hz-tabs button { display: inline-flex; align-items: center; gap: 7px; flex: none; height: 30px; padding: 0 11px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.hz-tabs button b { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--surface-2); font-size: 11px; display: inline-grid; place-items: center; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.hz-tabs button:hover { background: var(--surface-2); }
+.hz-tabs button.on { background: var(--hz-ink); color: #fff; } .hz-tabs button.on b { background: rgba(255, 255, 255, .16); color: #fff; }
+.hz-tabs button.zero { color: var(--ink-3); }
+.hz-tl { display: flex; flex-direction: column; }
+.hz-th, .hz-t { display: grid; grid-template-columns: 40px minmax(0, 1.8fr) minmax(0, 1.45fr) 56px 88px 132px; align-items: center; gap: 14px; padding: 0 18px 0 20px; }
+.hz-th { height: 32px; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); background: #fafbfa; border-bottom: 1px solid var(--line); }
+.hz-t { position: relative; min-height: 64px; border-top: 1px solid var(--line); cursor: pointer; transition: background .15s; }
+.hz-th + .hz-t { border-top: 0; }
+.hz-t::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; background: transparent; }
+.hz-t.p-high::before { background: #c9473f; } .hz-t.p-medium::before { background: #d6a23a; }
+.hz-t:hover { background: #f8faf9; } .hz-t:hover .hz-cta { box-shadow: 0 0 0 3px rgba(23, 113, 61, .12); }
+.hz-t:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.hz-t-ic .type-ico { width: 36px; height: 36px; border-radius: 10px; }
+.hz-t-ic .mthumb { width: 40px; height: 32px; }
+.hz-t-main { display: flex; flex-direction: column; min-width: 0; }
+.hz-t-main b { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-t-meta { display: flex; gap: 6px; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+.hz-t-meta > span + span::before { content: "·"; margin-right: 6px; }
+.hz-t-meta .mono { font-size: 11px; }
+.hz-t-step { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.hz-t-sl { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2); min-width: 0; }
+.hz-t-sl > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-t-sl > .ico { color: var(--ink-3); flex: none; }
+.hz-stp { display: flex; align-items: center; gap: 3px; } .hz-stp em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--ink-3); margin-left: 5px; font-variant-numeric: tabular-nums; }
+.hz-t-sl b { font-weight: 700; color: var(--ink); }
+.hz-t-note { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-stp i { flex: 1; max-width: 26px; height: 4px; border-radius: 2px; background: var(--surface-3); }
+.hz-stp i.done { background: var(--accent); }
+.hz-stp i.cur { background: currentColor; box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 22%, transparent); }
+.hz-t-who { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12.5px; color: var(--ink-2); }
+.hz-t-who > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-av { display: flex; flex: none; } .hz-av .more { background: var(--surface-2); color: var(--ink-3); } .hz-av .avatar { width: 24px; height: 24px; font-size: 9.5px; box-shadow: 0 0 0 2px #fff; } .hz-av .avatar + .avatar { margin-left: -7px; }
+.hz-t-wait { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.hz-t-wait b { font-weight: 700; }
+.hz-sla { display: block; height: 4px; border-radius: 2px; background: var(--surface-3); overflow: hidden; }
+.hz-sla i { display: block; height: 100%; border-radius: 2px; background: #9fb3a9; }
+.p-high .hz-sla i { background: #c9473f; } .p-medium .hz-sla i { background: #d6a23a; } .p-high .hz-t-wait b { color: #a8322d; }
+.hz-t-act { justify-self: end; max-width: 100%; }
+.hz-cta { display: inline-flex; align-items: center; height: 30px; max-width: 100%; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--accent); color: #fff; transition: box-shadow .15s; }
+.hz-cta.amend, .hz-cta.rejected, .hz-cta.submit, .hz-cta.draft { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.hz-cta.watch { background: var(--surface-2); color: var(--ink-2); }
+.hz-sub-h { padding: 8px 20px; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); background: #fafbfa; border-top: 1px solid var(--line); }
+/* pipeline flow */
+.hz-flow { list-style: none; margin: 0; padding: 4px 18px 8px; display: flex; flex-direction: column; }
+.hz-flow li { position: relative; }
+.hz-flow li + li::before { content: ""; position: absolute; left: 15px; top: -8px; height: 16px; width: 2px; background: var(--line); }
+.hz-flow button { display: grid; grid-template-columns: 32px minmax(0, 1fr) 52px; align-items: center; gap: 12px; width: 100%; padding: 8px 0; border: 0; background: none; font: inherit; text-align: left; color: inherit; cursor: pointer; }
+.hz-node { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--ink-3); box-shadow: inset 0 0 0 1px var(--line); position: relative; z-index: 1; }
+.hz-node .ico { width: 15px; height: 15px; }
+.t-s1 .hz-node { background: #eaf0f8; color: #35598f; box-shadow: inset 0 0 0 1px #c9d7ea; } .t-warn .hz-node { background: #fbf3e2; color: #8a5a0a; box-shadow: inset 0 0 0 1px #efdcb3; } .t-ok .hz-node { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1px #c6e0cf; } .t-bad .hz-node { background: #fbeceb; color: #a8322d; box-shadow: inset 0 0 0 1px #f0cbc8; }
+.hz-fl { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.hz-fn { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.hz-fn b { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.hz-fn em { font-style: normal; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-ft { position: relative; height: 6px; border-radius: 3px; background: var(--surface-2); }
+.hz-ft i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; min-width: 3px; background: var(--mk-dim); }
+.t-s1 .hz-ft i { background: var(--mk-s1); } .t-warn .hz-ft i { background: var(--mk-warn); } .t-ok .hz-ft i { background: var(--mk-ok); } .t-bad .hz-ft i { background: var(--mk-bad); }
+.hz-fv { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
+.hz-fv b { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hz-fv em { font-style: normal; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.hz-flow button:hover .hz-fn b { color: var(--accent-ink); text-decoration: underline; }
+.hz-chain { margin-top: auto; padding: 14px 18px 16px; background: #fafbfa; border-top: 1px solid var(--line); }
+.hz-chain-r { display: flex; align-items: stretch; gap: 0; }
+.hz-cn { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border: 1px solid var(--line); border-radius: 12px; background: #fff; font: inherit; color: var(--ink-3); cursor: pointer; }
+.hz-cn b { font-size: 20px; line-height: 1.1; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.hz-cn span:last-child { font-size: 11.5px; font-weight: 600; }
+.hz-cn.on { border-color: #c9d7ea; box-shadow: 0 6px 14px -10px rgba(53, 89, 143, .45); } .hz-cn.on b { color: var(--ink); } .hz-cn.on span:last-child { color: var(--ink-2); }
+.hz-cn:hover { border-color: var(--accent); }
+.hz-arrow { flex: none; width: 14px; position: relative; align-self: center; height: 2px; background: var(--line-strong); }
+.hz-arrow::after { content: ""; position: absolute; right: -1px; top: -3px; border: 4px solid transparent; border-left-color: var(--line-strong); border-right: 0; }
 /* performance */
-.hx-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
-.hx-st { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; border-left: 1px solid var(--line); min-width: 0; }
-.hx-st:first-child { border-left: 0; }
-.hx-st > span { font-size: 12px; color: var(--ink-2); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-st b { font-size: 22px; line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
-.hx-st small { font-size: 12px; color: var(--ink-3); font-weight: 600; margin-left: 2px; letter-spacing: 0; }
-.hx-st em { font-style: normal; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-out { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
-.hx-perf { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; flex: 1; }
-.hx-perf > div { padding: 12px 16px 14px; min-width: 0; }
-.hx-perf > div + div { border-left: 1px solid var(--line); }
-.hx-cols { display: block; width: 100%; height: auto; }
-.hx-col { fill: var(--mk-o1); } .hx-col.cur { fill: var(--mk-s1); }
-.hx-flag { display: flex; gap: 6px; align-items: flex-start; margin: 10px 0 0; font-size: 12px; color: var(--ink-2); line-height: 1.4; }
-.hx-flag .ico { color: #87600e; flex: none; margin-top: 1px; }
-/* lists: activity + watch */
-.hx-list { display: flex; flex-direction: column; flex: 1; }
-.hx-ev, .hx-due { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 46px; padding: 6px 16px; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; text-align: left; color: inherit; cursor: pointer; }
-.hx-list > :first-child { border-top: 0; }
-.hx-ev:hover, .hx-due:hover { background: var(--surface-2); }
-.hx-evb { display: flex; flex-direction: column; min-width: 0; flex: 1; font-size: 12.5px; line-height: 1.35; }
-.hx-evb > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-evb b { font-weight: 600; }
-.hx-evb > span:last-child, .hx-evo { font-size: 11.5px; color: var(--ink-3); }
-.hx-evt { color: var(--ink-2); } .hx-evt b { color: var(--ink); }
-.hx-ev time { flex: none; font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.hx-wc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
-.hx-wc > div { display: flex; flex-direction: column; padding: 9px 16px; border-left: 1px solid var(--line); min-width: 0; }
-.hx-wc > div:first-child { border-left: 0; }
-.hx-wc b { font-size: 18px; font-variant-numeric: tabular-nums; line-height: 1.2; }
-.hx-wc span { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hx-wc .bad b { color: #b3261e; } .hx-wc .warn b { color: #87600e; }
-.hx-dd { flex: none; width: 50px; display: flex; align-items: baseline; justify-content: flex-end; gap: 2px; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.hx-dd b { font-size: 15px; color: var(--ink); }
-.hx-dd.bad b { color: #b3261e; } .hx-dd.warn b { color: #87600e; }
-.hx-tag { flex: none; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 5px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
-.hx-tag.bad { background: #fbe9e7; color: #a8322d; } .hx-tag.warn { background: #fbf2e0; color: #7a560d; }
-/* overview */
-.hx-ovg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.hx-ov { padding: 14px 16px; border-left: 1px solid var(--line); border-top: 1px solid var(--line); min-width: 0; }
-.hx-ov:nth-child(3n + 1) { border-left: 0; } .hx-ov:nth-child(-n + 3) { border-top: 0; }
-.hx-ovh { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; } .hx-ovh .hx-cap { margin-bottom: 8px; }
+.hz-perf .hz-h { border-bottom: 1px solid var(--line); }
+.hz-perf-g { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.5fr); flex: 1; }
+.hz-perf-l { display: flex; flex-direction: column; padding: 18px; background: linear-gradient(180deg, #f6faf7, #fbfcfb); border-right: 1px solid var(--line); }
+.hz-big { font-size: 46px; font-weight: 700; line-height: 1; letter-spacing: -.035em; font-variant-numeric: tabular-nums; color: var(--hz-ink); }
+.hz-big small { font-family: var(--font); font-size: 15px; font-weight: 600; letter-spacing: 0; color: var(--ink-3); margin-left: 6px; }
+.hz-delta { display: inline-flex; align-items: center; gap: 4px; margin: 8px 0 16px; font-size: 12px; color: var(--ink-3); }
+.hz-delta.good { color: var(--accent-ink); } .hz-delta.bad { color: #a8322d; } .hz-delta .ico { width: 14px; height: 14px; }
+.hz-rates { display: flex; flex-direction: column; gap: 10px; }
+.hz-rate { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "l v" "t t" "s s"; gap: 3px 8px; }
+.hz-rate > span:first-child { grid-area: l; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.hz-rate b { grid-area: v; font-family: var(--display); font-size: 17px; font-variant-numeric: tabular-nums; } .hz-rate b small { font-family: var(--font); font-size: 11px; color: var(--ink-3); margin-left: 1px; }
+.hz-rt { grid-area: t; height: 5px; border-radius: 3px; background: var(--surface-3); overflow: hidden; } .hz-rt i { display: block; height: 100%; border-radius: 3px; }
+.hz-rate em { grid-area: s; font-style: normal; font-size: 11px; color: var(--ink-3); }
+.hz-out { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; } .hz-out .hz-cap { margin-bottom: 0; }
+.hz-perf-r { display: flex; flex-direction: column; padding: 16px 18px 18px; min-width: 0; }
+.hz-ch-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; } .hz-ch-h .hz-cap { margin-bottom: 4px; }
+.hz-k-col { background: var(--mk-o1); } .hz-k-ln { height: 2px !important; width: 14px !important; border-radius: 1px; background: var(--hz-ink); vertical-align: 3px !important; }
+.hz-chart { display: block; width: 100%; height: auto; margin-bottom: 10px; }
+.hz-col { fill: #a9c7b5; } .hz-col.cur { fill: var(--accent); }
+.hz-ln { fill: none; stroke: var(--hz-ink); stroke-width: 1.6; stroke-dasharray: 3 3; }
+.hz-dot { fill: #fff; stroke: var(--hz-ink); stroke-width: 1.6; }
+.hz-chart .ch-hit:hover { fill: rgba(23, 113, 61, .06); }
+.hz-steps { padding-top: 12px; border-top: 1px solid var(--line); }
+.hz-sr { display: grid; grid-template-columns: minmax(0, 120px) minmax(0, 1fr) 48px; align-items: center; gap: 12px; min-height: 28px; font-size: 12.5px; }
+.hz-sl { display: flex; align-items: center; gap: 7px; color: var(--ink-2); white-space: nowrap; overflow: hidden; }
+.hz-st { position: relative; height: 10px; border-radius: 5px; background: var(--surface-2); }
+.hz-st i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: #a9c7b5; min-width: 3px; }
+.hz-sr.slow .hz-st i { background: var(--hz-ink); }
+.hz-sr b { text-align: right; font-family: var(--display); font-size: 14px; font-variant-numeric: tabular-nums; } .hz-sr b small { font-family: var(--font); font-size: 11px; color: var(--ink-3); }
+.hz-flag { display: flex; gap: 7px; align-items: flex-start; margin: 10px 0 0; padding: 8px 10px; border-radius: 9px; background: #f6f4ee; font-size: 12px; color: var(--ink-2); line-height: 1.4; }
+.hz-flag .ico { flex: none; margin-top: 1px; color: #8a5a0a; }
+/* watch */
+.hz-wc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 18px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.hz-wc > div { display: flex; flex-direction: column; padding: 8px 12px; border-left: 1px solid var(--line); min-width: 0; }
+.hz-wc > div:first-child { border-left: 0; }
+.hz-wc b { font-size: 22px; line-height: 1.15; font-variant-numeric: tabular-nums; color: var(--ink); }
+.hz-wc span { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-wc .bad b { color: #a8322d; } .hz-wc .warn b { color: #8a5a0a; }
+.hz-rw { position: relative; height: 92px; margin: 14px 18px 4px; }
+.hz-rw-over { position: absolute; left: 0; top: 10px; bottom: 26px; border-radius: 8px 0 0 8px; background: repeating-linear-gradient(135deg, rgba(168, 50, 45, .06) 0 6px, rgba(168, 50, 45, .02) 6px 12px); }
+.hz-rw-axis { position: absolute; left: 0; right: 0; bottom: 26px; height: 1px; background: var(--line-strong); }
+.hz-rw-now { position: absolute; top: 4px; bottom: 26px; width: 0; border-left: 1.5px solid var(--hz-ink); }
+.hz-rw-now em { position: absolute; bottom: -20px; left: 0; transform: translateX(-50%); font-style: normal; font-size: 10.5px; font-weight: 800; color: var(--hz-ink); white-space: nowrap; }
+.hz-rw-tk { position: absolute; bottom: 22px; width: 0; height: 8px; border-left: 1px solid var(--line-strong); }
+.hz-rw-tk em { position: absolute; bottom: -18px; left: 0; transform: translateX(-50%); font-style: normal; font-size: 10.5px; color: var(--ink-3); }
+.hz-rw-m { position: absolute; bottom: calc(32px + var(--l) * 16px); width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; padding: 0; border: 2px solid #fff; background: #8fa39a; box-shadow: 0 1px 3px rgba(16, 24, 20, .25); cursor: pointer; transition: transform .15s; }
+.hz-rw-m.rv { border-radius: 3px; }
+.hz-rw-m.warn { background: #d6a23a; } .hz-rw-m.bad { background: #c9473f; }
+.hz-rw-m:hover, .hz-rw-m:focus-visible { transform: scale(1.35); z-index: 2; }
+.hz-rw-lab { position: absolute; top: -2px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.hz-rw-lab.l { left: 4px; color: #a8322d; opacity: .8; } .hz-rw-lab.r { right: 0; }
+.hz-due-l { display: flex; flex-direction: column; flex: 1; border-top: 1px solid var(--line); margin-top: 6px; }
+.hz-due { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 6px 18px; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; text-align: left; color: inherit; cursor: pointer; }
+.hz-due:first-child { border-top: 0; } .hz-due:hover { background: #f8faf9; }
+.hz-due > .ico { color: var(--ink-3); flex: none; }
+.hz-dd { flex: none; width: 46px; display: flex; flex-direction: column; align-items: center; line-height: 1.05; }
+.hz-dd b { font-family: var(--display); font-size: 19px; font-variant-numeric: tabular-nums; }
+.hz-dd em { font-style: normal; font-size: 10px; color: var(--ink-3); white-space: nowrap; }
+.hz-due.bad .hz-dd b { color: #a8322d; } .hz-due.warn .hz-dd b { color: #8a5a0a; }
+.hz-due-b { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.hz-due-b b { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-due-b > span { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+.hz-due-b i { width: 7px; height: 7px; border-radius: 50%; background: #8fa39a; flex: none; }
+.hz-due.bad .hz-due-b i { background: #c9473f; } .hz-due.warn .hz-due-b i { background: #d6a23a; }
+/* ledger */
+.hz-led { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.hz-lr { display: grid; grid-template-columns: 46px auto minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 58px; padding: 6px 18px; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; text-align: left; color: inherit; cursor: pointer; }
+.hz-lr:first-child { border-top: 0; } .hz-lr:hover { background: #f8faf9; }
+.hz-stamp { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 46px; height: 44px; border-radius: 10px; border: 1px solid #cfe3d6; background: linear-gradient(180deg, #f3faf5, #e8f3ec); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); line-height: 1.05; }
+.hz-stamp b { font-size: 18px; letter-spacing: -.02em; }
+.hz-lr .type-ico { width: 32px; height: 32px; } .hz-lr .mthumb { width: 40px; height: 32px; }
+.hz-lr-b { display: flex; flex-direction: column; min-width: 0; }
+.hz-lr-b b { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-lr-b > span { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hz-lr-b .mono { font-size: 11px; }
+.hz-lr-t { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: nowrap; }
+.hz-tg { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--surface-2); font-size: 11px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.hz-tg.p { background: var(--accent-soft); color: var(--accent-ink); } .hz-tg.c { font-family: var(--mono); font-size: 10.5px; }
+/* activity timeline */
+.hz-act { position: relative; display: flex; flex-direction: column; padding: 0 0 8px; border-top: 1px solid var(--line); }
+.hz-act::before { content: ""; position: absolute; left: 31px; top: 34px; bottom: 18px; width: 1px; background: var(--line); }
+.hz-day { position: relative; padding: 10px 18px 4px 52px; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.hz-ev { position: relative; display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 6px 18px; border: 0; background: none; font: inherit; text-align: left; color: inherit; cursor: pointer; }
+.hz-ev:hover { background: #f8faf9; }
+.hz-ev-n { position: relative; flex: none; }
+.hz-ev-n .avatar { width: 28px; height: 28px; font-size: 10px; box-shadow: 0 0 0 3px #fff; }
+.hz-ev-n::after { content: ""; position: absolute; right: -2px; bottom: -1px; width: 9px; height: 9px; border-radius: 50%; border: 2px solid #fff; background: var(--mk-dim); }
+.hz-ev-n.t-ok::after { background: var(--mk-ok); } .hz-ev-n.t-warn::after { background: var(--mk-warn); } .hz-ev-n.t-bad::after { background: var(--mk-bad); } .hz-ev-n.t-info::after { background: var(--mk-s1); }
+.hz-ev-b { display: flex; flex-direction: column; flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
+.hz-ev-b b { color: var(--ink); font-weight: 700; }
+.hz-ev-b > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hz-ev-o { font-size: 11.5px; color: var(--ink-3); }
+.hz-ev time { flex: none; font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; padding-top: 2px; }
+/* portfolio */
+.hz-port .hz-h { border-bottom: 1px solid var(--line); }
+.hz-port-g { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr); }
+.hz-pc { padding: 16px 18px 18px; min-width: 0; border-left: 1px solid var(--line); }
+.hz-pc:first-child { border-left: 0; }
+.hz-hm-w { overflow-x: auto; }
+.hz-hm { width: calc(100% + 8px); border-collapse: separate; border-spacing: 4px; margin: -4px; font-size: 12px; }
+.hz-hm th { font-weight: 700; color: var(--ink-3); font-size: 11px; text-align: center; padding: 0 2px 2px; white-space: nowrap; }
+.hz-hm tbody th, .hz-hm tfoot th { text-align: left; color: var(--ink-2); font-size: 12px; padding-right: 8px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+.hz-hm td { padding: 0; text-align: center; }
+.hz-hc { display: grid; place-items: center; width: 100%; min-width: 40px; height: 40px; border-radius: 8px; font-family: var(--display); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-ink); background: color-mix(in srgb, #17713d calc(var(--k) * 100%), #f2f6f3); cursor: default; }
+.hz-hc.dk { color: #fff; }
+.hz-hm td.tot, .hz-hm tfoot td { font-size: 12px; color: var(--ink-2); }
+.hz-hm td.tot b, .hz-hm tfoot td b { font-family: var(--display); font-size: 14px; color: var(--ink); }
+.hz-hm em { display: block; font-style: normal; font-size: 10.5px; color: var(--ink-3); }
+.hz-hm th.tot { color: var(--ink-3); }
+.hz-note { margin: 10px 0 0; font-size: 11.5px; color: var(--ink-3); }
+.hz-stack { display: flex; gap: 2px; height: 10px; border-radius: 4px; overflow: hidden; } .hz-stack > span { min-width: 3px; } .hz-stack.tall { height: 14px; }
+.hz-sl-g { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 14px; margin-top: 10px; }
+.hz-sl-g span { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-2); } .hz-sl-g i { width: 8px; height: 8px; border-radius: 2px; flex: none; } .hz-sl-g b { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink); }
+.hz .hx-empty { padding: 26px 18px; }
+.hz .hx-more { padding: 10px 18px; }
 /* responsive */
-@media (max-width: 1280px) { .hx-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .hx-k:nth-child(3n + 1) { border-left: 0; } .hx-k:nth-child(n + 4) { border-top: 1px solid var(--line); } }
-@media (max-width: 1100px) { .hx-p.span8, .hx-p.span4 { grid-column: span 12; } .hx-ovg { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hx-ov { border-left: 1px solid var(--line) !important; border-top: 1px solid var(--line) !important; } .hx-ov:nth-child(2n + 1) { border-left: 0 !important; } .hx-ov:nth-child(-n + 2) { border-top: 0 !important; } }
+@media (max-width: 1360px) { .hz-band-main { grid-template-columns: minmax(240px, 290px) minmax(0, 1fr); } .hz-kz { width: 92px; } }
+@media (max-width: 1180px) { .hz-card.span8, .hz-card.span4, .hz-card.span7, .hz-card.span5 { grid-column: span 12; } .hz-port-g { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .hz-pc-hm { grid-column: span 2; border-bottom: 1px solid var(--line); } .hz-pc:nth-child(2) { border-left: 0; } }
+@media (max-width: 900px) { .hz-band-main { grid-template-columns: minmax(0, 1fr); } .hz-next { margin: 14px; } .hz-kpis { border-top: 1px solid var(--hz-line); } .hz-k:nth-child(3n + 1) { border-left: 0; }
+  .hz-th { display: none; } .hz-t { grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-areas: "ic main wait" "ic step act"; gap: 6px 12px; padding: 12px 16px 12px 18px; }
+  .hz-t-ic { grid-area: ic; align-self: start; } .hz-t-main { grid-area: main; } .hz-t-step { grid-area: step; } .hz-t-wait { grid-area: wait; align-items: flex-end; min-width: 70px; } .hz-t-act { grid-area: act; } .hz-t-who { display: none; }
+  .hz-perf-g { grid-template-columns: minmax(0, 1fr); } .hz-perf-l { border-right: 0; border-bottom: 1px solid var(--line); } }
 @media (max-width: 760px) {
-  .hx-head h1 { font-size: 20px; } .hx-qa { width: 100%; } .hx-qa .btn { flex: 1; justify-content: center; }
-  .hx-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hx-k { border-left: 1px solid var(--line) !important; border-top: 1px solid var(--line) !important; padding: 10px 12px; } .hx-k:nth-child(2n + 1) { border-left: 0 !important; } .hx-k:nth-child(-n + 2) { border-top: 0 !important; } .hx-kv { font-size: 22px; }
-  .hx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hx-st:nth-child(3) { border-left: 0; } .hx-st:nth-child(n + 3) { border-top: 1px solid var(--line); }
-  .hx-perf { grid-template-columns: minmax(0, 1fr); } .hx-perf > div + div { border-left: 0; border-top: 1px solid var(--line); }
-  .hx-ovg { grid-template-columns: minmax(0, 1fr); } .hx-ov { border-left: 0 !important; border-top: 1px solid var(--line) !important; } .hx-ov:first-child { border-top: 0 !important; }
-  .hx-seg { flex-wrap: wrap; } .hx-seg button { flex: 1 1 45%; border-top: 1px solid var(--line); } .hx-seg button:nth-child(-n + 2) { border-top: 0; } .hx-seg button:nth-child(3) { border-left: 0; }
-  .hx-tbl, .hx-tbl tbody { display: block; } .hx-tbl thead, .hx-tbl colgroup { display: none; }
-  .hx-tbl tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 8px 16px; border-top: 1px solid var(--line); }
-  .hx-tbl tr:first-child { border-top: 0; }
-  .hx-tbl td { display: none; height: auto; padding: 0 !important; border: 0; }
-  .hx-tbl td:first-child { display: block; grid-column: 1; grid-row: 1 / span 2; min-width: 0; }
-  .hx-tasks td:nth-child(4) { display: block; grid-column: 2; grid-row: 1; justify-self: end; }
-  .hx-tasks td:nth-child(5) { display: block; grid-column: 2; grid-row: 2; justify-self: end; max-width: 130px; }
-  .hx-tbl:not(.hx-tasks) td:last-child { display: block; grid-column: 2; grid-row: 1 / span 2; }
-  .hx-tbl tr.hx-div { display: block; padding: 6px 16px; } .hx-tbl tr.hx-div td { display: block; padding: 0 !important; background: none; }
-  .hx-tbl tr.hx-div { background: var(--surface-2); }
-  .hx-ph h3 { white-space: nowrap; } .hx-ph .hx-ctx { min-width: 0; }
+  .hz-band { border-radius: 16px; } .hz-band-top { padding: 18px 16px 14px; } .hz-hello h1 { font-size: 24px; } .hz-qa { width: 100%; } .hz-qa .hz-btn { flex: 1; justify-content: center; }
+  .hz-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hz-k { grid-template-columns: minmax(0, 1fr); grid-template-areas: "l" "v" "c" "z"; border-left: 1px solid var(--hz-line) !important; border-top: 1px solid var(--hz-line) !important; padding: 12px 14px; } .hz-k:nth-child(2n + 1) { border-left: 0 !important; } .hz-k:nth-child(-n + 2) { border-top: 0 !important; } .hz-kv { font-size: 28px; } .hz-kz { width: 100%; padding-top: 6px; }
+  .hz-port-g { grid-template-columns: minmax(0, 1fr); } .hz-pc-hm { grid-column: auto; } .hz-pc { border-left: 0; border-top: 1px solid var(--line); } .hz-pc:first-child { border-top: 0; }
+  .hz-lr { grid-template-columns: 46px minmax(0, 1fr); } .hz-lr > .type-ico, .hz-lr > .mthumb, .hz-lr-t { display: none; }
+  .hz-h { padding: 0 16px; } .hz-big { font-size: 40px; }
 }
-}
+@media (max-width: 1100px) and (min-width: 761px) { .hz-k { grid-template-columns: minmax(0, 1fr); grid-template-areas: "l" "v" "c" "z"; } .hz-kz { width: 100%; padding-top: 8px; } .hz-spark, .hz-prio, .hz-runw { max-width: 100%; } }
+@media (max-width: 760px) { .hz-qa { display: grid; grid-template-columns: 1fr 1fr; } .hz-qa .hz-btn:first-child { grid-column: 1 / -1; } .hz-btn { white-space: nowrap; font-size: 12.5px; padding: 0 10px; } .hz-spark, .hz-prio, .hz-runw { max-width: 100%; } }
+.hz-qh { margin-top: auto; display: flex; flex-wrap: wrap; gap: 6px 20px; padding: 11px 20px; border-top: 1px solid var(--line); background: #fafbfa; font-size: 12px; color: var(--ink-3); }
+.hz-qh span { display: inline-flex; align-items: center; gap: 5px; } .hz-qh b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.hz-qh i { width: 7px; height: 7px; border-radius: 50%; background: var(--mk-dim); } .hz-qh i.ok { background: var(--mk-ok); } .hz-qh i.bad { background: var(--mk-bad); }
+.hz-qh .hz-link { padding: 0; }
 
 </style>
 <div id="app"></div>
@@ -3513,133 +3651,183 @@ function homeScope(u) {
   return { label: 'Your team’s content', f: o => sameTeam(u, o) || (!!o.blocks && o.blocks.some(b => b.moduleId && sameTeam(u, modById(b.moduleId)))) };
 }
 /* Each Home section renders on its own: if one fails, it shows an inline error and the rest of the page still works. */
-function homeSafe(name, cls, fn) { try { return fn(); } catch (e) { console.error('Home section failed:', name, e); return `<section class="panel hx-p ${cls} hx-err" role="alert"><div class="hx-ph"><h3>${esc(name)}</h3></div><div class="hx-empty">${icon('alert', 'sm')}<span>This section could not be loaded. The rest of Home is unaffected.</span><button type="button" class="btn sm" data-act="home-retry">Try again</button></div></section>`; } }
+function homeSafe(name, cls, fn) { try { return fn(); } catch (e) { console.error('Home section failed:', name, e); return `<section class="hz-card ${cls} hx-err" role="alert"><header class="hz-h"><h3>${esc(name)}</h3></header><div class="hx-empty">${icon('alert', 'sm')}<span>This section could not be loaded. The rest of Home is unaffected.</span><button type="button" class="btn sm" data-act="home-retry">Try again</button></div></section>`; } }
 // Approvals completed per week, oldest first (last n weeks) — from closed approval cycles.
-function weeklyApprovals(cycles, n = 12) { const now = Date.now(); const out = Array.from({ length: n }, (_, i) => ({ start: now - (n - i) * 7 * DAY, n: 0 })); cycles.forEach(c => { if (c.outcome !== 'Approved' || !c.end) return; const k = n - 1 - Math.floor((now - c.end) / (7 * DAY)); if (k >= 0 && k < n) out[k].n++; }); return out; }
-function miniCols(weeks) {
-  const W = 360, H = 112, L = 22, B = 18, T = 8; const iw = W - L - 4, ih = H - T - B; const mx = Math.max(2, ...weeks.map(w => w.n)); const tk = Math.ceil(mx / 2) * 2; const bw = iw / weeks.length;
-  const y = v => T + ih - ih * v / tk; const lab = t => { const d = new Date(t); return d.getDate() + ' ' + MON[d.getMonth()]; };
-  return `<svg class="hx-cols" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc('Approvals per week: ' + weeks.map(w => lab(w.start) + ' ' + w.n).join(', '))}">
-    ${[0, tk / 2, tk].map(v => `<line class="ch-grid" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="ch-ax" x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${Math.round(v * 10) / 10}</text>`).join('')}
-    ${weeks.map((w, i) => { const x = L + i * bw; const h = ih * w.n / tk; return `<g><rect class="hx-col${i === weeks.length - 1 ? ' cur' : ''}" x="${x + bw * .22}" y="${y(w.n)}" width="${bw * .56}" height="${Math.max(0, h)}" rx="3"/><rect class="ch-hit" x="${x}" y="${T}" width="${bw}" height="${ih}" data-tip="${esc('Week of ' + lab(w.start) + '\n' + w.n + ' approval' + (w.n === 1 ? '' : 's'))}"/></g>`; }).join('')}
-    ${[0, Math.floor(weeks.length / 2), weeks.length - 1].map(i => `<text class="ch-ax" x="${i === weeks.length - 1 ? W - 2 : i === 0 ? L : L + i * bw + bw / 2}" y="${H - 4}" text-anchor="${i === weeks.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'}">${i === weeks.length - 1 ? 'This wk' : lab(weeks[i].start)}</text>`).join('')}</svg>`;
+function weeklyApprovals(cycles, n = 12) { const now = Date.now(); const out = Array.from({ length: n }, (_, i) => ({ start: now - (n - i) * 7 * DAY, n: 0, sub: 0 })); cycles.forEach(c => { const k = n - 1 - Math.floor((now - c.end) / (7 * DAY)); if (c.outcome === 'Approved' && c.end && k >= 0 && k < n) out[k].n++; const s = n - 1 - Math.floor((now - c.start) / (7 * DAY)); if (c.start && s >= 0 && s < n) out[s].sub++; }); return out; }
+const hzDay = t => { const d = new Date(t); return d.getDate() + ' ' + MON[d.getMonth()]; };
+// Sparkline from a weekly series (oldest → newest). Every point carries a tooltip.
+function hzSpark(vals, labels, unit, kind = 'line') {
+  const W = 112, H = 34, n = vals.length, mx = Math.max(1, ...vals), x = i => 2 + (W - 4) * i / Math.max(1, n - 1), y = v => H - 3 - (H - 8) * v / mx;
+  const hit = vals.map((v, i) => `<rect class="ch-hit" x="${x(i) - (W / n) / 2}" y="0" width="${W / n}" height="${H}" data-tip="${esc(labels[i] + ' · ' + v + ' ' + unit)}"/>`).join('');
+  if (kind === 'bars') { const bw = (W - 4) / n; return `<svg class="hz-spark bars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMax meet" aria-hidden="true">${vals.map((v, i) => `<rect x="${2 + i * bw + bw * .18}" y="${y(v)}" width="${bw * .64}" height="${v ? Math.max(2, H - 3 - y(v)) : 1}" rx="1" class="${v ? '' : 'z'} ${i === n - 1 ? 'cur' : ''}"/>`).join('')}${hit}</svg>`; }
+  const pts = vals.map((v, i) => x(i) + ',' + y(v)).join(' ');
+  return `<svg class="hz-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMax meet" aria-hidden="true"><polygon class="a" points="${x(0)},${H} ${pts} ${x(n - 1)},${H}"/><polyline points="${pts}"/><circle cx="${x(n - 1)}" cy="${y(vals[n - 1])}" r="2.6"/>${hit}</svg>`;
+}
+// Mini workflow stepper: done / current / upcoming steps of the item's approval workflow.
+function hzStepper(o) {
+  if (!o.review) return '';
+  const wf = wfById(o.review.wf); if (!wf) return '';
+  const steps = wf.steps.map((s, i) => [s, i]).filter(([s]) => !isNotify(s)); const cur = o.review.step;
+  const k = steps.findIndex(([, i]) => i === cur) + 1;
+  return `<span class="hz-stp" aria-label="Step ${k} of ${steps.length}">${steps.map(([s, i]) => `<i class="${i < cur ? 'done' : i === cur ? 'cur fn-' + String(s.fn).toLowerCase() : ''}" title="${esc(stepLabel(s))}"></i>`).join('')}<em>${k}/${steps.length}</em></span>`;
 }
 function viewHome() {
   const u = me(); const tasks = tasksFor(u); const a = authority(u.fn, u.level); const first = u.name.split(' ')[0]; const admin = isAdmin(u);
-  const now = new Date(); const today = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); const hr = now.getHours();
+  const now = new Date(); const NOW = now.getTime(); const today = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); const hr = now.getHours();
   const sc = homeScope(u); const mods = S.modules.filter(sc.f); const seeAssets = can(u, 'page_assets'); const assets = seeAssets ? S.assets.filter(sc.f) : [];
   const libOk = m => ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '');
   const mIn = mods.filter(m => m.review), mDraft = mods.filter(m => ['Draft', 'Awaiting Lead submission'].includes(statusOf(m))), mAmend = mods.filter(m => statusOf(m) === 'Amendment Requested');
   const aAmend = assets.filter(x => statusOf(x) === 'Amendment Requested'); const aIn = assets.filter(x => x.review); const mLive = mods.filter(libOk); const mExp = mods.filter(m => libraryStatus(m) === 'Expiring');
-  const cyc90 = allCycles().filter(c => (c.end || Date.now()) > Date.now() - 90 * DAY && sc.f(c.obj)); const P = (() => { try { return approvalStats(cyc90); } catch (e) { console.error('Approval statistics failed', e); return null; } })();
-  const high = tasks.filter(t => taskInfo(t).priority === 'High').length;
-  const new30 = mLive.filter(m => live(m) && live(m).approvedAt > Date.now() - 30 * DAY).length;
+  const cycAll = allCycles().filter(c => sc.f(c.obj));
+  const P = (() => { try { return approvalStats(cycAll.filter(c => (c.end || NOW) > NOW - 90 * DAY)); } catch (e) { console.error('Approval statistics failed', e); return null; } })();
+  const Pprev = (() => { try { return approvalStats(cycAll.filter(c => c.end && c.end <= NOW - 90 * DAY && c.end > NOW - 180 * DAY)); } catch (e) { return null; } })();
+  const TI = new Map(tasks.map(t => [t, taskInfo(t)])); const PR = { High: 0, Medium: 1, Normal: 2 };
+  const high = tasks.filter(t => TI.get(t).priority === 'High').length, med = tasks.filter(t => TI.get(t).priority === 'Medium').length;
+  const sorted = [...tasks].sort((x, y) => PR[TI.get(x).priority] - PR[TI.get(y).priority] || x.since - y.since);
   const expired = mods.filter(m => live(m) && !m.archived && liveMeta(m).expiry && daysTo(liveMeta(m).expiry) < 0).length;
+  // 12 weekly points ending now, for trend lines
+  const WK = 7 * DAY; const ends = Array.from({ length: 12 }, (_, i) => NOW - (11 - i) * WK); const wkLab = ends.map((t, i) => i === 11 ? 'This week' : 'Week of ' + hzDay(t - WK));
+  const modCyc = cycAll.filter(c => c.kind === 'Module');
+  const inRevS = ends.map((t, i) => i === 11 ? mIn.length : new Set(modCyc.filter(c => c.start <= t && (!c.end || c.end > t)).map(c => c.id)).size);
+  const apprS = ends.map((t, i) => i === 11 ? mLive.length : mods.filter(m => !m.archived && m.versions.some(v => v.approvedAt && v.approvedAt <= t)).length);
+  const amendS = ends.map(t => cycAll.reduce((n, c) => n + c.decisions.filter(x => x.decision === 'Amendment requested' && x.at > t - WK && x.at <= t).length, 0));
 
-  /* 1 · Key metrics: six primary figures for the role; the rest as a quiet secondary line. */
-  const K = (label, val, unit, ctx, tone, go, id) => `<button class="hx-k" ${go || 'disabled'} data-k="${id}"><span class="hx-kl">${label}</span><span class="hx-kv">${val}${unit ? `<small>${unit}</small>` : ''}</span><span class="hx-kc ${tone || ''}">${tone ? `<span class="k-dot ${tone}"></span>` : ''}${ctx}</span></button>`;
-  const kpis = homeSafe('Key metrics', 'span12', () => { const list = [
-    can(u, 'page_tasks') && K('My tasks', tasks.length, '', high ? high + ' high priority' : tasks.length ? 'None overdue' : 'Nothing waiting', high ? 'bad' : '', goAttr('tasks'), 'tasks'),
-    K('Modules in review', mIn.length, '', mIn.length ? 'Oldest step ' + fmtDur(Date.now() - Math.min(...mIn.map(m => m.review.stepStartedAt))) : 'None waiting', '', goAttr('modules', null, ' data-mstat="In Review"'), 'inreview'),
-    K('Amendment requests', mAmend.length + aAmend.length, '', mAmend.length + ' module' + (mAmend.length === 1 ? '' : 's') + (seeAssets ? ' · ' + aAmend.length + ' asset' + (aAmend.length === 1 ? '' : 's') : ''), mAmend.length + aAmend.length ? 'warn' : '', goAttr('modules', null, ' data-mstat="Amendment Requested"'), 'amend'),
-    K('Approved modules', mLive.length, '', new30 ? '+' + new30 + ' in the last 30 days' : 'Live in the library', '', goAttr('modules', null, ' data-mstat="live"'), 'approved'),
-    K('Expiring soon', mExp.length, '', (expired ? expired + ' expired · ' : '') + '≤ ' + S.settings.expiryWarnDays + ' days', mExp.length || expired ? 'warn' : '', goAttr('modules', null, ' data-mstat="Expiring"'), 'expiring'),
-    !P ? K('Avg. approval time', '—', '', 'Unavailable', '', '', 'avg') : K('Avg. approval time', P.done.length ? durDays(P.avgApproval) : '—', P.done.length ? 'days' : '', P.n ? Math.round(100 * P.approvalRate) + '% approval rate · 90d' : 'No cycles in 90 days', '', can(u, 'view_reports') ? goAttr('reports') : '', 'avg')
-  ].filter(Boolean);
-    const sec = [
-      [mods.length + ' modules', mods.filter(m => isMediaType(m.type)).length + ' media & documents', goAttr('modules', null, ' data-mstat=""')],
-      [mDraft.length + ' draft' + (mDraft.length === 1 ? '' : 's'), 'not yet submitted', goAttr('modules', null, ' data-mstat="open"')],
-      seeAssets && [aIn.length + ' asset' + (aIn.length === 1 ? '' : 's') + ' in review', assets.length + ' in total', goAttr('assets', null, ' data-setf="astat=In Review"')],
-      seeAssets && [assets.filter(x => live(x)).length + ' approved assets', 'with a live version', goAttr('assets', null, ' data-setf="astat=Approved"')],
-      (admin || can(u, ['manage_workflows', 'page_admin'])) && [S.workflows.filter(w => !w.hidden && w.active !== false).length + ' active workflows', '', goAttr('workflows')],
-      (admin || can(u, ['manage_users', 'page_admin'])) && [S.users.filter(x => x.status === 'Active').length + ' active users', S.functions.filter(f => f.active).length + ' functions', goAttr('users')]
+  /* ---- Command band: greeting, the next task, key metrics with trends ---- */
+  const band = homeSafe('Overview', 'span12', () => {
+    const nx = sorted[0]; const nI = nx && TI.get(nx);
+    const next = nx ? `<button type="button" class="hz-next" ${goAttr(taskTarget(nx), nx.obj.id)}><span class="hz-eyebrow">${icon('flag', 'sm')}Next up · ${esc(nI.priority)} priority</span><b class="hz-next-t" title="${esc(nx.title)}">${esc(nx.title)}</b><span class="hz-next-m">${esc(nx.obj.id)} · ${esc(nI.typeName)} · v${latest(nx.obj).v}</span><span class="hz-next-s">${nx.step ? fnBadge(nx.step.fn, 'sm') : icon('clock', 'sm')}<span>${esc(nI.step)}</span></span><span class="hz-next-f"><span class="hz-next-w"><b>${fmtDur(nI.wait)}</b> waiting</span><span class="hz-next-cta">${esc(nI.action)}${icon('arrow', 'sm')}</span></span></button>`
+      : `<div class="hz-next calm"><span class="hz-eyebrow">${icon('check', 'sm')}All clear</span><b class="hz-next-t">Nothing needs your action</b><span class="hz-next-m">${can(u, 'page_library') ? 'Approved content is ready to reuse in the library.' : 'New tasks appear here as soon as they reach you.'}</span></div>`;
+    const K = (id, label, val, unit, ctx, viz, go, tone) => `<button type="button" class="hz-k" data-k="${id}" ${go || 'disabled'}><span class="hz-kl">${label}</span><span class="hz-kv">${val}${unit ? `<small>${unit}</small>` : ''}</span><span class="hz-kc ${tone || ''}">${ctx}</span><span class="hz-kz">${viz}</span></button>`;
+    const prio = tasks.length ? `<span class="hz-prio" aria-hidden="true">${[['High', high, 'bad'], ['Medium', med, 'warn'], ['Normal', tasks.length - high - med, 'dim']].filter(x => x[1]).map(x => `<i class="${x[2]}" style="flex:${x[1]}" data-tip="${x[0]} priority · ${x[1]}"></i>`).join('')}</span>` : '<span class="hz-prio"><i class="none" style="flex:1"></i></span>';
+    const buckets = [[0, 30], [31, 60], [61, 90]].map(([lo, hi]) => mods.filter(m => live(m) && !m.archived && liveMeta(m).expiry && daysTo(liveMeta(m).expiry) >= lo && daysTo(liveMeta(m).expiry) <= hi).length);
+    const kp = [
+      can(u, 'page_tasks') && K('tasks', 'My tasks', tasks.length, '', high ? `<b>${high}</b> high priority` : tasks.length ? 'None past SLA' : 'Nothing waiting', prio, goAttr('tasks'), high ? 'bad' : ''),
+      K('inreview', 'Modules in review', mIn.length, '', mIn.length ? 'Oldest step ' + fmtDur(NOW - Math.min(...mIn.map(m => m.review.stepStartedAt))) : 'None waiting', hzSpark(inRevS, wkLab, 'in review'), goAttr('modules', null, ' data-mstat="In Review"')),
+      K('amend', 'Amendment requests', mAmend.length + aAmend.length, '', mAmend.length + ' module' + (mAmend.length === 1 ? '' : 's') + (seeAssets ? ' · ' + aAmend.length + ' asset' + (aAmend.length === 1 ? '' : 's') : ''), hzSpark(amendS, wkLab, 'requested', 'bars'), goAttr('modules', null, ' data-mstat="Amendment Requested"'), mAmend.length + aAmend.length ? 'warn' : ''),
+      K('approved', 'Approved modules', mLive.length, '', (() => { const d = mLive.length - apprS[7]; return d > 0 ? `<b>+${d}</b> in 4 weeks` : 'Live in the library'; })(), hzSpark(apprS, wkLab, 'approved'), goAttr('modules', null, ' data-mstat="live"')),
+      K('expiring', 'Expiring soon', mExp.length, '', (expired ? `<b>${expired}</b> expired · ` : '') + '≤ ' + S.settings.expiryWarnDays + ' days', `<span class="hz-runw" aria-hidden="true">${buckets.map((n, i) => `<i data-tip="${['0–30', '31–60', '61–90'][i]} days · ${n} expiring" style="--h:${Math.min(100, 18 + n * 28)}%" class="${n ? 'on' : ''}"></i>`).join('')}<em>0–90 d</em></span>`, goAttr('modules', null, ' data-mstat="Expiring"'), mExp.length || expired ? 'warn' : ''),
+      !P ? K('avg', 'Avg. approval time', '—', '', 'Unavailable', '', '') : K('avg', 'Avg. approval time', P.done.length ? durDays(P.avgApproval) : '—', P.done.length ? 'days' : '', P.n ? Math.round(100 * P.approvalRate) + '% approval rate · 90 d' : 'No cycles in 90 days', hzSpark(weeklyApprovals(cycAll).map(w => w.n), wkLab, 'approvals', 'bars'), can(u, 'view_reports') ? goAttr('reports') : '')
     ].filter(Boolean);
-    return `<section class="hx-kpis" aria-label="Key metrics" style="--n:${list.length}">${list.join('')}</section><nav class="hx-sec" aria-label="More figures">${sec.map(s => `<button type="button" ${s[2]}><b>${s[0]}</b>${s[1] ? `<span>${s[1]}</span>` : ''}</button>`).join('')}</nav>`; });
+    const qa = [canCreateModule(u) && can(u, 'page_modules') && `<button class="hz-btn pri" ${goAttr('module-new')}>${icon('plus', 'sm')}Create module</button>`, canCreateAsset(u) && seeAssets && `<button class="hz-btn" data-act="asset-new">${icon('layers', 'sm')}Create asset</button>`, can(u, 'page_library') && `<button class="hz-btn" ${goAttr('library')}>${icon('book', 'sm')}Approved Library</button>`].filter(Boolean).join('');
+    return `<section class="hz-band" aria-label="Overview"><div class="hz-band-top"><div class="hz-hello"><span class="hz-date">${esc(today)}</span><h1>${hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening'}, ${esc(first)}</h1><p class="hz-who"><span>${esc(roleLabel(u))}</span><span>${icon(a.final ? 'key' : 'eye', 'sm')}${esc(a.short)}</span><span>${icon('globe', 'sm')}${esc(sc.label)}</span></p></div><div class="hz-qa">${qa}</div></div>
+      <div class="hz-band-main">${next}<div class="hz-kpis" style="--n:${kp.length}" aria-label="Key metrics">${kp.join('')}</div></div></section>`; });
 
-  /* 2 · My Tasks */
+  /* Secondary inventory — every figure links to its list */
+  const inv = homeSafe('Workspace', 'span12', () => { const sec = [
+      ['grid', mods.length, 'modules', mods.filter(m => isMediaType(m.type)).length + ' media & docs', goAttr('modules', null, ' data-mstat=""')],
+      ['file', mDraft.length, mDraft.length === 1 ? 'draft' : 'drafts', '', goAttr('modules', null, ' data-mstat="open"')],
+      seeAssets && ['layers', aIn.length, aIn.length === 1 ? 'asset in review' : 'assets in review', 'of ' + assets.length, goAttr('assets', null, ' data-setf="astat=In Review"')],
+      seeAssets && ['check', assets.filter(x => live(x)).length, 'approved assets', '', goAttr('assets', null, ' data-setf="astat=Approved"')],
+      (admin || can(u, ['manage_workflows', 'page_admin'])) && ['workflow', S.workflows.filter(w => !w.hidden && w.active !== false).length, 'active workflows', '', goAttr('workflows')],
+      (admin || can(u, ['manage_users', 'page_admin'])) && ['users', S.users.filter(x => x.status === 'Active').length, 'active users', S.functions.filter(f => f.active).length + ' functions', goAttr('users')]
+    ].filter(Boolean);
+    return `<nav class="hx-sec hz-inv" aria-label="Workspace figures">${sec.map(s => `<button type="button" ${s[4]}>${icon(s[0], 'sm')}<b>${s[1]} ${s[2]}</b>${s[3] ? `<span>${s[3]}</span>` : ''}</button>`).join('')}</nav>`; });
+
+  /* ---- My Tasks workspace ---- */
   const taskBox = homeSafe('My Tasks', 'span8', () => {
-    const byG = TASK_GROUPS.map(g => [g[0], g[1], tasks.filter(t => taskGroup(t) === g[0]).length]);
     const watching = tasks.length < 4 && !admin ? [...mods, ...assets].filter(o => o.review && !tasks.some(t => t.obj === o) && (fnInfo(u.fn).reviews ? curStep(o).fn === u.fn : sameTeam(u, o))).map(o => ({ kind: 'watch', obj: o, type: kindOf(o), title: nameOf(o), id: o.id, step: curStep(o), since: o.review.stepStartedAt })) : [];
-    const PR = { High: 0, Medium: 1, Normal: 2 };
-    const tq = [...tasks].sort((x, y) => PR[taskInfo(x).priority] - PR[taskInfo(y).priority] || x.since - y.since).slice(0, 6).concat(watching.slice(0, Math.max(0, 4 - tasks.length)));
-    const row = t => { const o = t.obj; const I = taskInfo(t); const nm = t.title;
-      return `<tr class="click" ${goAttr(t.kind === 'watch' ? (t.type === 'Asset' ? 'asset' : 'module') : taskTarget(t), o.id)} tabindex="0"><td><div class="hx-item">${t.type === 'Asset' ? `<span class="type-ico">${icon('layers', 'sm')}</span>` : modThumb(o, latest(o))}<span class="hx-it"><b title="${esc(nm)}">${esc(nm)}</b><span>${esc(o.id)} · ${esc(I.typeName)} · v${latest(o).v}</span></span></div></td><td><span class="hx-step" title="${esc(I.step)}">${t.step ? fnBadge(t.step.fn, 'sm') : ''}<span>${esc(I.step)}</span></span></td><td class="hx-resp" title="${esc(I.responsible)}">${esc(I.responsible)}</td><td class="num"><span class="hx-wait ${PRIO_TONE[I.priority]}" title="${I.priority} priority">${fmtDur(I.wait)}</span></td><td><span class="hx-act ${t.kind}">${esc(I.action)}</span></td></tr>`; };
-    const rows = tq.map((t, i) => (t.kind === 'watch' && (i === 0 || tq[i - 1].kind !== 'watch') ? `<tr class="hx-div"><td colspan="5">${fnInfo(u.fn).reviews ? 'Also in ' + esc(u.fn) + ' review' : 'Your team’s items with reviewers'}</td></tr>` : '') + row(t)).join('');
-    return `<section class="panel hx-p span8" aria-labelledby="hx-t-tasks"><div class="hx-ph"><h3 id="hx-t-tasks">My Tasks</h3><span class="hx-n">${tasks.length}</span><span class="grow"></span>${can(u, 'page_tasks') ? `<button class="hx-link" ${goAttr('tasks')}>View all ${icon('chevron', 'sm')}</button>` : ''}</div>
-      <div class="hx-seg" role="group" aria-label="Tasks by type">${byG.map(g => `<button type="button" class="${g[2] ? '' : 'zero'}" ${goAttr('tasks', null, ` data-tab="${g[0]}"`)}><b>${g[2]}</b>${esc(g[1])}</button>`).join('')}</div>
-      ${!tasks.length && watching.length ? `<div class="hx-note">${icon('check', 'sm')}Nothing needs your action right now.</div>` : ''}
-      ${tq.length ? `<div class="hx-tw"><table class="hx-tbl hx-tasks"><colgroup><col><col style="width:23%"><col style="width:13%"><col style="width:88px"><col style="width:140px"></colgroup><thead><tr><th>Item</th><th>Current step</th><th>Responsible</th><th class="num">Waiting</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="hx-empty">${icon('check', 'sm')}<span>Nothing needs your action.${can(u, 'page_library') ? ' Browse the Approved Library for reusable content.' : ''}</span></div>`}
-      ${tasks.length > 6 ? `<div class="hx-more">${tasks.length - 6} more in <button class="hx-link" ${goAttr('tasks')}>My Tasks</button></div>` : ''}</section>`; });
+    const tab = UI.f.htab && TASK_GROUPS.some(g => g[0] === UI.f.htab) ? UI.f.htab : 'all';
+    const byG = TASK_GROUPS.map(g => [g[0], g[1], tasks.filter(t => taskGroup(t) === g[0]).length]);
+    const list = (tab === 'all' ? sorted : sorted.filter(t => taskGroup(t) === tab)); const shown = list.slice(0, 6); const sla = (S.settings.reviewSlaDays || 3) * DAY;
+    const row = t => { const o = t.obj; const I = t.kind === 'watch' ? taskInfo(t) : TI.get(t); const who = t.kind === 'review' || t.kind === 'watch' ? assigneeFor(t.step) : [user(o.owner)];
+      const pct = Math.min(100, 100 * I.wait / sla); const pri = t.kind === 'watch' ? 'watch' : I.priority.toLowerCase();
+      return `<div class="hz-t p-${pri}" ${goAttr(t.kind === 'watch' ? (t.type === 'Asset' ? 'asset' : 'module') : taskTarget(t), o.id)} role="link" tabindex="0">
+        <span class="hz-t-ic">${t.type === 'Asset' ? `<span class="type-ico">${icon('layers', 'sm')}</span>` : modThumb(o, latest(o))}</span>
+        <span class="hz-t-main"><b title="${esc(t.title)}">${esc(t.title)}</b><span class="hz-t-meta"><span class="mono">${esc(o.id)}</span><span>${esc(I.typeName)}</span><span>v${latest(o).v}</span></span></span>
+        <span class="hz-t-step">${t.step ? `<span class="hz-t-sl" title="${esc(I.step)}">${fnBadge(t.step.fn, 'sm')}<span><b>${esc(levelName(t.step.level))}</b> ${t.step.req === 'approve' ? 'approval' : 'review'}</span></span>${hzStepper(o)}` : `<span class="hz-t-sl" title="${esc(I.step)}">${icon(t.kind === 'rejected' ? 'x' : t.kind === 'amend' ? 'undo' : 'edit', 'sm')}<span>${esc({ rejected: 'Rejected', amend: 'Amending', submit: 'Awaiting submission', draft: 'Draft' }[t.kind] || I.step)}</span></span><span class="hz-t-note">${esc(t.kind === 'rejected' ? 'Cycle closed' : t.kind === 'amend' && o.resume ? 'Then ' + o.resume.fn + ' ' + levelName(o.resume.level) : t.kind === 'submit' ? 'Prepared by a Member' : 'Not yet submitted')}</span>`}</span>
+        <span class="hz-t-who" title="${esc('Responsible: ' + I.responsible)}"><span class="hz-av">${who.slice(0, 3).map(x => avatar(x, 'sm')).join('')}${who.length > 3 ? `<span class="avatar sm more">+${who.length - 3}</span>` : ''}</span></span>
+        <span class="hz-t-wait" title="${esc(I.priority + ' priority · SLA ' + (S.settings.reviewSlaDays || 3) + ' days')}"><b>${fmtDur(I.wait)}</b><span class="hz-sla"><i style="width:${pct}%"></i></span></span>
+        <span class="hz-t-act"><span class="hz-cta ${t.kind}">${esc(I.action)}</span></span></div>`; };
+    const wrows = watching.slice(0, Math.max(0, 4 - tasks.length));
+    return `<section class="hz-card span8" aria-labelledby="hx-t-tasks"><header class="hz-h"><h3 id="hx-t-tasks">My Tasks</h3><span class="hz-n">${tasks.length}</span><span class="grow"></span>${can(u, 'page_tasks') ? `<button class="hz-link" ${goAttr('tasks')}>Open My Tasks ${icon('chevron', 'sm')}</button>` : ''}</header>
+      <div class="hz-tabs" role="tablist" aria-label="Filter tasks"><button type="button" role="tab" aria-selected="${tab === 'all'}" class="${tab === 'all' ? 'on' : ''}" data-act="home-tab" data-v="all">All<b>${tasks.length}</b></button>${byG.map(g => `<button type="button" role="tab" aria-selected="${tab === g[0]}" class="${tab === g[0] ? 'on' : ''} ${g[2] ? '' : 'zero'}" data-act="home-tab" data-v="${g[0]}">${esc(g[1])}<b>${g[2]}</b></button>`).join('')}</div>
+      ${shown.length ? `<div class="hz-tl" role="list"><div class="hz-th" aria-hidden="true"><span></span><span>Item</span><span>Workflow position</span><span>Who</span><span>Waiting · SLA</span><span></span></div>${shown.map(row).join('')}</div>` : `<div class="hx-empty">${icon('check', 'sm')}<span>${tasks.length ? 'Nothing in this group.' : 'Nothing needs your action.' + (can(u, 'page_library') ? ' Browse the Approved Library for reusable content.' : '')}</span></div>`}
+      ${tab === 'all' && wrows.length ? `<div class="hz-sub-h">${fnInfo(u.fn).reviews ? 'Also in ' + esc(u.fn) + ' review' : 'Your team’s items with reviewers'}</div><div class="hz-tl">${wrows.map(row).join('')}</div>` : ''}
+      ${(() => { if (!tasks.length) return ''; const ws = tasks.map(t => TI.get(t).wait); const past = tasks.filter(t => TI.get(t).wait > sla).length;
+        return `<div class="hz-qh"><span><b>${list.length > 6 ? list.length - 6 + ' more' : tasks.length + ' open'}</b>${list.length > 6 ? ` in <button class="hz-link" ${goAttr('tasks')}>My Tasks</button>` : ''}</span><span>Average wait <b>${fmtDur(ws.reduce((a, b) => a + b, 0) / ws.length)}</b></span><span><i class="ok"></i><b>${tasks.length - past}</b> within SLA</span><span><i class="${past ? 'bad' : ''}"></i><b>${past}</b> past the ${S.settings.reviewSlaDays || 3}-day SLA</span></div>`; })()}</section>`; });
 
-  /* 3 · Pipeline: where every module is now (expiring is shown apart from approved, so the bar adds up). */
+  /* ---- Approval pipeline as a connected stage flow ---- */
   const pipe = homeSafe('Approval pipeline', 'span4', () => {
-    const live2 = mLive.length - mExp.length; const st = [['Draft', mDraft.length, 'dim', 'open'], ['In review', mIn.length, 's1', 'In Review'], ['Amendment', mAmend.length, 'warn', 'Amendment Requested'], ['Approved', live2, 'ok', 'live'], ['Approved · expiring', mExp.length, 'bad', 'Expiring']];
-    const tot = st.reduce((s, x) => s + x[1], 0); const inFn = reviewFuncs().map(fn => [fn, mIn.filter(m => curStep(m).fn === fn).length]); const mx = Math.max(1, ...inFn.map(x => x[1]));
-    return `<section class="panel hx-p span4" aria-labelledby="hx-t-pipe"><div class="hx-ph"><h3 id="hx-t-pipe">Approval pipeline</h3><span class="grow"></span><span class="hx-ctx">Modules · ${esc(sc.label)}</span></div><div class="hx-pb">
-      <div class="hx-stack" role="img" aria-label="${esc(st.map(s => s[0] + ' ' + s[1]).join(', '))}">${tot ? st.filter(s => s[1]).map(s => `<span class="mk-${s[2]}" style="flex:${s[1]}" data-tip="${esc(s[0] + ' · ' + s[1] + ' (' + Math.round(100 * s[1] / tot) + '%)')}"></span>`).join('') : '<span class="mk-none" style="flex:1"></span>'}</div>
-      <div class="hx-stages">${st.map(s => `<button type="button" ${goAttr('modules', null, ` data-mstat="${s[3]}"`)}><i class="mk-${s[2]}"></i><span>${s[0]}</span><b>${s[1]}</b><em>${tot ? Math.round(100 * s[1] / tot) : 0}%</em></button>`).join('')}</div>
-      <div class="hx-sub"><span class="hx-cap">In review now, by step</span>${inFn.length ? inFn.map(([fn, n]) => `<div class="hx-bar"><span class="hx-bl">${fnBadge(fn, 'sm')}${esc(fn)}</span><span class="hx-tr"><span class="mk-s1" style="width:${100 * n / mx}%" data-tip="${esc(fn + ' · ' + n + ' in review')}"></span></span><b>${n}</b></div>`).join('') : '<p class="hx-muted">No review functions configured.</p>'}</div></div></section>`; });
+    const live2 = mLive.length - mExp.length;
+    const st = [['Draft', mDraft.length, 'dim', 'open', 'edit', 'Being prepared'], ['In review', mIn.length, 's1', 'In Review', 'shieldcheck', 'With MLR reviewers'], ['Amendment', mAmend.length, 'warn', 'Amendment Requested', 'undo', 'Back with the owner'], ['Approved', live2, 'ok', 'live', 'check', 'Live in the library'], ['Approved · expiring', mExp.length, 'bad', 'Expiring', 'clock', 'Within ' + S.settings.expiryWarnDays + ' days of expiry']];
+    const tot = st.reduce((s, x) => s + x[1], 0); const inFn = reviewFuncs().map(fn => [fn, mIn.filter(m => curStep(m).fn === fn).length]);
+    return `<section class="hz-card span4" aria-labelledby="hx-t-pipe"><header class="hz-h"><h3 id="hx-t-pipe">Approval pipeline</h3><span class="grow"></span><span class="hz-ctx">${tot} modules</span></header>
+      <ol class="hz-flow">${st.map(s => `<li><button type="button" ${goAttr('modules', null, ` data-mstat="${s[3]}"`)} class="t-${s[2]}"><span class="hz-node">${icon(s[4], 'sm')}</span><span class="hz-fl"><span class="hz-fn"><b>${s[0]}</b><em>${s[5]}</em></span><span class="hz-ft"><i style="width:${tot ? 100 * s[1] / tot : 0}%" data-tip="${esc(s[0] + ' · ' + s[1] + ' of ' + tot + ' modules')}"></i></span></span><span class="hz-fv"><b>${s[1]}</b><em>${tot ? Math.round(100 * s[1] / tot) : 0}%</em></span></button></li>`).join('')}</ol>
+      <div class="hz-chain"><span class="hz-cap">In review now · by step</span><div class="hz-chain-r">${inFn.length ? inFn.map(([fn, n], i) => `${i ? `<span class="hz-arrow" aria-hidden="true"></span>` : ''}<button type="button" class="hz-cn ${n ? 'on' : ''}" ${goAttr('modules', null, ' data-mstat="In Review"')} data-tip="${esc(fn + ' · ' + n + ' module' + (n === 1 ? '' : 's') + ' at this step')}">${fnBadge(fn, 'sm')}<b>${n}</b><span>${esc(fn)}</span></button>`).join('') : '<p class="hx-muted">No review functions configured.</p>'}</div></div></section>`; });
 
-  /* 4 · Approval performance (last 90 days) */
+  /* ---- Approval performance ---- */
   const perf = homeSafe('Approval performance', 'span8', () => { if (!P) throw new Error('Approval statistics unavailable');
-    const slowFn = [...P.fnAvg].sort((x, y) => y.avg - x.avg)[0]; const inProg = P.n - P.closed; const wk = weeklyApprovals(allCycles().filter(c => sc.f(c.obj)));
-    const S4 = (l, v, unit, sub) => `<div class="hx-st"><span>${l}</span><b>${v}<small>${unit}</small></b><em>${sub}</em></div>`;
+    const inProg = P.n - P.closed; const wk = weeklyApprovals(cycAll); const slowFn = [...P.fnAvg].sort((x, y) => y.avg - x.avg)[0];
+    const d = Pprev && Pprev.done.length && P.done.length ? durDays(P.avgApproval) - durDays(Pprev.avgApproval) : null;
+    const delta = d == null ? '<span class="hz-delta">No earlier cycles to compare</span>' : `<span class="hz-delta ${d < 0 ? 'good' : d > 0 ? 'bad' : ''}">${icon(d <= 0 ? 'down' : 'up', 'sm')}${Math.abs(Math.round(d * 10) / 10)} days ${d < 0 ? 'faster' : d > 0 ? 'slower' : 'same'} than the previous 90 days</span>`;
+    const rate = (l, v, sub, tone) => `<div class="hz-rate"><span>${l}</span><b>${v}<small>%</small></b><span class="hz-rt"><i class="mk-${tone}" style="width:${v}%"></i></span><em>${sub}</em></div>`;
+    // columns: approvals per week, line: submissions per week — same unit (cycles), one axis
+    const W = 520, H = 168, L = 26, B = 22, T = 10; const iw = W - L - 6, ih = H - T - B; const mx = Math.max(2, ...wk.map(w => Math.max(w.n, w.sub))); const tk = Math.ceil(mx / 2) * 2; const bw = iw / wk.length; const y = v => T + ih - ih * v / tk;
+    const line = wk.map((w, i) => (L + i * bw + bw / 2) + ',' + y(w.sub)).join(' ');
+    const chart = `<svg class="hz-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc('Per week, approvals and submissions: ' + wk.map(w => hzDay(w.start) + ' ' + w.n + '/' + w.sub).join(', '))}">
+      ${[0, tk / 2, tk].map(v => `<line class="ch-grid" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="ch-ax" x="${L - 7}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join('')}
+      ${wk.map((w, i) => `<rect class="hz-col${i === wk.length - 1 ? ' cur' : ''}" x="${L + i * bw + bw * .2}" y="${y(w.n)}" width="${bw * .6}" height="${Math.max(0, T + ih - y(w.n))}" rx="3"/>`).join('')}
+      <polyline class="hz-ln" points="${line}"/>${wk.map((w, i) => `<circle class="hz-dot" cx="${L + i * bw + bw / 2}" cy="${y(w.sub)}" r="3"/>`).join('')}
+      ${wk.map((w, i) => `<rect class="ch-hit" x="${L + i * bw}" y="${T}" width="${bw}" height="${ih}" data-tip="${esc((i === wk.length - 1 ? 'This week' : 'Week of ' + hzDay(w.start)) + '\n' + w.n + ' approved · ' + w.sub + ' submitted')}"/>`).join('')}
+      ${[0, 4, 8, 11].map(i => `<text class="ch-ax" x="${i === 11 ? W - 2 : L + i * bw + bw / 2}" y="${H - 4}" text-anchor="${i === 11 ? 'end' : 'middle'}">${i === 11 ? 'This week' : hzDay(wk[i].start)}</text>`).join('')}</svg>`;
     const mxf = Math.max(1, ...P.fnAvg.map(x => x.avg));
-    return `<section class="panel hx-p span8" aria-labelledby="hx-t-perf"><div class="hx-ph"><h3 id="hx-t-perf">Approval performance</h3><span class="grow"></span><span class="hx-ctx">Last 90 days · ${P.n} cycle${P.n === 1 ? '' : 's'}</span>${can(u, 'view_reports') ? `<button class="hx-link" ${goAttr('reports')}>Reports ${icon('chevron', 'sm')}</button>` : ''}</div>
-      <div class="hx-stats">${S4('Average approval time', P.done.length ? durDays(P.avgApproval) : '—', P.done.length ? ' days' : '', P.done.length + ' approved cycle' + (P.done.length === 1 ? '' : 's'))}${S4('Approval rate', Math.round(100 * P.approvalRate), '%', P.closed + ' closed cycles')}${S4('Amendment rate', Math.round(100 * P.amendmentRate), '%', P.amendCycles + ' of ' + P.n + ' cycles')}${S4('Rejection rate', Math.round(100 * P.rejectionRate), '%', P.rej.length + ' rejected')}</div>
-      <div class="hx-out"><div class="hx-stack thin" role="img" aria-label="${esc('Outcomes: ' + P.done.length + ' approved, ' + P.rej.length + ' rejected, ' + inProg + ' in progress')}">${P.n ? [['Approved', P.done.length, 'ok'], ['Rejected', P.rej.length, 'bad'], ['In progress', inProg, 'warn']].filter(x => x[1]).map(x => `<span class="mk-${x[2]}" style="flex:${x[1]}" data-tip="${x[0]} · ${x[1]}"></span>`).join('') : '<span class="mk-none" style="flex:1"></span>'}</div><div class="hx-leg"><span><i class="mk-ok"></i>Approved <b>${P.done.length}</b></span><span><i class="mk-bad"></i>Rejected <b>${P.rej.length}</b></span><span><i class="mk-warn"></i>In progress <b>${inProg}</b></span></div></div>
-      <div class="hx-perf"><div><span class="hx-cap">Approvals per week · last 12 weeks</span>${miniCols(wk)}</div>
-      <div><span class="hx-cap">Average review time per step · days</span>${P.fnAvg.length ? P.fnAvg.map(x => `<div class="hx-bar"><span class="hx-bl">${fnBadge(x.fn, 'sm')}${esc(x.fn)}</span><span class="hx-tr"><span class="${slowFn && x.fn === slowFn.fn ? 'mk-o2' : 'mk-o1'}" style="width:${100 * x.avg / mxf}%" data-tip="${esc(x.fn + ' · ' + durDays(x.avg) + ' days on average · ' + x.n + ' steps')}"></span></span><b>${durDays(x.avg)}d</b></div>`).join('') : '<p class="hx-muted">No completed review steps in the last 90 days.</p>'}
-      ${P.slow ? `<p class="hx-flag">${icon('alert', 'sm')}<span>Slowest step: <b>${esc(P.slow.fn)} ${esc(levelName(P.slow.level))} ${P.slow.level === 'Lead' ? 'approval' : 'review'}</b> · ${durDays(P.slow.avg)} days on average</span></p>` : ''}</div></div></section>`; });
+    return `<section class="hz-card hz-perf span8" aria-labelledby="hx-t-perf"><header class="hz-h"><h3 id="hx-t-perf">Approval performance</h3><span class="hz-ctx">Last 90 days · ${P.n} cycle${P.n === 1 ? '' : 's'}</span><span class="grow"></span>${can(u, 'view_reports') ? `<button class="hz-link" ${goAttr('reports')}>Reports ${icon('chevron', 'sm')}</button>` : ''}</header>
+      <div class="hz-perf-g"><div class="hz-perf-l"><span class="hz-cap">Average approval time</span><div class="hz-big">${P.done.length ? durDays(P.avgApproval) : '—'}<small>${P.done.length ? 'days' : ''}</small></div>${delta}
+        <div class="hz-rates">${rate('Approval rate', Math.round(100 * P.approvalRate), P.done.length + ' of ' + P.closed + ' closed', 'ok')}${rate('Amendment rate', Math.round(100 * P.amendmentRate), P.amendCycles + ' of ' + P.n + ' cycles', 'warn')}${rate('Rejection rate', Math.round(100 * P.rejectionRate), P.rej.length + ' rejected', 'bad')}</div>
+        <div class="hz-out"><span class="hz-cap">Cycle outcomes</span><div class="hz-stack" role="img" aria-label="${esc(P.done.length + ' approved, ' + P.rej.length + ' rejected, ' + inProg + ' in progress')}">${P.n ? [['Approved', P.done.length, 'ok'], ['Rejected', P.rej.length, 'bad'], ['In progress', inProg, 'warn']].filter(x => x[1]).map(x => `<span class="mk-${x[2]}" style="flex:${x[1]}" data-tip="${x[0]} · ${x[1]}"></span>`).join('') : '<span class="mk-none" style="flex:1"></span>'}</div><div class="hx-leg"><span><i class="mk-ok"></i>Approved <b>${P.done.length}</b></span><span><i class="mk-bad"></i>Rejected <b>${P.rej.length}</b></span><span><i class="mk-warn"></i>In progress <b>${inProg}</b></span></div></div></div>
+      <div class="hz-perf-r"><div class="hz-ch-h"><span class="hz-cap">Throughput · last 12 weeks</span><span class="hx-leg sm"><span><i class="hz-k-col"></i>Approved</span><span><i class="hz-k-ln"></i>Submitted</span></span></div>${chart}
+        <div class="hz-steps"><span class="hz-cap">Average time at each review step</span>${P.fnAvg.length ? P.fnAvg.map(x => `<div class="hz-sr ${slowFn && x.fn === slowFn.fn && P.fnAvg.length > 1 ? 'slow' : ''}"><span class="hz-sl">${fnBadge(x.fn, 'sm')}${esc(x.fn)}</span><span class="hz-st"><i style="width:${100 * x.avg / mxf}%" data-tip="${esc(x.fn + ' · ' + durDays(x.avg) + ' days on average · ' + x.n + ' steps')}"></i></span><b>${durDays(x.avg)}<small>d</small></b></div>`).join('') : '<p class="hx-muted">No completed review steps in the last 90 days.</p>'}
+        ${P.slow ? `<p class="hz-flag">${icon('alert', 'sm')}<span>Slowest step: <b>${esc(P.slow.fn)} ${esc(levelName(P.slow.level))} ${P.slow.level === 'Lead' ? 'approval' : 'review'}</b> · ${durDays(P.slow.avg)} days on average</span></p>` : ''}</div></div></div></section>`; });
 
-  /* 5 · Recent activity */
-  const actBox = homeSafe('Recent activity', 'span4', () => {
-    const ACT_RX = /submitted|approv|review|comment|reply|amend|reject|created|version|resolved|uploaded|replaced|withdraw|reinstat/i;
-    const acts = [...S.audit].filter(e => !e.auto && ['Module', 'Asset'].includes(e.objType) && ACT_RX.test(e.action) && (sc.f(objById(e.objType, e.objId) || {}) || e.user === u.id)).sort((x, y) => y.ts - x.ts).slice(0, 7);
-    return `<section class="panel hx-p span4" aria-labelledby="hx-t-act"><div class="hx-ph"><h3 id="hx-t-act">Recent activity</h3><span class="grow"></span>${can(u, 'view_audit') ? `<button class="hx-link" ${goAttr('audit')}>Audit trail ${icon('chevron', 'sm')}</button>` : ''}</div><div class="hx-list">${acts.length ? acts.map(e => { const x = user(e.user); const o = objById(e.objType, e.objId); const on = o ? nameOf(o) : e.objId;
-      return `<button type="button" class="hx-ev" ${goAttr(e.objType === 'Asset' ? 'asset' : 'module', e.objId)}>${avatar(x, 'sm')}<span class="hx-evb"><span class="hx-evt"><b>${esc(x.name)}</b> ${esc(e.action.toLowerCase())}</span><span class="hx-evo" title="${esc(on)}">${esc(on)} · v${e.version}</span></span><time datetime="${new Date(e.ts).toISOString()}" title="${esc(fmtDT(e.ts))}">${ago(e.ts)}</time></button>`; }).join('') : `<div class="hx-empty"><span>No activity yet.</span></div>`}</div></section>`; });
-
-  /* 6 · Recently approved */
-  const recentBox = homeSafe('Recently approved', 'span8', () => {
-    const recent = [...mods.filter(m => live(m) && !m.archived).map(m => ['Module', m]), ...assets.filter(x => live(x)).map(x => ['Asset', x])].sort((x, y) => live(y[1]).approvedAt - live(x[1]).approvedAt).slice(0, 6);
-    const txt = (ids, f) => (ids || []).map(f).join(', ') || '—';
-    return `<section class="panel hx-p span8" aria-labelledby="hx-t-rec"><div class="hx-ph"><h3 id="hx-t-rec">Recently approved</h3><span class="grow"></span>${can(u, 'page_library') ? `<button class="hx-link" ${goAttr('library')}>Approved Library ${icon('chevron', 'sm')}</button>` : ''}</div>${recent.length ? `<div class="hx-tw"><table class="hx-tbl"><colgroup><col><col style="width:17%"><col style="width:13%"><col style="width:14%"><col style="width:56px"><col style="width:92px"></colgroup><thead><tr><th>Name</th><th>Type</th><th>Product</th><th>Countries</th><th>Ver.</th><th class="num">Approved</th></tr></thead><tbody>${recent.map(([k, o]) => { const lv = live(o); const mt = k === 'Module' ? metaOf(o, lv) : o; const nm = k === 'Module' ? mt.title || o.title : o.name; const pr = txt(mt.products || o.products, id => product(id).name); const ct = txt(mt.markets || o.markets, id => id);
-      return `<tr class="click" ${goAttr(k === 'Asset' ? 'asset' : 'module', o.id, ` data-v="${lv.v}"`)} tabindex="0"><td><div class="hx-item">${k === 'Asset' ? `<span class="type-ico">${icon('layers', 'sm')}</span>` : modThumb(o, lv)}<span class="hx-it"><b title="${esc(nm)}">${esc(nm)}</b><span>${o.id}</span></span></div></td><td><span class="hx-2"><span>${esc(k === 'Module' ? mtype(mt.type || o.type).name : mat(o.type).name)}</span><span class="hx-muted">${k}</span></span></td><td class="hx-cut" title="${esc(pr)}">${esc(pr)}</td><td class="hx-cut mono" title="${esc(ct)}">${esc(ct)}</td><td class="mono">v${lv.v}</td><td class="num" title="${esc(fmtD(lv.approvedAt))}">${fmtD(lv.approvedAt).replace(/ \d{4}$/, m => new Date(lv.approvedAt).getFullYear() === now.getFullYear() ? '' : m)}</td></tr>`; }).join('')}</tbody></table></div>` : `<div class="hx-empty"><span>Nothing approved yet.</span></div>`}</section>`; });
-
-  /* 7 · Expiry & review watch — most urgent first */
+  /* ---- Expiry & review watch: a runway from overdue to 90 days ahead ---- */
   const dueBox = homeSafe('Expiry & review watch', 'span4', () => {
     const watch = []; mods.filter(m => live(m) && !m.archived).forEach(m => { const mt = liveMeta(m); const de = mt.expiry ? daysTo(mt.expiry) : null, dr = mt.reviewDate ? daysTo(mt.reviewDate) : null;
       if (de != null && de < 0) watch.push([m, 'Expired', de, mt.expiry, 'bad']); else if (de != null && de <= 90) watch.push([m, 'Expiring', de, mt.expiry, de <= S.settings.expiryWarnDays ? 'warn' : '']);
       if (dr != null && dr <= 60 && !(de != null && de < 0)) watch.push([m, 'Review due', dr, mt.reviewDate, dr < 0 ? 'bad' : dr <= 30 ? 'warn' : '']); });
-    watch.sort((x, y) => x[2] - y[2]); const wc = k => watch.filter(w => w[1] === k).length;
-    return `<section class="panel hx-p span4" aria-labelledby="hx-t-due"><div class="hx-ph"><h3 id="hx-t-due">Expiry & review watch</h3><span class="grow"></span>${can(u, 'view_audit') ? `<button class="hx-link" ${goAttr('lifecycle')}>Lifecycle ${icon('chevron', 'sm')}</button>` : ''}</div>
-      <div class="hx-wc"><div class="${wc('Expired') ? 'bad' : ''}"><b>${wc('Expired')}</b><span>Expired</span></div><div class="${wc('Expiring') ? 'warn' : ''}"><b>${wc('Expiring')}</b><span>Expiring ≤ 90d</span></div><div><b>${wc('Review due')}</b><span>Review ≤ 60d</span></div></div>
-      <div class="hx-list">${watch.length ? watch.slice(0, 5).map(([m, k, d, at, tone]) => { const nm = liveMeta(m).title || m.title; return `<button type="button" class="hx-due" ${goAttr('module', m.id, ' data-tab="lifecycle"')}><span class="hx-dd ${tone}"><b>${Math.abs(d)}</b>${d < 0 ? 'd late' : 'd'}</span><span class="hx-evb"><b title="${esc(nm)}">${esc(nm)}</b><span>${fmtD(at)} · v${live(m).v}</span></span><span class="hx-tag ${tone}">${k}</span></button>`; }).join('') : `<div class="hx-empty">${icon('check', 'sm')}<span>Nothing expiring or due for review in the next 90 days.</span></div>`}</div>
-      ${watch.length > 5 ? `<div class="hx-more">${watch.length - 5} more in <button class="hx-link" ${goAttr('lifecycle')}>Lifecycle</button></div>` : ''}</section>`; });
+    watch.sort((x, y) => x[2] - y[2]); const wc = k => watch.filter(w => w[1] === k).length; const over = watch.filter(w => w[2] < 0).length;
+    const X = d => 4 + 92 * (Math.max(-30, Math.min(90, d)) + 30) / 120; const lanes = []; const marks = watch.map(w => { const x = X(w[2]); let l = 0; while (lanes[l] != null && x - lanes[l] < 6) l++; lanes[l] = x; return [w, x, Math.min(l, 2)]; });
+    const runway = `<div class="hz-rw" role="img" aria-label="${esc(watch.length + ' items between 30 days overdue and 90 days ahead')}"><span class="hz-rw-over" style="width:${X(0)}%"></span><span class="hz-rw-axis"></span><span class="hz-rw-now" style="left:${X(0)}%"><em>Today</em></span>${[30, 60, 90].map(d => `<span class="hz-rw-tk" style="left:${X(d)}%"><em>${d}d</em></span>`).join('')}${marks.map(([w, x, l]) => `<button type="button" class="hz-rw-m ${w[4] || 'n'} ${w[1] === 'Review due' ? 'rv' : ''}" style="left:${x}%;--l:${l}" ${goAttr('module', w[0].id, ' data-tab="lifecycle"')} data-tip="${esc((liveMeta(w[0]).title || w[0].title) + '\n' + w[1] + ' · ' + (w[2] < 0 ? Math.abs(w[2]) + ' days overdue' : 'in ' + w[2] + ' days'))}" aria-label="${esc(w[1] + ': ' + (liveMeta(w[0]).title || w[0].title))}"></button>`).join('')}<span class="hz-rw-lab l">Overdue</span><span class="hz-rw-lab r">90 days ahead</span></div>`;
+    return `<section class="hz-card span4" aria-labelledby="hx-t-due"><header class="hz-h"><h3 id="hx-t-due">Expiry & review watch</h3><span class="grow"></span>${can(u, 'view_audit') ? `<button class="hz-link" ${goAttr('lifecycle')}>Lifecycle ${icon('chevron', 'sm')}</button>` : ''}</header>
+      <div class="hz-wc"><div class="${wc('Expired') ? 'bad' : ''}"><b>${wc('Expired')}</b><span>Expired</span></div><div class="${wc('Expiring') ? 'warn' : ''}"><b>${wc('Expiring')}</b><span>Expiring ≤ 90d</span></div><div><b>${wc('Review due')}</b><span>Review ≤ 60d</span></div></div>
+      ${runway}
+      <div class="hz-due-l">${watch.length ? watch.slice(0, 5).map(([m, k, d, at, tone]) => { const nm = liveMeta(m).title || m.title; return `<button type="button" class="hz-due ${tone || 'n'}" ${goAttr('module', m.id, ' data-tab="lifecycle"')}><span class="hz-dd"><b>${Math.abs(d)}</b><em>${d < 0 ? 'days over' : 'days'}</em></span><span class="hz-due-b"><b title="${esc(nm)}">${esc(nm)}</b><span><i></i>${k} · ${fmtD(at)} · v${live(m).v}</span></span>${icon('chevron', 'sm')}</button>`; }).join('') : `<div class="hx-empty">${icon('check', 'sm')}<span>Nothing expiring or due for review in the next 90 days.</span></div>`}</div>
+      ${watch.length > 5 ? `<div class="hx-more">${watch.length - 5} more${over ? ' · ' + over + ' overdue' : ''} in <button class="hz-link" ${goAttr('lifecycle')}>Lifecycle</button></div>` : ''}</section>`; });
 
-  /* 8 · Content overview */
+  /* ---- Recently approved: an approval ledger ---- */
+  const recentBox = homeSafe('Recently approved', 'span7', () => {
+    const recent = [...mods.filter(m => live(m) && !m.archived).map(m => ['Module', m]), ...assets.filter(x => live(x)).map(x => ['Asset', x])].sort((x, y) => live(y[1]).approvedAt - live(x[1]).approvedAt).slice(0, 6);
+    return `<section class="hz-card span7" aria-labelledby="hx-t-rec"><header class="hz-h"><h3 id="hx-t-rec">Recently approved</h3><span class="grow"></span>${can(u, 'page_library') ? `<button class="hz-link" ${goAttr('library')}>Approved Library ${icon('chevron', 'sm')}</button>` : ''}</header>${recent.length ? `<div class="hz-led">${recent.map(([k, o]) => { const lv = live(o); const mt = k === 'Module' ? metaOf(o, lv) : o; const nm = k === 'Module' ? mt.title || o.title : o.name; const d = new Date(lv.approvedAt); const prs = (mt.products || o.products || []).map(id => product(id).name); const cts = mt.markets || o.markets || [];
+      return `<button type="button" class="hz-lr" ${goAttr(k === 'Asset' ? 'asset' : 'module', o.id, ` data-v="${lv.v}"`)}><span class="hz-stamp" title="${esc(fmtD(lv.approvedAt))}"><b>${d.getDate()}</b>${MON[d.getMonth()]}</span>${k === 'Asset' ? `<span class="type-ico">${icon('layers', 'sm')}</span>` : modThumb(o, lv)}<span class="hz-lr-b"><b title="${esc(nm)}">${esc(nm)}</b><span><span class="mono">${o.id}</span> · ${esc(k === 'Module' ? mtype(mt.type || o.type).name : mat(o.type).name)} · v${lv.v}</span></span><span class="hz-lr-t">${prs.slice(0, 1).map(x => `<span class="hz-tg p">${esc(x)}</span>`).join('')}${prs.length > 1 ? `<span class="hz-tg">+${prs.length - 1}</span>` : ''}<span class="hz-tg c" title="${esc(cts.join(', '))}">${esc(cts.slice(0, 3).join(' · '))}${cts.length > 3 ? ' +' + (cts.length - 3) : ''}</span></span></button>`; }).join('')}</div>` : `<div class="hx-empty"><span>Nothing approved yet.</span></div>`}</section>`; });
+
+  /* ---- Recent activity: a day-grouped timeline ---- */
+  const actBox = homeSafe('Recent activity', 'span5', () => {
+    const ACT_RX = /submitted|approv|review|comment|reply|amend|reject|created|version|resolved|uploaded|replaced|withdraw|reinstat/i;
+    const acts = [...S.audit].filter(e => !e.auto && ['Module', 'Asset'].includes(e.objType) && ACT_RX.test(e.action) && (sc.f(objById(e.objType, e.objId) || {}) || e.user === u.id)).sort((x, y) => y.ts - x.ts).slice(0, 7);
+    const dayOf = t => { const d0 = new Date(); d0.setHours(0, 0, 0, 0); return t >= d0.getTime() ? 'Today' : t >= d0.getTime() - DAY ? 'Yesterday' : fmtD(t); };
+    let lastDay = ''; const items = acts.map(e => { const x = user(e.user); const o = objById(e.objType, e.objId); const on = o ? nameOf(o) : e.objId; const dl = dayOf(e.ts); const head = dl !== lastDay ? `<div class="hz-day">${esc(dl)}</div>` : ''; lastDay = dl;
+      return head + `<button type="button" class="hz-ev" ${goAttr(e.objType === 'Asset' ? 'asset' : 'module', e.objId)}><span class="hz-ev-n t-${toneOf(e.action) || 'dim'}">${avatar(x, 'sm')}</span><span class="hz-ev-b"><span><b>${esc(x.name)}</b> ${esc(e.action.toLowerCase())}</span><span class="hz-ev-o" title="${esc(on)}">${esc(on)} · v${e.version}</span></span><time datetime="${new Date(e.ts).toISOString()}" title="${esc(fmtDT(e.ts))}">${new Date(e.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</time></button>`; }).join('');
+    return `<section class="hz-card span5" aria-labelledby="hx-t-act"><header class="hz-h"><h3 id="hx-t-act">Recent activity</h3><span class="grow"></span>${can(u, 'view_audit') ? `<button class="hz-link" ${goAttr('audit')}>Audit trail ${icon('chevron', 'sm')}</button>` : ''}</header><div class="hz-act">${acts.length ? items : `<div class="hx-empty"><span>No activity yet.</span></div>`}</div></section>`; });
+
+  /* ---- Content portfolio: product × country coverage, status, type, reuse ---- */
   const overview = homeSafe('Content overview', 'span12', () => {
-    const ov = (title, body, leg) => `<div class="hx-ov"><div class="hx-ovh"><span class="hx-cap">${title}</span>${leg || ''}</div>${body}</div>`;
-    const bars = (rows, tone, unit) => { const mx = Math.max(1, ...rows.map(r => r[1])); return rows.length ? rows.map(r => `<div class="hx-bar"><span class="hx-bl" title="${esc(r[0])}">${r[3] || esc(r[0])}</span><span class="hx-tr"><span class="mk-${r[2] || tone}" style="width:${100 * r[1] / mx}%" data-tip="${esc(r[0] + ' · ' + r[1] + ' ' + unit)}"></span></span><b>${r[1]}</b></div>`).join('') : '<p class="hx-muted">No content yet.</p>'; };
-    const pair = rows => { const mx = Math.max(1, ...rows.flatMap(r => [r[1], r[2]])); return rows.length ? rows.map(r => `<div class="hx-bar pair"><span class="hx-bl" title="${esc(r[0])}">${esc(r[0])}</span><span class="hx-tr2"><span class="hx-tr"><span class="mk-o1" style="width:${100 * r[1] / mx}%" data-tip="${esc(r[0] + ' · ' + r[1] + ' modules')}"></span></span>${seeAssets ? `<span class="hx-tr"><span class="mk-o2" style="width:${100 * r[2] / mx}%" data-tip="${esc(r[0] + ' · ' + r[2] + ' assets')}"></span></span>` : ''}</span><b>${r[1]}${seeAssets ? `<span class="hx-muted"> · ${r[2]}</span>` : ''}</b></div>`).join('') : '<p class="hx-muted">No content yet.</p>'; };
-    const leg = seeAssets ? `<span class="hx-leg sm"><span><i class="mk-o1"></i>Modules</span><span><i class="mk-o2"></i>Assets</span></span>` : '';
+    const prods = S.products.filter(p => p.active), mks = S.markets.filter(x => x.active);
+    const cell = (p, c) => mods.filter(m => m.products.includes(p.id) && m.markets.includes(c.id)).length; const acell = (p, c) => assets.filter(x => x.products.includes(p.id) && x.markets.includes(c.id)).length;
+    const mxc = Math.max(1, ...prods.flatMap(p => mks.map(c => cell(p, c))));
+    const heat = prods.length && mks.length ? `<div class="hz-hm-w"><table class="hz-hm"><thead><tr><th></th>${mks.map(c => `<th title="${esc(c.name)}">${esc(c.id)}</th>`).join('')}<th class="tot">Total</th></tr></thead><tbody>${prods.map(p => `<tr><th title="${esc(p.name)}">${esc(p.name)}</th>${mks.map(c => { const n = cell(p, c), na = acell(p, c); const k = n / mxc; return `<td><span class="hz-hc ${k > .55 ? 'dk' : ''}" style="--k:${n ? .12 + .88 * k : 0}" data-tip="${esc(p.name + ' · ' + c.name + '\n' + n + ' modules' + (seeAssets ? ' · ' + na + ' assets' : ''))}">${n || '·'}</span></td>`; }).join('')}<td class="tot"><b>${mods.filter(m => m.products.includes(p.id)).length}</b>${seeAssets ? `<em>${assets.filter(x => x.products.includes(p.id)).length}</em>` : ''}</td></tr>`).join('')}</tbody><tfoot><tr><th>Total</th>${mks.map(c => `<td><b>${mods.filter(m => m.markets.includes(c.id)).length}</b>${seeAssets ? `<em>${assets.filter(y => y.markets.includes(c.id)).length}</em>` : ''}</td>`).join('')}<td></td></tr></tfoot></table></div><p class="hz-note">Modules approved or in preparation for each product and country${seeAssets ? '. Totals show modules, then assets in grey' : ''}.</p>` : '<p class="hx-muted">No active products or countries.</p>';
     const sRows = [['Draft', mDraft.length, 'dim'], ['In review', mIn.length, 's1'], ['Amendment', mAmend.length, 'warn'], ['Rejected', mods.filter(m => statusOf(m) === 'Rejected').length, 'bad'], ['Approved', mLive.length, 'ok'], ['Review required', mods.filter(m => libraryStatus(m) === 'Review Required').length, 'bad']];
+    const sTot = Math.max(1, mods.length);
+    const bars = (rows, tone, unit) => { const mx = Math.max(1, ...rows.map(r => r[1])); return rows.length ? rows.map(r => `<div class="hx-bar"><span class="hx-bl" title="${esc(r[0])}">${r[3] || esc(r[0])}</span><span class="hx-tr"><span class="mk-${r[2] || tone}" style="width:${100 * r[1] / mx}%" data-tip="${esc(r[0] + ' · ' + r[1] + ' ' + unit)}"></span></span><b>${r[1]}</b></div>`).join('') : '<p class="hx-muted">No content yet.</p>'; };
     const reuse = {}; assets.forEach(x => uniq(x.blocks.filter(b => b.kind === 'module').map(b => b.moduleId)).forEach(id => { reuse[id] = (reuse[id] || 0) + 1; }));
     const top = Object.entries(reuse).filter(([id]) => modById(id)).sort((x, y) => y[1] - x[1]).slice(0, 5);
-    return `<section class="panel hx-p span12" aria-labelledby="hx-t-ov"><div class="hx-ph"><h3 id="hx-t-ov">Content overview</h3><span class="grow"></span><span class="hx-ctx">${esc(sc.label)} · ${mods.length} modules${seeAssets ? ' · ' + assets.length + ' assets' : ''}</span></div><div class="hx-ovg">
-      ${ov('Modules by status', bars(sRows, 's1', 'modules'))}
-      ${ov('Modules by type', bars(S.moduleTypes.map(t => [t.name, mods.filter(m => m.type === t.id).length]).filter(r => r[1]).sort((x, y) => y[1] - x[1]), 's1', 'modules'))}
-      ${ov('Content by product', pair(S.products.filter(p => p.active).map(p => [p.name, mods.filter(m => m.products.includes(p.id)).length, assets.filter(x => x.products.includes(p.id)).length])), leg)}
-      ${ov('Content by country', pair(S.markets.filter(x => x.active).map(x => [x.name, mods.filter(m => m.markets.includes(x.id)).length, assets.filter(y => y.markets.includes(x.id)).length]).filter(r => r[1] || r[2])), leg)}
-      ${seeAssets ? ov('Assets by material type', bars(S.materialTypes.map(t => [t.name, assets.filter(x => x.type === t.id).length]).filter(r => r[1]).sort((x, y) => y[1] - x[1]), 'o2', 'assets')) : ''}
-      ${seeAssets ? ov('Most reused modules · assets using each', top.length ? bars(top.map(([id, n]) => [modById(id).title, n, 's1', `<button type="button" class="linklike" ${goAttr('module', id)}>${esc(modById(id).title)}</button>`]), 's1', 'assets') : '<p class="hx-muted">No modules are used in assets yet.</p>') : ''}
-    </div></section>`; });
+    const tRows = S.moduleTypes.map(t => [t.name, mods.filter(m => m.type === t.id).length]).filter(r => r[1]).sort((x, y) => y[1] - x[1]);
+    return `<section class="hz-card hz-port span12" aria-labelledby="hx-t-ov"><header class="hz-h"><h3 id="hx-t-ov">Content portfolio</h3><span class="hz-ctx">${esc(sc.label)} · ${mods.length} modules${seeAssets ? ' · ' + assets.length + ' assets' : ''}</span><span class="grow"></span></header>
+      <div class="hz-port-g"><div class="hz-pc hz-pc-hm"><span class="hz-cap">Coverage · product × country</span>${heat}</div>
+      <div class="hz-pc"><span class="hz-cap">Modules by status</span><div class="hz-stack tall" role="img" aria-label="${esc(sRows.map(s => s[0] + ' ' + s[1]).join(', '))}">${sRows.filter(s => s[1]).map(s => `<span class="mk-${s[2]}" style="flex:${s[1]}" data-tip="${esc(s[0] + ' · ' + s[1] + ' (' + Math.round(100 * s[1] / sTot) + '%)')}"></span>`).join('') || '<span class="mk-none" style="flex:1"></span>'}</div><div class="hz-sl-g">${sRows.map(s => `<span><i class="mk-${s[2]}"></i>${s[0]}<b>${s[1]}</b></span>`).join('')}</div>
+        <span class="hz-cap" style="margin-top:16px">Modules by type</span>${bars(tRows, 's1', 'modules')}</div>
+      ${seeAssets ? `<div class="hz-pc"><span class="hz-cap">Assets by material type</span>${bars(S.materialTypes.map(t => [t.name, assets.filter(x => x.type === t.id).length]).filter(r => r[1]).sort((x, y) => y[1] - x[1]), 'o2', 'assets')}
+        <span class="hz-cap" style="margin-top:16px">Most reused modules · assets using each</span>${top.length ? bars(top.map(([id, n]) => [modById(id).title, n, 's1', `<button type="button" class="linklike" ${goAttr('module', id)}>${esc(modById(id).title)}</button>`]), 's1', 'assets') : '<p class="hx-muted">No modules are used in assets yet.</p>'}</div>` : ''}</div></section>`; });
 
-  const qa = [canCreateModule(u) && can(u, 'page_modules') && goBtn('Create module', 'module-new', null, 'primary', 'plus'), canCreateAsset(u) && seeAssets && btn('Create asset', 'asset-new', '', '', 'layers'), can(u, 'page_library') && goBtn('Approved Library', 'library', null, '', 'book')].filter(Boolean).join('');
-  return `<div class="home hx">
-  <header class="hx-head"><div><h1>${hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening'}, ${esc(first)}</h1><p class="hx-meta"><span>${esc(roleLabel(u))}</span><span>${icon(a.final ? 'key' : 'eye', 'sm')}${esc(a.short)}</span><span>${esc(sc.label)}</span><span>${esc(today)}</span></p></div><div class="hx-qa">${qa}</div></header>
-  ${kpis}
-  <div class="hx-grid">${taskBox}${pipe}${perf}${dueBox}${recentBox}${actBox}${overview}</div></div>`;
+  return `<div class="home hz">${band}${inv}<div class="hz-grid">${taskBox}${pipe}${perf}${dueBox}${recentBox}${actBox}${overview}</div></div>`;
 }
 function taskMeta(t) {
   if (t.kind === 'review') return esc(stepLabel(t.step)) + ' · waiting ' + fmtDur(Date.now() - t.since);
@@ -5723,6 +5911,7 @@ const ACT = {
   'set-bool': el => { UI.setDraft[el.dataset.k] = !UI.setDraft[el.dataset.k]; render(); },
   'set-discard': () => { UI.setDraft = null; render(); },
   'home-retry': () => render(),
+  'home-tab': el => { UI.f.htab = el.dataset.v; render(); },
   'set-save': () => {
     const D = UI.setDraft; let n = 0;
     const ep = String(D.notifyEndpoint || '').trim(); if (ep && !/^https:\/\/[^\s/]+\.[^\s]+$/i.test(ep)) { toast('Email delivery endpoint must be a full https:// address', 'err'); return; } if ('notifyEndpoint' in D) D.notifyEndpoint = ep;

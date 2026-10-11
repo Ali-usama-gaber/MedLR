@@ -456,6 +456,7 @@ const ACT = {
   'set-bool': el => { UI.setDraft[el.dataset.k] = !UI.setDraft[el.dataset.k]; render(); },
   'set-discard': () => { UI.setDraft = null; render(); },
   'home-retry': () => render(),
+  'home-tab': el => { UI.f.htab = el.dataset.v; render(); },
   'set-save': () => {
     const D = UI.setDraft; let n = 0;
     const ep = String(D.notifyEndpoint || '').trim(); if (ep && !/^https:\/\/[^\s/]+\.[^\s]+$/i.test(ep)) { toast('Email delivery endpoint must be a full https:// address', 'err'); return; } if ('notifyEndpoint' in D) D.notifyEndpoint = ep;
