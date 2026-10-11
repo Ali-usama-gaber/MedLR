@@ -3,7 +3,9 @@ const STORE_KEY = 'saja-medlr-v7';
 let S = load();
 const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, modal: null, pop: null, search: '', f: {}, draft: null, sel: {}, wfSel: null };
 
-function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return s; if (s && s.version === 7) return migrate7to8(s); } } catch (e) {} return SEED(); }
+function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return linkModuleWorkflows(s); if (s && s.version === 7) return linkModuleWorkflows(migrate7to8(s)); } } catch (e) {} return linkModuleWorkflows(SEED()); }
+// Every module records the workflow chosen for it. Older records take it from their approval history; drafts with no history stay unset until someone chooses.
+function linkModuleWorkflows(s) { s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
 // v7 → v8 keeps every user-created record: indications become records, permissions gain page access and authority, annotations start empty.
 function migrate7to8(s) {
   const valid = new Set(PERMS.map(p => p[0]));
@@ -237,6 +239,10 @@ function curCycle(obj) { const r = obj.review || obj.resume; if (!r) return null
 // Authority: Member steps need "Member review", Lead steps need "Lead review" (configured per role in Roles & Permissions).
 const levelAuth = level => level === 'Lead' ? 'auth_lead' : 'auth_member';
 function assigneeFor(st) { return S.users.filter(u => u.status === 'Active' && !isAdmin(u) && u.fn === st.fn && (!st.team || u.team === st.team) && can(u, levelAuth(st.level)) && can(u, st.req === 'approve' ? 'approve' : 'review')); }
+// Workflows a module may use: visible, active and built for modules.
+const eligibleModuleWorkflows = () => S.workflows.filter(w => !w.hidden && w.active !== false && w.appliesTo === 'Module');
+const suggestedWorkflow = type => { const w = type && mtype(type).workflow; return w && eligibleModuleWorkflows().some(x => x.id === w) ? w : null; };
+const wfSummary = w => reviewSteps(w).map(s => s.fn + ' ' + levelName(s.level)).join(' → ');
 const isFinalStep = (wf, i) => !wf.steps.slice(i + 1).some(s => !isNotify(s));
 // The permission a step needs: review → Review, approval → Approve, last approval → Final approval.
 function canActOn(u, obj) {

@@ -86,11 +86,11 @@ function viewAssemble() {
    <div class="canvas">${sheet(a, true, false)}</div>
    <div class="stack props-col"><section class="panel props"><div class="panel-head"><h3>Asset properties</h3></div><div class="panel-body form">
      <div class="field"><label for="ap-name">Asset name</label><input class="input" id="ap-name" data-asset-prop="name" data-id="${a.id}" value="${esc(a.name)}"></div>
-     <div class="field"><label for="ap-type">Material type</label><select class="select" id="ap-type" data-asset-prop="type" data-id="${a.id}">${activeOf(S.materialTypes, a.type).map(t => opt(t.id, a.type, t.name)).join('')}</select></div>
-     <div class="field"><span class="label">Products</span>${chipSelect('a-products', 'a-toggle', 'products', activeOf(S.products, a.products).map(p => [p.id, p.name, p.area]), a.products, { ph: 'Select products', noun: 'products', manage: 'products', extra: `data-id="${a.id}"` })}</div>
-     <div class="field"><span class="label">Countries</span>${chipSelect('a-markets', 'a-toggle', 'markets', activeOf(S.markets, a.markets).map(x => [x.id, x.name, x.id]), a.markets, { ph: 'Select countries', noun: 'countries', manage: 'markets', extra: `data-id="${a.id}"` })}</div>
-     <div class="field"><label for="ap-ch">Channel</label><select class="select" id="ap-ch" data-asset-prop="channel" data-id="${a.id}">${activeOf(S.channels, a.channel).map(c => opt(c.id, a.channel, c.name)).join('')}</select></div>
-     <div class="field"><label for="ap-aud">Audience</label><select class="select" id="ap-aud" data-asset-prop="audience" data-id="${a.id}">${activeOf(S.audiences, a.audience).map(c => opt(c.id, a.audience, c.name)).join('')}</select></div>
+     <div class="field">${labelRow('Material type', addNew('materials', 'asset:type:' + a.id), 'ap-type')}<select class="select" id="ap-type" data-asset-prop="type" data-id="${a.id}">${activeOf(S.materialTypes, a.type).map(t => opt(t.id, a.type, t.name)).join('')}</select></div>
+     <div class="field">${labelRow('Products', addNew('products', 'asset:products:' + a.id))}${chipSelect('a-products', 'a-toggle', 'products', activeOf(S.products, a.products).map(p => [p.id, p.name, p.area]), a.products, { ph: 'Select products', noun: 'products', extra: `data-id="${a.id}"` })}</div>
+     <div class="field">${labelRow('Countries', addNew('markets', 'asset:markets:' + a.id, 'country'))}${chipSelect('a-markets', 'a-toggle', 'markets', activeOf(S.markets, a.markets).map(x => [x.id, x.name, x.id]), a.markets, { ph: 'Select countries', noun: 'countries', extra: `data-id="${a.id}"` })}</div>
+     <div class="field">${labelRow('Channel', addNew('channels', 'asset:channel:' + a.id), 'ap-ch')}<select class="select" id="ap-ch" data-asset-prop="channel" data-id="${a.id}">${activeOf(S.channels, a.channel).map(c => opt(c.id, a.channel, c.name)).join('')}</select></div>
+     <div class="field">${labelRow('Audience', addNew('audiences', 'asset:audience:' + a.id), 'ap-aud')}<select class="select" id="ap-aud" data-asset-prop="audience" data-id="${a.id}">${activeOf(S.audiences, a.audience).map(c => opt(c.id, a.audience, c.name)).join('')}</select></div>
      <div class="field"><label for="ap-owner">Material Owner</label>${isAdmin(me()) || can(me(), 'manage_users') ? `<select class="select" id="ap-owner" data-asset-prop="owner" data-id="${a.id}">${ownerOptions(a.owner).map(u => opt(u.id, a.owner, u.name + ' · ' + roleLabel(u))).join('')}</select>` : `<div class="input" style="display:flex;align-items:center;background:var(--surface-2)">${esc(user(a.owner).name)}</div>`}</div>
      <div class="field"><label for="ap-disc">Local disclaimer</label><textarea class="textarea" id="ap-disc" rows="3" data-asset-prop="disclaimer" data-id="${a.id}" placeholder="Required for some countries — see Validation SOPs">${esc(a.disclaimer || '')}</textarea></div>
      <div class="stack" style="gap:8px"><span class="section-title">Module eligibility</span>
@@ -392,17 +392,40 @@ function viewRoles() {
   const how = [['user', 'User type', 'Administrator or a business user. Administrators always hold every permission.'], ['shieldcheck', 'Position', 'Member or Lead within a function. Workflows assign steps to a level.'], ['team', 'Team', 'People belong to one team; a workflow step can be limited to a team.'], ['key', 'Role', 'Function + position, e.g. Medical Lead. Permissions are set per role.'], ['check', 'Permissions', 'Pages a role can open and actions it can perform.'], ['workflow', 'Workflow authority', 'Member review / Lead review: which workflow steps the role may act on.'], ['award', 'Approval authority', 'Approve signs an approval step; Final approval signs the last one.']];
   const howP = `<section class="panel"><div class="panel-head"><h3>${icon('key', 'sm')} How permissions work</h3></div><div class="panel-body"><ol class="how-list">${how.map((h, i) => `<li><span class="how-n">${i + 1}</span><span class="how-i">${icon(h[0], 'sm')}</span><span><b>${esc(h[1])}</b><span>${esc(h[2])}</span></span></li>`).join('')}</ol><p class="muted" style="font-size:12.5px;margin-top:10px">A person can act on a workflow step only when their function, position, team, workflow authority and approval permission all match the step. Every change is recorded in the audit trail.</p></div></section>`;
   const cards = tab === 'Administration' ? roleCard('Administrator') : `<div class="role-grid">${LEVELS.map(l => roleCard(tab + '-' + l)).join('')}</div>`;
-  const matrix = F('rmatrix') ? viewRoleMatrix() : '';
-  return pageHead('Roles & Permissions', 'A role is a function plus a position (Member or Lead). Permissions apply to everyone in the role immediately.', `${btn(F('rmatrix') ? 'Hide comparison' : 'Compare all roles', 'role-matrix', 'ghost', '', 'layers')}${can(me(), 'manage_users') ? btn('Restore defaults', 'roles-reset', '', '', 'undo') : ''}`) +
+  const matrix = '';
+  return pageHead('Roles & Permissions', 'A role is a function plus a position (Member or Lead). Permissions apply to everyone in the role immediately.', `${btn('Compare all roles', 'role-compare', '', '', 'layers')}${can(me(), 'manage_users') ? btn('Restore defaults', 'roles-reset', '', '', 'undo') : ''}`) +
   `<div class="grid cols-2 roles-intro">${hier}${howP}</div>
   <div class="tabs" role="tablist" style="margin:18px 0 14px">${tabs.map(t => `<button class="tab ${tab === t ? 'active' : ''}" role="tab" aria-selected="${tab === t}" ${goAttr('roles', null, ` data-tab="${esc(t)}"`)}>${t === 'Administration' ? '' : fnBadge(t, 'sm')}${esc(t)}<span class="n">${S.users.filter(u => u.status === 'Active' && (t === 'Administration' ? isAdmin(u) : u.fn === t)).length}</span></button>`).join('')}</div>
   ${cards}${matrix}`;
 }
-// Optional comparison of every role side by side (read-only).
-function viewRoleMatrix() {
-  const ids = [...funcIds().flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator']; const groups = uniq(PERMS.map(p => p[2]));
-  return `<section class="panel table-wrap perm-wrap" style="margin-top:18px"><div class="panel-head"><h3>All roles compared</h3><span class="muted" style="font-size:12px">Read-only · edit a role from its card</span></div><table class="tbl no-pg perm-tbl"><thead><tr><th>Permission</th>${ids.map(r => `<th><div class="perm-h">${fnBadge(r === 'Administrator' ? 'Admin' : r.split('-')[0], 'sm')}<b>${esc(r === 'Administrator' ? 'Admin' : r.split('-')[0])}</b><span>${esc(r === 'Administrator' ? 'All' : levelName(r.split('-')[1]))}</span></div></th>`).join('')}</tr></thead><tbody>
-  ${groups.map(g => `<tr class="perm-group"><td colspan="${ids.length + 1}">${esc(g)}</td></tr>` + PERMS.filter(p => p[2] === g).map(p => `<tr><td class="perm-name">${esc(p[1])}</td>${ids.map(r => { const on = r === 'Administrator' || (S.roles[r] || []).includes(p[0]); return `<td class="perm-cell"><span class="pbox ${on ? 'on' : ''}" aria-label="${on ? 'Granted' : 'Not granted'}">${on ? icon('check', 'sm') : ''}</span></td>`; }).join('')}</tr>`).join('')).join('')}</tbody></table></section>`;
+/* Compare all roles: a tabbed popup over the real role permissions. Edits are a draft until Save; Cancel discards them. */
+const CMP_TABS = [['overview', 'Overview'], ['pages', 'Page access'], ['content', 'Content actions'], ['review', 'Review & approval'], ['admin', 'Administration'], ['special', 'Special permissions']];
+function cmpKeys(tab) {
+  const by = g => PERMS.filter(p => p[2] === g).map(p => p[0]);
+  const K = { pages: by('Access'), content: ['view', 'create', 'edit', 'submit', 'amend', 'create_version', 'withdraw', 'restore'], review: ['review', 'approve', 'request_amend', 'reject', 'auth_member', 'auth_lead', 'final_approve'], admin: by('Administration').filter(k => k !== 'manage_comments') };
+  const used = new Set(Object.values(K).flat()); K.special = PERMS.map(p => p[0]).filter(k => !used.has(k));
+  return (K[tab] || []).filter(k => PERMS.some(p => p[0] === k));
+}
+const cmpRoles = () => [...funcIds().flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator'];
+const cmpHas = (D, r, k) => r === 'Administrator' || (D[r] || []).includes(k);
+function cmpChanges(D) { const out = []; cmpRoles().filter(r => r !== 'Administrator').forEach(r => PERMS.forEach(([k]) => { const a = (S.roles[r] || []).includes(k), b = (D[r] || []).includes(k); if (a !== b) out.push([r, k, b]); })); return out; }
+function roleCompareModal(M) {
+  const D = M.d; const tab = M.tab || 'overview'; const roles = cmpRoles(); const edit = can(me(), 'manage_users'); const ch = cmpChanges(D);
+  const head = `<thead><tr><th class="cmp-perm">Permission</th>${roles.map(r => `<th class="cmp-role"><div>${fnBadge(r === 'Administrator' ? 'Admin' : r.split('-')[0], 'sm')}<b>${esc(r === 'Administrator' ? 'Admin' : r.split('-')[0])}</b><span>${esc(r === 'Administrator' ? 'All' : levelName(r.split('-')[1]))}</span></div></th>`).join('')}</tr></thead>`;
+  let body;
+  if (tab === 'overview') {
+    const cats = CMP_TABS.slice(1); const caps = [['create', 'Create'], ['submit', 'Submit'], ['review', 'Review'], ['approve', 'Approve'], ['final_approve', 'Final approval'], ['export', 'Export'], ['manage_users', 'Admin']];
+    body = `<div class="table-wrap"><table class="tbl no-pg cmp-tbl cmp-ov"><thead><tr><th>Role</th><th>People</th>${cats.map(c => `<th>${esc(c[1])}</th>`).join('')}<th>Key capabilities</th></tr></thead><tbody>${roles.map(r => { const n = S.users.filter(u => roleId(u) === r && u.status === 'Active').length;
+      return `<tr><td><div class="row nowrap" style="gap:6px">${fnBadge(r === 'Administrator' ? 'Admin' : r.split('-')[0], 'sm')}<b>${esc(roleName(r))}</b></div></td><td class="num">${n}</td>${cats.map(c => { const ks = cmpKeys(c[0]); const on = ks.filter(k => cmpHas(D, r, k)).length; return `<td><button type="button" class="cmp-count ${on === ks.length ? 'full' : on ? 'part' : 'none'}" data-act="cmp-tab" data-v="${c[0]}" title="Open ${esc(c[1])}"><span class="cmp-bar"><i style="width:${ks.length ? 100 * on / ks.length : 0}%"></i></span>${on}/${ks.length}</button></td>`; }).join('')}<td><div class="tags">${caps.filter(c => cmpHas(D, r, c[0])).map(c => `<span class="tag">${c[1]}</span>`).join('') || '<span class="muted">View only</span>'}</div></td></tr>`; }).join('')}</tbody></table></div>`;
+  } else {
+    const keys = cmpKeys(tab).filter(k => !M.diff || new Set(roles.filter(r => r !== 'Administrator').map(r => cmpHas(D, r, k))).size > 1);
+    body = `<div class="row" style="justify-content:space-between;margin-bottom:10px"><span class="muted" style="font-size:12.5px">${edit ? 'Tick to grant, untick to remove. Nothing changes until you save.' : 'Read only — editing needs the Manage users permission.'}</span><label class="row" style="gap:6px;font-size:12.5px">${toggleBtn(!!M.diff, 'cmp-diff', '', 'Only show differences')}Only show differences</label></div>
+    <div class="table-wrap cmp-wrap"><table class="tbl no-pg cmp-tbl">${head}<tbody>${keys.map(k => { const P = PERMS.find(p => p[0] === k); return `<tr><td class="cmp-perm"><b>${esc(P[1])}</b><span>${esc(P[3])}</span></td>${roles.map(r => { const on = cmpHas(D, r, k); const changed = r !== 'Administrator' && on !== (S.roles[r] || []).includes(k); const locked = r === 'Administrator' || !edit;
+      return `<td class="perm-cell ${changed ? 'changed' : ''}"><button type="button" class="pbox ${on ? 'on' : ''}" ${locked ? `disabled title="${r === 'Administrator' ? 'Administrators always have every permission' : 'Read only'}"` : `data-act="cmp-toggle" data-role="${r}" data-perm="${k}"`} role="checkbox" aria-checked="${on}" aria-label="${esc(P[1])} for ${esc(roleName(r))}">${on ? icon('check', 'sm') : ''}</button></td>`; }).join('')}</tr>`; }).join('') || `<tr><td colspan="${roles.length + 1}" class="muted">Every role has the same setting here.</td></tr>`}</tbody></table></div>`;
+  }
+  return modalShell('layers', '', 'Compare all roles', `${roles.length} roles · permissions from Roles & Permissions${ch.length ? ` · <b class="cmp-dirty">${ch.length} unsaved change${ch.length > 1 ? 's' : ''}</b>` : ''}`,
+    `<div class="tabs cmp-tabs" role="tablist">${CMP_TABS.map(t => `<button type="button" class="tab ${tab === t[0] ? 'active' : ''}" role="tab" aria-selected="${tab === t[0]}" data-act="cmp-tab" data-v="${t[0]}">${t[1]}${t[0] !== 'overview' ? `<span class="n">${cmpKeys(t[0]).length}</span>` : ''}</button>`).join('')}</div>${body}`,
+    `${ch.length ? `<span class="cmp-dirty">${icon('alert', 'sm')}${ch.length} unsaved change${ch.length > 1 ? 's' : ''}</span>` : ''}<span class="grow"></span>${btn(ch.length ? 'Cancel' : 'Close', 'cmp-cancel')}${edit ? btn('Save changes', 'cmp-save', 'primary', ch.length ? '' : 'disabled', 'check') : ''}`, 'xl');
 }
 function roleModal(M) {
   const rid = M.id; const has = S.roles[rid] || []; const groups = uniq(PERMS.map(p => p[2]));
@@ -412,10 +435,10 @@ function roleModal(M) {
 }
 
 /* ===== Organisation & configuration: generated from CONFIG (config.js) ===== */
-const viewTeams = () => viewConfig('teams');
-const viewProducts = () => viewConfig('products');
-const viewMarkets = () => viewConfig('markets');
-const viewMaterials = () => viewConfig('materials');
+const viewTeams = () => viewSettings('teams');
+const viewProducts = () => viewSettings('products');
+const viewMarkets = () => viewSettings('markets');
+const viewMaterials = () => viewSettings('materials');
 
 /* ===== Validation SOPs ===== */
 const typeLabel = id => S.moduleTypes.some(t => t.id === id) ? mtype(id).name : mat(id).name;
@@ -435,14 +458,32 @@ const SETTINGS = [
   ['Approved Library governance', [['libraryShowExpiring', 'Show expiring content in the library', 'bool', 'When off, content inside the expiry warning window is hidden from the library.']]],
   ['Approval settings', [['reviewSlaDays', 'Review SLA (days)', 'number', 'My Tasks marks a task High priority once it has waited longer than this, Medium after half of it.'], ['blockOnOpenComments', 'Block approval while comments are open', 'bool', 'Reviewers resolve or answer every open comment on the version before approving.'], ['requireSignature', 'Require password e-signature for approvals', 'bool', 'Approvers re-enter their password to sign.'], ['adminActsOnAnyStep', 'Administrators can act on any approval step', 'bool', 'Decisions are marked “Recorded by Administrator”.'], ['defaultModuleWorkflow', 'Default workflow for new modules', 'wf', ''], ['newVersionWorkflow', 'Default workflow for new versions', 'wf', 'Pre-selected when a new version of an approved module is submitted.'], ['assetStreamWorkflow', 'Workflow for assets made only of approved modules', 'wfa', 'Assets with new text use the workflow of their Material Type.']]]
 ];
-function viewSettings() {
-  if (!UI.setDraft) UI.setDraft = { ...S.settings };
-  const D = UI.setDraft; const dirty = SETTINGS.some(([, f]) => f.some(([k]) => String(D[k]) !== String(S.settings[k])));
-  const field = ([k, label, type, hint]) => { const id = 'st-' + k;
-    const ctl = type === 'bool' ? toggleBtn(!!D[k], 'set-bool', `data-k="${k}"`, label) : type === 'wf' || type === 'wfa' ? `<select class="select" id="${id}" data-set="${k}">${asWorkflows(type === 'wf' ? 'Module' : 'Asset').map(w => opt(w[0], D[k], w[1])).join('')}</select>` : `<input class="input" id="${id}" data-set="${k}" type="${type}" value="${esc(D[k])}" ${type === 'number' ? 'min="1"' : ''}>`;
-    return type === 'bool' ? `<div class="set-row"><div><b>${label}</b>${hint ? `<span class="muted">${hint}</span>` : ''}</div>${ctl}</div>` : `<div class="field"><label for="${id}">${label}</label>${ctl}${hint ? `<span class="hint">${hint}</span>` : ''}</div>`; };
-  return pageHead('Settings', 'System-wide rules for lifecycle, the Approved Library and approvals. Every change is recorded in the audit trail.', `${dirty ? btn('Discard', 'set-discard', 'ghost') : ''}${btn('Save settings', 'set-save', 'primary', dirty ? '' : 'disabled', 'check')}`) +
-  `<div class="grid cols-2">${SETTINGS.map(([title, fields]) => `<section class="panel"><div class="panel-head"><h3>${title}</h3></div><div class="panel-body form">${fields.map(field).join('')}</div></section>`).join('')}
-  <section class="panel"><div class="panel-head"><h3>Governance shortcuts</h3></div><div class="panel-body stack" style="gap:8px">${[['roles', 'key', 'Roles & Permissions'], ['functions', 'shieldcheck', 'Functions'], ['workflows', 'workflow', 'Workflows & review hierarchy'], ['sops', 'clipboard', 'Validation SOPs'], ['moduletypes', 'type', 'Module types'], ['channels', 'send', 'Channels'], ['audiences', 'users', 'Audiences'], ['references', 'quote', 'Reference library'], ['audit', 'history', 'Full audit trail'], ['reports', 'chart', 'All reports']].map(([r, ic, l]) => `<button class="task" ${goAttr(r)}>${icon(ic, 'sm')}<span class="body"><b>${l}</b></span>${icon('chevron', 'sm')}</button>`).join('')}</div></section>
-  <section class="panel"><div class="panel-head"><h3>Workspace data</h3></div><div class="panel-body stack"><p class="ink2" style="font-size:13px">Restore the initial SAJA workspace: products, countries, users, workflows, SOPs, modules, assets and the audit trail. This cannot be undone.</p><div>${btn('Restore initial workspace', 'reset-open', 'danger', '', 'undo')}</div></div></section></div>`;
+/* Settings: vertical tabs, each with its own management table or form. Every tab reads the same records used elsewhere. */
+const SET_GROUPS = { general: 'Organisation', lifecycle: 'Lifecycle rules', library: 'Approved Library governance', approval: 'Approval settings' };
+function settingsTabs() {
+  const anyAdmin = [ADMIN_VIEW];
+  return [
+    ['WORKSPACE', [['general', 'Organisation', 'settings', 'manage_settings'], ['lifecycle', 'Lifecycle rules', 'clock', 'manage_settings'], ['approval', 'Approval settings', 'shieldcheck', 'manage_settings'], ['library', 'Library governance', 'book', 'manage_settings']]],
+    ['REFERENCE DATA', ['products', 'markets', 'moduletypes', 'materials', 'channels', 'audiences', 'references'].map(k => [k, CONFIG[k].plural, CONFIG[k].icon, CONFIG[k].viewPerm || [CONFIG[k].perm, ...anyAdmin]])],
+    ['ORGANISATION', ['teams', 'functions'].map(k => [k, CONFIG[k].plural, CONFIG[k].icon, [CONFIG[k].perm, ...anyAdmin]])],
+    ['DATA', [['data', 'Workspace data', 'refresh', 'manage_settings']]]
+  ].map(([g, items]) => [g, items.filter(t => can(me(), t[3]))]).filter(g => g[1].length);
+}
+function viewSettings(tabArg) {
+  const groups = settingsTabs(); const all = groups.flatMap(g => g[1]); const want = tabArg || UI.route.p.tab;
+  const tab = all.some(t => t[0] === want) ? want : (all[0] || [])[0]; if (!tab) return `<div class="empty"><h4>No settings available for your role</h4></div>`;
+  const side = `<nav class="set-nav" aria-label="Settings sections">${groups.map(([g, items]) => `<div class="set-grp">${g}</div>${items.map(t => `<button type="button" class="set-tab ${t[0] === tab ? 'on' : ''}" ${goAttr('settings', null, ` data-tab="${t[0]}"`)} aria-current="${t[0] === tab ? 'page' : 'false'}">${icon(t[2], 'sm')}<span>${esc(t[1])}</span>${CONFIG[t[0]] ? `<span class="n">${CONFIG[t[0]].coll().length}</span>` : ''}</button>`).join('')}`).join('')}</nav>`;
+  let main;
+  if (CONFIG[tab]) main = viewConfig(tab);
+  else if (tab === 'data') main = pageHead('Workspace data', 'Restore the initial SAJA workspace: products, countries, users, workflows, SOPs, modules, assets and the audit trail.') + `<section class="panel"><div class="panel-body stack"><p class="ink2" style="font-size:13px">This cannot be undone. Uploaded files stored in this browser are removed.</p><div>${btn('Restore initial workspace', 'reset-open', 'danger', '', 'undo')}</div></div></section>`;
+  else {
+    if (!UI.setDraft) UI.setDraft = { ...S.settings };
+    const D = UI.setDraft; const dirty = SETTINGS.some(([, f]) => f.some(([k]) => String(D[k]) !== String(S.settings[k]))); const grp = SETTINGS.find(g => g[0] === SET_GROUPS[tab]);
+    const field = ([k, label, type, hint]) => { const id = 'st-' + k;
+      const ctl = type === 'bool' ? toggleBtn(!!D[k], 'set-bool', `data-k="${k}"`, label) : type === 'wf' || type === 'wfa' ? `<select class="select" id="${id}" data-set="${k}">${asWorkflows(type === 'wf' ? 'Module' : 'Asset').map(w => opt(w[0], D[k], w[1])).join('')}</select>` : `<input class="input" id="${id}" data-set="${k}" type="${type}" value="${esc(D[k])}" ${type === 'number' ? 'min="1"' : ''}>`;
+      return type === 'bool' ? `<div class="set-row"><div><b>${label}</b>${hint ? `<span class="muted">${hint}</span>` : ''}</div>${ctl}</div>` : `<div class="field"><label for="${id}">${label}</label>${ctl}${hint ? `<span class="hint">${hint}</span>` : ''}</div>`; };
+    main = pageHead(esc(grp[0]), 'System-wide rules. Every change is recorded in the audit trail with the previous and new value.', `${dirty ? btn('Discard', 'set-discard', 'ghost') : ''}${btn('Save settings', 'set-save', 'primary', dirty ? '' : 'disabled', 'check')}`) + (dirty ? `<div class="banner warn" style="margin-bottom:12px">${icon('alert')}<div class="txt"><b>Unsaved changes</b><p>Save to apply them, or discard.</p></div></div>` : '') +
+      `<section class="panel"><div class="panel-body form">${grp[1].map(field).join('')}</div></section>`;
+  }
+  return `<div class="set-shell">${side}<div class="set-main">${main}</div></div>`;
 }

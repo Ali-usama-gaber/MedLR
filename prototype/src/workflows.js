@@ -90,7 +90,9 @@ function viewWorkflowNew() {
     </div>
     <div class="nwf-tools"><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === D.steps.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button type="button" class="btn icon sm danger" data-act="nwf-del" data-i="${i}" aria-label="Remove step">${icon('trash', 'sm')}</button></div>
   </div>`;
+  const back = UI.returnTo || (() => { try { return JSON.parse(sessionStorage.getItem('medlr-return') || 'null'); } catch (e) { return null; } })();
   return pageHead('New workflow', 'Build a review route step by step. Level and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) +
+  (back ? `<div class="banner info" style="margin-bottom:14px">${icon('layers')}<div class="txt"><b>You came from ${esc(back.draft && back.draft.title ? '“' + back.draft.title + '”' : 'the module form')}</b><p>Your module entries are kept. After you create this workflow you return to the form with it selected.</p></div>${btn('Back without creating', 'wf-return', 'sm')}</div>` : '') +
   wizBar('workflow', WSTEPS, D) +
   `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="workflow" novalidate><div class="stack">${wizHead(WSTEPS, D)}
   <section class="panel"${hid(0)}><div class="panel-head"><h3>Workflow details</h3></div><div class="panel-body form">

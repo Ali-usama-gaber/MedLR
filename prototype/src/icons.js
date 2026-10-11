@@ -1,5 +1,6 @@
 /* icons (Lucide-style line icons) */
 const IC = {
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
   pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   square: '<rect width="16" height="16" x="4" y="4" rx="2"/>',
   circle: '<circle cx="12" cy="12" r="9"/>',

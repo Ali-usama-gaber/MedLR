@@ -1,4 +1,4 @@
-<!-- SAJA MedLR build 2026-10-11 08:59 UTC -->
+<!-- SAJA MedLR build 2026-10-11 09:20 UTC -->
 <title>SAJA MedLR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1954,6 +1954,65 @@ mark.an-pt[data-n]::before { content: none; }
 .an-rail button span { white-space: nowrap; }
 @media (max-width: 1280px) { .an-rail button span { display: none; } .an-rail button { padding: 7px; } }
 
+/* ===== Workflow picker & add-new shortcuts ===== */
+.add-new { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border: 1px dashed var(--line-strong, #c5cdc9); border-radius: 8px; background: none; font: inherit; font-size: 12px; font-weight: 700; color: var(--accent); cursor: pointer; white-space: nowrap; }
+.add-new:hover { background: var(--accent-soft, #e6f2ea); border-style: solid; }
+.add-new.disabled { color: var(--ink-3); cursor: not-allowed; }
+.label-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; margin-bottom: 6px; }
+.label-row .label, .label-row label { margin: 0; }
+.wfp-box { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font: inherit; text-align: left; cursor: pointer; }
+.wfp.invalid .wfp-box { border-color: var(--st-bad); }
+.wfp-cur { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.wfp-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 11.5px; color: var(--ink-2); }
+.wfp-step { display: inline-flex; align-items: center; padding: 1px 6px 1px 2px; border-radius: 6px; background: var(--surface-2); }
+.wfp-step b { margin-left: 3px; font-weight: 700; color: var(--ink-3); }
+.wfp-arr { color: var(--ink-3); }
+.wfp-opt { flex-direction: column; align-items: stretch !important; gap: 4px; padding: 10px 12px !important; }
+.wfp-t { display: flex; align-items: center; gap: 8px; }
+.wfp-t .muted { margin-left: auto; font-size: 11.5px; }
+.wfp-d { font-size: 12px; }
+.wfp .msel-pop { max-height: 420px; }
+.wfp-sug { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 6px 10px; border-radius: 9px; background: var(--surface-2); font-size: 12.5px; }
+.wfp-sug .btn { margin-left: auto; }
+.msel-below { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.msel-below .muted { font-size: 12.5px; }
+.msel-foot .linklike { font-size: 12px; margin-right: 6px; }
+.sop-scope-hint { display: flex; gap: 6px; align-items: flex-start; padding: 8px 10px; border-radius: 9px; background: var(--surface-2); margin: 0; }
+.label-row .add-new + .add-new { margin-left: 6px; }
+.label-row > span:last-child, .label-row > button:last-child { flex: none; }
+
+/* ===== Compare all roles ===== */
+.modal.wide.xl { width: min(1240px, calc(100vw - 32px)); max-width: none; }
+.cmp-tabs { margin-bottom: 14px; flex-wrap: wrap; }
+.cmp-wrap { max-height: 56vh; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+.cmp-tbl th, .cmp-tbl td { padding: 7px 8px; }
+.cmp-tbl thead th { position: sticky; top: 0; background: var(--surface); z-index: 2; }
+.cmp-perm { min-width: 220px; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+.cmp-perm b { display: block; font-size: 13px; }
+.cmp-perm span { font-size: 11.5px; color: var(--ink-3); }
+.cmp-role div { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; text-transform: none; letter-spacing: 0; }
+.cmp-role div b { font-size: 11.5px; color: var(--ink); }
+.cmp-tbl .perm-cell { text-align: center; }
+.cmp-tbl .perm-cell.changed { background: var(--st-warn-bg); }
+.cmp-dirty { display: inline-flex; align-items: center; gap: 6px; color: var(--st-warn); font-weight: 700; font-size: 12.5px; }
+.cmp-count { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; font: inherit; font-size: 12px; cursor: pointer; color: var(--ink-2); }
+.cmp-bar { width: 46px; height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.cmp-bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.cmp-count.none { color: var(--ink-3); }
+.cmp-ov td { vertical-align: middle; }
+
+/* ===== Settings: vertical tabs ===== */
+.set-shell { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 20px; align-items: start; }
+.set-nav { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 2px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-1); }
+.set-grp { padding: 10px 10px 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; color: var(--ink-3); }
+.set-tab { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: 0; border-radius: 9px; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-2); text-align: left; cursor: pointer; }
+.set-tab:hover { background: var(--surface-2); color: var(--ink); }
+.set-tab.on { background: var(--accent-soft, #e6f2ea); color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.set-tab .n { margin-left: auto; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.set-main { min-width: 0; }
+.set-main .page-head h1 { font-size: 24px; }
+@media (max-width: 900px) { .set-shell { grid-template-columns: 1fr; } .set-nav { position: static; flex-direction: row; overflow-x: auto; scrollbar-width: none; padding: 6px; } .set-grp { display: none; } .set-tab { flex: none; } }
+
 </style>
 <div id="app"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -2342,6 +2401,7 @@ function seedAudit(S) {
 
 /* icons (Lucide-style line icons) */
 const IC = {
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
   pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   square: '<rect width="16" height="16" x="4" y="4" rx="2"/>',
   circle: '<circle cx="12" cy="12" r="9"/>',
@@ -2434,7 +2494,9 @@ const STORE_KEY = 'saja-medlr-v7';
 let S = load();
 const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, modal: null, pop: null, search: '', f: {}, draft: null, sel: {}, wfSel: null };
 
-function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return s; if (s && s.version === 7) return migrate7to8(s); } } catch (e) {} return SEED(); }
+function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return linkModuleWorkflows(s); if (s && s.version === 7) return linkModuleWorkflows(migrate7to8(s)); } } catch (e) {} return linkModuleWorkflows(SEED()); }
+// Every module records the workflow chosen for it. Older records take it from their approval history; drafts with no history stay unset until someone chooses.
+function linkModuleWorkflows(s) { s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
 // v7 → v8 keeps every user-created record: indications become records, permissions gain page access and authority, annotations start empty.
 function migrate7to8(s) {
   const valid = new Set(PERMS.map(p => p[0]));
@@ -2668,6 +2730,10 @@ function curCycle(obj) { const r = obj.review || obj.resume; if (!r) return null
 // Authority: Member steps need "Member review", Lead steps need "Lead review" (configured per role in Roles & Permissions).
 const levelAuth = level => level === 'Lead' ? 'auth_lead' : 'auth_member';
 function assigneeFor(st) { return S.users.filter(u => u.status === 'Active' && !isAdmin(u) && u.fn === st.fn && (!st.team || u.team === st.team) && can(u, levelAuth(st.level)) && can(u, st.req === 'approve' ? 'approve' : 'review')); }
+// Workflows a module may use: visible, active and built for modules.
+const eligibleModuleWorkflows = () => S.workflows.filter(w => !w.hidden && w.active !== false && w.appliesTo === 'Module');
+const suggestedWorkflow = type => { const w = type && mtype(type).workflow; return w && eligibleModuleWorkflows().some(x => x.id === w) ? w : null; };
+const wfSummary = w => reviewSteps(w).map(s => s.fn + ' ' + levelName(s.level)).join(' → ');
 const isFinalStep = (wf, i) => !wf.steps.slice(i + 1).some(s => !isNotify(s));
 // The permission a step needs: review → Review, approval → Approve, last approval → Final approval.
 function canActOn(u, obj) {
@@ -2960,11 +3026,21 @@ function multi(act, k, options, selected, extra = '') {
 }
 // Searchable multi-select with chips: [ Product A × ] [ Product B × ] [ + Select ].
 // options come from the managed collections; act/k/extra are the toggle handler used by the owning form.
+// "+ Add new" beside a selector: creates the missing configuration record in the same form used in Settings, then selects it.
+// The form being filled in stays as it is (it is not left), so typed text and uploaded files are kept.
+const permName = p => (PERMS.find(x => x[0] === p) || [p, p])[1];
+function addNew(k, field, label) {
+  const C = CONFIG[k]; const lab = label || C.label.toLowerCase();
+  return can(me(), C.perm) ? `<button type="button" class="add-new" data-act="cfg-quick" data-k="${k}" data-field="${field}">${icon('plus', 'sm')}Add new ${esc(lab)}</button>`
+    : `<span class="add-new disabled" aria-disabled="true" title="Adding a ${esc(lab)} needs the “${esc(permName(C.perm))}” permission">${icon('lock', 'sm')}Add new ${esc(lab)}</span>`;
+}
+const labelRow = (lbl, extra, forId) => `<div class="label-row">${forId ? `<label for="${forId}">${lbl}</label>` : `<span class="label">${lbl}</span>`}${extra}</div>`;
 function chipSelect(id, act, k, options, selected, opts = {}) {
   const open = UI.msel === id; const q = open ? (UI.mselq || '').toLowerCase() : ''; const label = o => (options.find(x => x[0] === o) || [o, o])[1]; const ex = opts.extra || '';
   const list = options.filter(o => !q || o[1].toLowerCase().includes(q));
-  return `<div class="msel ${open ? 'open' : ''} ${opts.invalid ? 'invalid' : ''}" data-msel="${id}"><div class="msel-box">${selected.map(v => `<span class="mchip">${esc(label(v))}<button type="button" data-act="${act}" data-k="${k}" data-v="${esc(v)}" ${ex} aria-label="Remove ${esc(label(v))}">${icon('x', 'sm')}</button></span>`).join('')}<button type="button" class="msel-add" data-act="msel-open" data-id="${id}" aria-expanded="${open}">${icon('plus', 'sm')}${selected.length ? 'Select' : esc(opts.ph || 'Select')}</button></div>
-  ${open ? `<div class="msel-pop" role="listbox" aria-multiselectable="true"><div class="field-inline msel-search">${icon('search', 'sm')}<input type="search" id="mselq-${id}" data-mselq="1" value="${esc(UI.mselq || '')}" placeholder="Search ${esc(opts.noun || '')}" aria-label="Search ${esc(opts.noun || '')}" autocomplete="off"></div><div class="msel-list">${list.map(([v, l, sub]) => { const on = selected.includes(v); return `<button type="button" class="msel-opt ${on ? 'on' : ''}" role="option" aria-selected="${on}" data-act="${act}" data-k="${k}" data-v="${esc(v)}" ${ex}><span class="box">${on ? icon('check', 'sm') : ''}</span><span class="ml">${esc(l)}</span>${sub ? `<span class="muted">${esc(sub)}</span>` : ''}</button>`; }).join('') || '<div class="muted" style="padding:10px 12px;font-size:12.5px">No matches</div>'}</div><div class="msel-foot"><span class="muted">${selected.length} selected</span>${opts.manage && can(me(), 'manage_settings') ? `<button type="button" class="linklike" ${goAttr(opts.manage)}>Manage ${esc(opts.noun || '')}</button>` : ''}<button type="button" class="btn sm" data-act="msel-close">Done</button></div></div>` : ''}</div>`;
+  const chips = selected.map(v => `<span class="mchip">${esc(label(v))}<button type="button" data-act="${act}" data-k="${k}" data-v="${esc(v)}" ${ex} aria-label="Remove ${esc(label(v))}">${icon('x', 'sm')}</button></span>`).join('');
+  return `<div class="msel ${open ? 'open' : ''} ${opts.invalid ? 'invalid' : ''}" data-msel="${id}"><div class="msel-box">${opts.below ? '' : chips}<button type="button" class="msel-add" data-act="msel-open" data-id="${id}" aria-expanded="${open}">${icon(opts.below ? 'search' : 'plus', 'sm')}${opts.below ? (selected.length ? selected.length + ' selected' : esc(opts.ph || 'Select')) : selected.length ? 'Select' : esc(opts.ph || 'Select')}</button>${opts.below ? icon('down', 'sm') : ''}</div>
+  ${open ? `<div class="msel-pop" role="listbox" aria-multiselectable="true"><div class="field-inline msel-search">${icon('search', 'sm')}<input type="search" id="mselq-${id}" data-mselq="1" value="${esc(UI.mselq || '')}" placeholder="Search ${esc(opts.noun || '')}" aria-label="Search ${esc(opts.noun || '')}" autocomplete="off"></div><div class="msel-list">${list.map(([v, l, sub]) => { const on = selected.includes(v); return `<button type="button" class="msel-opt ${on ? 'on' : ''}" role="option" aria-selected="${on}" data-act="${act}" data-k="${k}" data-v="${esc(v)}" ${ex}><span class="box">${on ? icon('check', 'sm') : ''}</span><span class="ml">${esc(l)}</span>${sub ? `<span class="muted">${esc(sub)}</span>` : ''}</button>`; }).join('') || '<div class="muted" style="padding:10px 12px;font-size:12.5px">No matches</div>'}</div><div class="msel-foot"><span class="muted">${selected.length} selected</span>${opts.bulk ? `<button type="button" class="linklike" data-act="${opts.bulk}" data-k="${k}" data-v="all">Select all</button><button type="button" class="linklike" data-act="${opts.bulk}" data-k="${k}" data-v="none">Clear all</button>` : ''}<button type="button" class="btn sm" data-act="msel-close">Done</button></div></div>` : ''}</div>${opts.below ? `<div class="msel-below">${chips || `<span class="muted">${esc(opts.empty || 'None selected')}</span>`}</div>` : ''}`;
 }
 function validationPanel(obj, kind, title = 'Validation check') {
   const res = validate(obj, kind); const bad = res.filter(x => !x.ok);
@@ -2982,14 +3058,13 @@ const NAV = [
   ['WORKSPACE'], ['home', 'Home', 'home'], ['modules', 'Modules', 'grid', 'mods', 'page_modules', 'primary'], ['tasks', 'My Tasks', 'inbox', 'tasks', 'page_tasks'], ['assets', 'Assets', 'layers', null, 'page_assets'], ['library', 'Approved Library', 'book', null, 'page_library'],
   ['INSIGHTS'], ['reports', 'Reports', 'chart', null, 'view_reports'],
   ['GOVERNANCE'], ['lifecycle', 'Lifecycle', 'clock', null, 'view_audit'], ['audit', 'Audit Trail', 'history', null, 'view_audit'], ['sops', 'Validation SOPs', 'clipboard', null, ['manage_sops', ADMIN_VIEW]], ['workflows', 'Workflows', 'workflow', null, ['manage_workflows', ADMIN_VIEW]], ['references', 'References', 'quote', null, 'view_audit'],
-  ['ADMINISTRATION'], ['users', 'Users', 'users', null, ['manage_users', ADMIN_VIEW]], ['roles', 'Roles & Permissions', 'key', null, ['manage_users', ADMIN_VIEW]], ['functions', 'Functions', 'shieldcheck', null, ['manage_users', ADMIN_VIEW]], ['teams', 'Teams', 'team', null, ['manage_users', ADMIN_VIEW]],
-  ['CONFIGURATION'], ['products', 'Products', 'pill', null, ['manage_settings', ADMIN_VIEW]], ['markets', 'Countries', 'globe', null, ['manage_settings', ADMIN_VIEW]], ['moduletypes', 'Module Types', 'type', null, ['manage_settings', ADMIN_VIEW]], ['materials', 'Material Types', 'file', null, ['manage_settings', ADMIN_VIEW]], ['channels', 'Channels', 'send', null, ['manage_settings', ADMIN_VIEW]], ['audiences', 'Audiences', 'users', null, ['manage_settings', ADMIN_VIEW]], ['settings', 'Settings', 'settings', null, 'manage_settings']
+  ['ADMINISTRATION'], ['users', 'Users', 'users', null, ['manage_users', ADMIN_VIEW]], ['roles', 'Roles & Permissions', 'key', null, ['manage_users', ADMIN_VIEW]], ['settings', 'Settings', 'settings', null, ['manage_settings', 'manage_users', ADMIN_VIEW]]
 ];
-const NAV_OF = { module: 'modules', 'module-new': 'modules', 'module-edit': 'modules', review: 'tasks', 'asset-review': 'tasks', approvals: 'tasks', assemble: 'assets', asset: 'assets', user: 'users', 'user-new': 'users', 'user-edit': 'users', workflow: 'workflows', 'workflow-new': 'workflows', cover: 'library' };
-const ROUTE_PERM = { modules: 'page_modules', module: 'view', 'module-new': 'create', 'module-edit': 'edit', review: 'view', tasks: 'page_tasks', approvals: 'page_tasks', assets: 'page_assets', asset: 'view', assemble: 'edit', 'asset-review': 'view', library: 'page_library', cover: 'view', references: 'view_audit', reports: 'view_reports', lifecycle: 'view_audit', audit: 'view_audit', sops: ['manage_sops', ADMIN_VIEW], workflows: ['manage_workflows', ADMIN_VIEW], workflow: ['manage_workflows', ADMIN_VIEW], 'workflow-new': 'manage_workflows', users: ['manage_users', ADMIN_VIEW], user: ['manage_users', ADMIN_VIEW], 'user-new': 'manage_users', 'user-edit': 'manage_users', roles: ['manage_users', ADMIN_VIEW], functions: ['manage_users', ADMIN_VIEW], teams: ['manage_users', ADMIN_VIEW], products: ['manage_settings', ADMIN_VIEW], markets: ['manage_settings', ADMIN_VIEW], moduletypes: ['manage_settings', ADMIN_VIEW], materials: ['manage_settings', ADMIN_VIEW], channels: ['manage_settings', ADMIN_VIEW], audiences: ['manage_settings', ADMIN_VIEW], settings: 'manage_settings' };
+const NAV_OF = { products: 'settings', markets: 'settings', moduletypes: 'settings', materials: 'settings', channels: 'settings', audiences: 'settings', teams: 'settings', functions: 'settings', module: 'modules', 'module-new': 'modules', 'module-edit': 'modules', review: 'tasks', 'asset-review': 'tasks', approvals: 'tasks', assemble: 'assets', asset: 'assets', user: 'users', 'user-new': 'users', 'user-edit': 'users', workflow: 'workflows', 'workflow-new': 'workflows', cover: 'library' };
+const ROUTE_PERM = { modules: 'page_modules', module: 'view', 'module-new': 'create', 'module-edit': 'edit', review: 'view', tasks: 'page_tasks', approvals: 'page_tasks', assets: 'page_assets', asset: 'view', assemble: 'edit', 'asset-review': 'view', library: 'page_library', cover: 'view', references: 'view_audit', reports: 'view_reports', lifecycle: 'view_audit', audit: 'view_audit', sops: ['manage_sops', ADMIN_VIEW], workflows: ['manage_workflows', ADMIN_VIEW], workflow: ['manage_workflows', ADMIN_VIEW], 'workflow-new': 'manage_workflows', users: ['manage_users', ADMIN_VIEW], user: ['manage_users', ADMIN_VIEW], 'user-new': 'manage_users', 'user-edit': 'manage_users', roles: ['manage_users', ADMIN_VIEW], functions: ['manage_users', ADMIN_VIEW], teams: ['manage_users', ADMIN_VIEW], products: ['manage_settings', ADMIN_VIEW], markets: ['manage_settings', ADMIN_VIEW], moduletypes: ['manage_settings', ADMIN_VIEW], materials: ['manage_settings', ADMIN_VIEW], channels: ['manage_settings', ADMIN_VIEW], audiences: ['manage_settings', ADMIN_VIEW], settings: ['manage_settings', 'manage_users', ADMIN_VIEW] };
 
 function viewShell(inner) {
-  const u = me(); const active = UI.route.name === 'item' ? UI.route.p.k : NAV_OF[UI.route.name] || UI.route.name; const nTasks = tasksFor(u).length;
+  const u = me(); const active = UI.route.name === 'item' ? NAV_OF[UI.route.p.k] || UI.route.p.k : NAV_OF[UI.route.name] || UI.route.name; const nTasks = tasksFor(u).length;
   const nav = NAV.map((n, i) => {
     if (n.length === 1) { const items = []; for (let j = i + 1; j < NAV.length && NAV[j].length > 1; j++) items.push(NAV[j]); return items.some(x => !x[4] || can(u, x[4])) ? `<div class="nav-label">${n[0]}</div>` : ''; }
     if (n[4] && !can(u, n[4])) return '';
@@ -3225,17 +3300,28 @@ function msteps(D) {
   return [['Module type', ['type'], 'What kind of module is this?'],
     media ? [kindLabel(k) + ' & details', ['file', 'title', 'body', 'source', 'usage', 'format', 'reason', 'owner'], 'Upload the exact file reviewers will approve, with its source and usage rules.'] : ['Content', ['title', 'body', 'reason', 'owner'], 'Name the module and write the exact text reviewers will approve.'],
     ['Products & countries', ['products', 'indications', 'audience', 'markets', 'channels'], 'Every product and country where this module can be used.'],
-    ['References & dates', ['refs', 'expiry', 'reviewDate'], media ? 'Optional references (for example the study behind a chart), periodic review and expiry.' : 'Evidence, periodic review and expiry.'],
+    ['References, dates & workflow', ['refs', 'expiry', 'reviewDate', 'workflow'], (media ? 'Optional references (for example the study behind a chart), periodic review, expiry' : 'Evidence, periodic review, expiry') + ' and the approval workflow.'],
     ['Review & save', [], 'Check everything, including the Validation SOPs, before saving.']];
 }
 const ownerOptions = keep => S.users.filter(u => (u.status === 'Active' && can(u, 'create')) || u.id === keep);
-function blankDraft() { return { type: '', title: '', body: '', media: null, reason: '', owner: me().id, products: [], indications: [], audience: '', markets: [], channels: [], refs: [], reviewDate: toISO(Date.now() + 300 * DAY), expiry: toISO(Date.now() + S.settings.defaultValidityMonths * 30.5 * DAY), newRefTitle: '', newRefSource: '', newRefKind: 'study' }; }
+function blankDraft() { return { workflow: '', type: '', title: '', body: '', media: null, reason: '', owner: me().id, products: [], indications: [], audience: '', markets: [], channels: [], refs: [], reviewDate: toISO(Date.now() + 300 * DAY), expiry: toISO(Date.now() + S.settings.defaultValidityMonths * 30.5 * DAY), newRefTitle: '', newRefSource: '', newRefKind: 'study' }; }
 function draftAsModule(D, m) { return { id: m ? m.id : 'NEW', type: D.type, title: D.title, owner: D.owner, products: D.products, markets: D.markets, audience: D.audience, channels: D.channels, reviewDate: fromISO(D.reviewDate), expiry: fromISO(D.expiry), versions: [{ v: 1, body: D.body, refs: D.refs, media: D.media, status: 'Draft', cycles: [] }] }; }
+// Searchable single-choice list of every eligible workflow from Workflow Management, with its steps.
+function wfPicker(D, err) {
+  const list = eligibleModuleWorkflows(); const open = UI.msel === 'd-wf'; const q = open ? (UI.mselq || '').toLowerCase() : ''; const sug = suggestedWorkflow(D.type); const cur = D.workflow && wfById(D.workflow);
+  const steps = w => `<span class="wfp-steps">${reviewSteps(w).map(st => `<span class="wfp-step">${fnBadge(st.fn, 'sm')}${esc(st.fn)} <b>${esc(levelName(st.level))}</b></span>`).join('<span class="wfp-arr">→</span>')}</span>`;
+  const shown = list.filter(w => !q || (w.name + ' ' + (w.desc || '') + ' ' + wfSummary(w)).toLowerCase().includes(q));
+  if (!list.length) return `<div class="banner warn">${icon('alert')}<div class="txt"><b>No eligible workflow</b><p>Module workflows must be active and apply to modules. ${can(me(), 'manage_workflows') ? 'Create one with “Add new workflow” — your entries here are kept.' : 'Ask an administrator to create or activate one in Workflow Management.'}</p></div></div>`;
+  return `<div class="msel wfp ${open ? 'open' : ''} ${err ? 'invalid' : ''}" data-msel="d-wf"><button type="button" class="wfp-box" data-act="msel-open" data-id="d-wf" aria-expanded="${open}">${cur ? `<span class="wfp-cur"><b>${esc(cur.name)}</b>${steps(cur)}</span>` : `<span class="muted">Choose a workflow (${list.length} available)</span>`}${icon('down', 'sm')}</button>
+    ${open ? `<div class="msel-pop" role="listbox"><div class="field-inline msel-search">${icon('search', 'sm')}<input type="search" id="mselq-d-wf" data-mselq="1" value="${esc(UI.mselq || '')}" placeholder="Search workflows or steps" aria-label="Search workflows" autocomplete="off"></div><div class="msel-list">${shown.map(w => `<button type="button" class="msel-opt wfp-opt ${D.workflow === w.id ? 'on' : ''}" role="option" aria-selected="${D.workflow === w.id}" data-act="d-wf" data-v="${w.id}"><span class="wfp-t"><b>${esc(w.name)}</b>${w.id === sug ? '<span class="chip ok">Suggested</span>' : ''}<span class="muted">${reviewSteps(w).length} steps</span></span>${w.desc ? `<span class="muted wfp-d">${esc(w.desc)}</span>` : ''}${steps(w)}</button>`).join('') || '<div class="muted" style="padding:10px 12px;font-size:12.5px">No workflow matches.</div>'}</div><div class="msel-foot"><span class="muted">${list.length} eligible · active module workflows</span><button type="button" class="btn sm" data-act="msel-close">Done</button></div></div>` : ''}</div>
+  ${err ? `<span class="err">${esc(err)}</span>` : ''}${sug && sug !== D.workflow ? `<div class="wfp-sug">${icon('sparkle', 'sm')}<span>Suggested for ${esc(mtype(D.type).name)}: <b>${esc(wfById(sug).name)}</b></span><button type="button" class="btn ghost sm" data-act="d-wf" data-v="${sug}">Use suggestion</button></div>` : ''}<span class="hint">The workflow sets the approval route. It is used when you submit and drives the approval timeline.</span>`;
+}
+function addNewWorkflowBtn() { return can(me(), 'manage_workflows') ? `<button type="button" class="add-new" data-act="wf-addnew">${icon('plus', 'sm')}Add new workflow</button>` : `<span class="add-new disabled" title="Adding a workflow needs the Manage workflows permission" aria-disabled="true">${icon('lock', 'sm')}Add new workflow</span>`; }
 function viewModuleForm() {
   const editId = UI.route.p.id; const m = editId ? modById(editId) : null; const isNewVer = !!(m && UI.route.p.newVersion);
   if (!m && editId) return viewMissing('Module');
   if (!UI.draft || UI.draft._for !== (editId || 'new') + (isNewVer ? ':nv' : '')) {
-    if (m) { const l = latest(m); UI.draft = { ...blankDraft(), _for: editId + (isNewVer ? ':nv' : ''), type: m.type, title: m.title, body: l.body, reason: isNewVer ? '' : (statusOf(m) === 'Amendment Requested' ? m.amendNote || '' : l.reason), owner: m.owner, products: [...m.products], indications: [...m.indications], audience: m.audience, markets: [...m.markets], channels: [...m.channels], refs: [...l.refs], media: l.media ? { ...l.media } : null, reviewDate: toISO(m.reviewDate || Date.now()), expiry: toISO(m.expiry || Date.now()) }; }
+    if (m) { const l = latest(m); UI.draft = { ...blankDraft(), _for: editId + (isNewVer ? ':nv' : ''), workflow: m.workflow && eligibleModuleWorkflows().some(w => w.id === m.workflow) ? m.workflow : '', type: m.type, title: m.title, body: l.body, reason: isNewVer ? '' : (statusOf(m) === 'Amendment Requested' ? m.amendNote || '' : l.reason), owner: m.owner, products: [...m.products], indications: [...m.indications], audience: m.audience, markets: [...m.markets], channels: [...m.channels], refs: [...l.refs], media: l.media ? { ...l.media } : null, reviewDate: toISO(m.reviewDate || Date.now()), expiry: toISO(m.expiry || Date.now()) }; }
     else UI.draft = { _for: 'new', ...blankDraft() };
     UI.draft.newVersion = isNewVer; UI.draft.step = m ? 1 : 0; UI.draft.maxStep = m ? 4 : 0; UI.draft.triedSteps = [];
   }
@@ -3252,7 +3338,7 @@ function viewModuleForm() {
   wizBar('module', MSTEPS, D) +
   `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="module" novalidate>
   <div class="stack">${wizHead(MSTEPS, D)}
-    <section class="panel"${hid(0)}><div class="panel-head"><h3>Module type</h3>${can(me(), 'manage_settings') ? `<span class="grow"></span><button type="button" class="btn ghost sm" ${goAttr('moduletypes')}>Manage module types</button>` : ''}</div><div class="panel-body stack">${[['Content modules', t => (t.kind || 'content') === 'content'], ['Media & document modules', t => (t.kind || 'content') !== 'content']].map(([g, f]) => { const ts = activeOf(S.moduleTypes, D.type).filter(f); return ts.length ? `<div><span class="section-title">${g}</span><div class="type-cards" role="radiogroup" aria-label="${g}" style="margin-top:8px">${ts.map(t => `<button type="button" class="type-card ${D.type === t.id ? 'on' : ''}" data-act="d-type" data-v="${t.id}" role="radio" aria-checked="${D.type === t.id}">${typeIco(t.id)}<span><b>${esc(t.name)}</b><span>${esc(t.desc)}</span></span></button>`).join('')}</div></div>` : ''; }).join('')}${err('type')}${m && D.type !== m.type && isMediaType(D.type) !== isMediaType(m.type) ? '<span class="err">A content module cannot become a media module (or the reverse). Create a new module instead.</span>' : ''}</div></section>
+    <section class="panel"${hid(0)}><div class="panel-head"><h3>Module type</h3><span class="grow"></span>${addNew('moduletypes', 'draft:type', 'module type')}</div><div class="panel-body stack">${[['Content modules', t => (t.kind || 'content') === 'content'], ['Media & document modules', t => (t.kind || 'content') !== 'content']].map(([g, f]) => { const ts = activeOf(S.moduleTypes, D.type).filter(f); return ts.length ? `<div><span class="section-title">${g}</span><div class="type-cards" role="radiogroup" aria-label="${g}" style="margin-top:8px">${ts.map(t => `<button type="button" class="type-card ${D.type === t.id ? 'on' : ''}" data-act="d-type" data-v="${t.id}" role="radio" aria-checked="${D.type === t.id}">${typeIco(t.id)}<span><b>${esc(t.name)}</b><span>${esc(t.desc)}</span></span></button>`).join('')}</div></div>` : ''; }).join('')}${err('type')}${m && D.type !== m.type && isMediaType(D.type) !== isMediaType(m.type) ? '<span class="err">A content module cannot become a media module (or the reverse). Create a new module instead.</span>' : ''}</div></section>
     ${MEDIA_K ? `<section class="panel"${hid(1)}><div class="panel-head"><h3>${esc(kindLabel(KIND))} file</h3>${md && md.fileId ? '<span class="grow"></span><span class="chip ok has-ico">' + icon('check', 'sm') + 'Uploaded</span>' : ''}</div><div class="panel-body form">
       ${md && md.fileId ? `${fileCard(md, `${fileActions(md, 'Draft upload')}<span class="chip ok has-ico">${icon('check', 'sm')}Uploaded</span><span class="muted mono" style="font-size:11px">${esc(md.algo)} ${esc(String(md.checksum).slice(0, 12))}…</span>`)}<div class="media-stage">${mediaView(md)}</div>` : ''}
       <label class="upload ${E.file ? 'invalid' : ''}" for="d-file">${icon('upload')}<b>${D.mediaBusy ? 'Processing file…' : md && md.fileId ? 'Replace file' : 'Choose a file to upload'}</b><span>${esc(MEDIA_ACCEPT[KIND].map(x => x.split('/')[1].replace('svg+xml', 'svg').replace('quicktime', 'mov').toUpperCase()).join(', '))} · up to ${MEDIA_MAX_MB} MB</span><input type="file" id="d-file" accept="${MEDIA_ACCEPT[KIND].join(',')}" data-act-change="d-file" class="sr-only"></label>${err('file')}
@@ -3267,15 +3353,16 @@ function viewModuleForm() {
       <div class="field"><label for="d-owner">Material Owner</label>${canOwner ? `<select class="select ${E.owner ? 'invalid' : ''}" id="d-owner" data-d="owner">${ownerOptions(D.owner).map(u => opt(u.id, D.owner, u.name + ' · ' + roleLabel(u))).join('')}</select><span class="hint">The owner receives amendment requests and rejections. Listed: active users with the Create permission.</span>` : `<div class="input" style="display:flex;align-items:center;background:var(--surface-2)">${esc(user(D.owner).name)}</div>`}${err('owner')}</div>
     </div></section>
     <section class="panel"${hid(2)}><div class="panel-head"><h3>Products & audience</h3><span class="muted" style="font-size:12px">Select one or more products</span></div><div class="panel-body form">
-      <div class="field"><span class="label">Products</span>${chipSelect('d-products', 'd-toggle', 'products', activeOf(S.products, D.products).map(p => [p.id, p.name, p.area + (p.active ? '' : ' · inactive')]), D.products, { ph: 'Select products', noun: 'products', manage: 'products', invalid: E.products })}${err('products')}</div>
+      <div class="field">${labelRow('Products', addNew('products', 'draft:products'))}${chipSelect('d-products', 'd-toggle', 'products', activeOf(S.products, D.products).map(p => [p.id, p.name, p.area + (p.active ? '' : ' · inactive')]), D.products, { ph: 'Select products', noun: 'products', invalid: E.products })}${err('products')}</div>
       <div class="field"><span class="label">Indication</span>${inds.length ? `<div class="tags ro-tags">${inds.map(i => `<span class="tag">${esc(indName(i))} <span class="muted">· ${esc(product(indication(i).product).name)}</span></span>`).join('')}</div><span class="hint">Taken from each selected product (Products → Indication).</span>` : '<p class="muted">Select a product first. Each product carries its indication.</p>'}${err('indications')}</div>
-      <div class="field"><label for="d-aud">Audience</label><select class="select ${E.audience ? 'invalid' : ''}" id="d-aud" data-d="audience">${opt('', D.audience, 'Select audience')}${activeOf(S.audiences, D.audience).map(a => opt(a.id, D.audience, a.name)).join('')}</select>${err('audience')}</div>
+      <div class="field">${labelRow('Audience', addNew('audiences', 'draft:audience'), 'd-aud')}<select class="select ${E.audience ? 'invalid' : ''}" id="d-aud" data-d="audience">${opt('', D.audience, 'Select audience')}${activeOf(S.audiences, D.audience).map(a => opt(a.id, D.audience, a.name)).join('')}</select>${err('audience')}</div>
     </div></section>
     <section class="panel"${hid(2)}><div class="panel-head"><h3>Countries & channels</h3></div><div class="panel-body form">
-      <div class="field"><span class="label">Countries</span>${chipSelect('d-markets', 'd-toggle', 'markets', activeOf(S.markets, D.markets).map(x => [x.id, x.name, x.id + (x.authority ? ' · ' + x.authority : '') + (x.active ? '' : ' · inactive')]), D.markets, { ph: 'Select countries', noun: 'countries', manage: 'markets', invalid: E.markets })}${err('markets')}</div>
-      <div class="field"><span class="label">Channels</span>${multi('d-toggle', 'channels', activeOf(S.channels, D.channels).map(c => [c.id, c.name]), D.channels)}${err('channels')}</div>
+      <div class="field">${labelRow('Countries', addNew('markets', 'draft:markets', 'country'))}${chipSelect('d-markets', 'd-toggle', 'markets', activeOf(S.markets, D.markets).map(x => [x.id, x.name, x.id + (x.authority ? ' · ' + x.authority : '') + (x.active ? '' : ' · inactive')]), D.markets, { ph: 'Select countries', noun: 'countries', invalid: E.markets })}${err('markets')}</div>
+      <div class="field">${labelRow('Channels', addNew('channels', 'draft:channels'))}${multi('d-toggle', 'channels', activeOf(S.channels, D.channels).map(c => [c.id, c.name]), D.channels)}${err('channels')}</div>
     </div></section>
-    <section class="panel"${hid(3)}><div class="panel-head"><h3>References</h3><span class="grow"></span><button type="button" class="btn ghost sm" ${goAttr('references')}>Reference library</button></div><div class="panel-body form">
+    <section class="panel"${hid(3)}><div class="panel-head"><h3>Approval workflow</h3><span class="grow"></span>${addNewWorkflowBtn()}</div><div class="panel-body form">${wfPicker(D, E.workflow)}</div></section>
+    <section class="panel"${hid(3)}><div class="panel-head"><h3>References</h3><span class="grow"></span>${addNew('references', 'draft:refs', 'reference')}</div><div class="panel-body form">
       ${D.refs.length ? `<div class="stack" style="gap:8px">${D.refs.map((r, i) => { const R = refById(r); return `<div class="ref"><span class="n">${i + 1}</span><div style="flex:1"><b>${esc(R.title)}</b><br><span class="muted">${esc(R.source)} · ${esc(refKind(R.kind))}</span></div><button type="button" class="btn icon sm" data-act="d-unref" data-v="${r}" aria-label="Remove reference">${icon('x', 'sm')}</button></div>`; }).join('')}</div>` : `<p class="muted">No references yet.</p>`}
       ${err('refs')}
       <div class="field"><label for="d-addref">Add from the reference library</label><select class="select" id="d-addref" data-act-change="d-addref">${opt('', '', 'Select a reference')}${S.references.filter(r => r.active && !D.refs.includes(r.id)).map(r => opt(r.id, '', r.title + ' (' + refKind(r.kind) + ')')).join('')}</select></div>
@@ -3289,7 +3376,7 @@ function viewModuleForm() {
     ${sumGroup('module', 0, 'Module type', sumRow('Type', esc(T.name)))}
     ${sumGroup('module', 1, MEDIA_K ? kindLabel(KIND) + ' & details' : 'Content', sumRow('Name', esc(D.title)) + (MEDIA_K ? sumRow('File', md && md.fileId ? esc(md.name + ' · ' + (md.format || md.mime) + ' · ' + fmtSize(md.size)) : '') + sumRow('Description', esc(D.body)) + sumRow('Source', esc(md && md.source)) + sumRow('Usage rules', esc(md && md.usage)) : sumRow('Text', esc(D.body))) + (isNewVer || amending ? sumRow(amending ? 'Changes' : 'Reason', esc(D.reason)) : '') + sumRow('Owner', esc(user(D.owner).name)))}
     ${sumGroup('module', 2, 'Products & countries', sumRow('Products', esc(productsTxt(D.products))) + sumRow('Indication', esc(indsTxt(D.indications))) + sumRow('Audience', esc(D.audience ? aud(D.audience).name : '')) + sumRow('Countries', esc(marketsTxt(D.markets))) + sumRow('Channels', esc(channelsTxt(D.channels))))}
-    ${sumGroup('module', 3, 'References & dates', sumRow('References', D.refs.map(r => esc(refById(r).title)).join('<br>')) + sumRow('Review date', esc(D.reviewDate)) + sumRow('Expiry', esc(D.expiry)))}
+    ${sumGroup('module', 3, 'References, dates & workflow', sumRow('References', D.refs.map(r => esc(refById(r).title)).join('<br>')) + sumRow('Review date', esc(D.reviewDate)) + sumRow('Expiry', esc(D.expiry)) + sumRow('Workflow', D.workflow && wfById(D.workflow) ? esc(wfById(D.workflow).name) + '<br><span class="muted">' + esc(wfSummary(wfById(D.workflow))) + '</span>' : ''))}
     <p class="muted" style="font-size:12px">${amending ? 'Saving keeps your changes. Resubmit from the module page to resume approval.' : 'Saving keeps the module as a draft. You submit it for MLR review from the module page.'}</p>` : ''}
     ${wizFoot('module', MSTEPS, D, m ? goAttr('module', m.id) : goAttr('modules'), m ? (isNewVer ? 'Create version ' + (latest(m).v + 1) : 'Save changes') : 'Save draft')}
   </div>
@@ -3311,6 +3398,8 @@ function validateDraft(D) {
   if (!D.products.length) e.products = 'Select at least one product.';
   if (!D.indications.length) e.indications = 'The selected product has no active indication. Add it in Products.';
   if (!D.audience) e.audience = 'Select an audience.';
+  if (!D.workflow) e.workflow = eligibleModuleWorkflows().length ? 'Choose the approval workflow for this module.' : 'No active module workflow exists yet. Add one in Workflow Management.';
+  else if (!eligibleModuleWorkflows().some(w => w.id === D.workflow)) e.workflow = 'This workflow is no longer active or does not apply to modules. Choose another.';
   if (!D.markets.length) e.markets = 'Select at least one country.';
   if (!D.channels.length) e.channels = 'Select at least one channel.';
   if (!D.expiry || fromISO(D.expiry) < Date.now()) e.expiry = 'Set an expiry date in the future.';
@@ -3353,10 +3442,10 @@ function viewModule() {
   (tab === 'overview' ? viewModuleOverview(m) : tab === 'comments' ? commentsTab(m) : tab === 'approval' ? viewApprovalTab(m, 'Module') : tab === 'versions' ? viewVersions(m, 'Module') : tab === 'lifecycle' ? viewModuleLifecycle(m) : auditTable(S.audit.filter(e => e.objId === m.id), true));
 }
 function refsList(ids) { return ids.length ? `<div class="stack" style="gap:8px">${ids.map((r, i) => { const R = refById(r); return `<div class="ref"><span class="n">${i + 1}</span><div><b>${esc(R.title)}</b><br><span class="muted">${esc(R.source)} · ${esc(refKind(R.kind))}</span></div></div>`; }).join('')}</div>` : '<p class="muted">No references.</p>'; }
-const lastWf = o => { const c = o.review || o.resume ? curCycle(o) : latest(o).cycles.slice(-1)[0]; return c ? wfById(c.wf) : null; };
+const lastWf = o => { const c = o.review || o.resume ? curCycle(o) : latest(o).cycles.slice(-1)[0]; return c ? wfById(c.wf) : o.workflow ? wfById(o.workflow) : null; };
 function metaKV(m, v) {
   const lv = live(m); const wf = lastWf(m);
-  return `<dl class="kv"><dt>Type</dt><dd>${esc(mtype(m.type).name)} <span class="muted" style="font-size:12px">· ${esc(modCategory(m.type))}</span></dd><dt>Products</dt><dd>${tagList(m.products, 'p')}</dd><dt>Indication</dt><dd>${esc(indsTxt(m.indications))}</dd><dt>Countries</dt><dd>${tagList(m.markets)} <span class="muted" style="font-size:12px">${esc(marketsTxt(m.markets))}</span></dd><dt>Audience</dt><dd>${esc(aud(m.audience).name)}</dd><dt>Channels</dt><dd>${esc(channelsTxt(m.channels))}</dd><dt>Version</dt><dd>v${v.v} · ${esc(v.status)}</dd><dt>Workflow</dt><dd>${wf ? esc(wf.name) : '<span class="muted">Chosen at submission</span>'}</dd><dt>Review date</dt><dd>${fmtD(m.reviewDate)}</dd><dt>Expiry</dt><dd>${fmtD(m.expiry)}</dd><dt>Owner</dt><dd>${esc(user(m.owner).name)} <span class="muted" style="font-size:12px">${esc(roleLabel(user(m.owner)))}</span></dd><dt>References</dt><dd>${v.refs.length}</dd>${lv ? `<dt>Approved</dt><dd>v${lv.v} · ${fmtD(lv.approvedAt)} · ${esc(user(lv.approvedBy).name)}</dd>` : ''}</dl>`;
+  return `<dl class="kv"><dt>Type</dt><dd>${esc(mtype(m.type).name)} <span class="muted" style="font-size:12px">· ${esc(modCategory(m.type))}</span></dd><dt>Products</dt><dd>${tagList(m.products, 'p')}</dd><dt>Indication</dt><dd>${esc(indsTxt(m.indications))}</dd><dt>Countries</dt><dd>${tagList(m.markets)} <span class="muted" style="font-size:12px">${esc(marketsTxt(m.markets))}</span></dd><dt>Audience</dt><dd>${esc(aud(m.audience).name)}</dd><dt>Channels</dt><dd>${esc(channelsTxt(m.channels))}</dd><dt>Version</dt><dd>v${v.v} · ${esc(v.status)}</dd><dt>Workflow</dt><dd>${wf ? esc(wf.name) + `<br><span class="muted" style="font-size:12px">${esc(wfSummary(wf))}</span>` : '<span class="muted">Not chosen yet</span>'}</dd><dt>Review date</dt><dd>${fmtD(m.reviewDate)}</dd><dt>Expiry</dt><dd>${fmtD(m.expiry)}</dd><dt>Owner</dt><dd>${esc(user(m.owner).name)} <span class="muted" style="font-size:12px">${esc(roleLabel(user(m.owner)))}</span></dd><dt>References</dt><dd>${v.refs.length}</dd>${lv ? `<dt>Approved</dt><dd>v${lv.v} · ${fmtD(lv.approvedAt)} · ${esc(user(lv.approvedBy).name)}</dd>` : ''}</dl>`;
 }
 function viewModuleOverview(m) {
   const pv = UI.route.p.v ? verOf(m, +UI.route.p.v) : null; const l = pv || latest(m); const other = pv && pv !== latest(m);
@@ -3385,7 +3474,7 @@ const stepTag = st => st.fn + ' ' + st.level + ' ' + (st.req === 'approve' ? 'ap
 function timelineModel(obj) {
   const v = latest(obj); const kind = kindOf(obj);
   const cyc = obj.review || obj.resume ? curCycle(obj) : v.cycles.slice(-1)[0];
-  const wfId = cyc ? cyc.wf : kind === 'Module' ? (mtype(obj.type).workflow && wfById(mtype(obj.type).workflow) ? mtype(obj.type).workflow : S.settings.defaultModuleWorkflow) : assetWorkflow(obj);
+  const wfId = cyc ? cyc.wf : kind === 'Module' ? (obj.workflow && wfById(obj.workflow) ? obj.workflow : suggestedWorkflow(obj.type) || S.settings.defaultModuleWorkflow) : assetWorkflow(obj);
   const wf = wfById(wfId); const decs = cyc ? cyc.decisions : []; const cur = obj.review ? obj.review.step : -1;
   const approved = !!cyc && cyc.outcome === 'Approved';
   const steps = wf.steps.map((s, i) => ({ s, i })).filter(x => !isNotify(x.s)).map(({ s, i }) => {
@@ -3407,7 +3496,7 @@ function approvalTimeline(obj) {
   const nowStep = steps.find(x => x.status === 'Current') || steps.find(x => ['Amendment Requested', 'Rejected'].includes(x.status));
   const doneN = steps.filter(x => x.status === 'Completed').length; const lv = live(obj);
   let head;
-  if (!cyc) head = `<b>Not submitted</b><span>Route when submitted: ${esc(wf.name)} · ${steps.length} step${steps.length === 1 ? '' : 's'}</span>`;
+  if (!cyc) head = `<b>Not submitted</b><span>${kind === 'Module' && !obj.workflow ? 'No workflow chosen yet — suggested route: ' : 'Route when submitted: '}${esc(wf.name)} · ${steps.length} step${steps.length === 1 ? '' : 's'}</span>`;
   else if (T.approved) head = `<b>Approved · v${v.v}</b><span>${fmtDT(v.approvedAt || cyc.end)} · final sign-off ${esc(user(v.approvedBy).name)} · ${fmtDur(cyc.end - cyc.start)} from submission</span>`;
   else if (nowStep && nowStep.status === 'Current') head = `<b>Now at ${esc(nowStep.s.fn)} · ${esc(levelName(nowStep.s.level))} ${nowStep.s.req === 'approve' ? 'approval' : 'review'}</b><span>With ${esc(nowStep.who.map(x => x.name).join(', ') || 'no active ' + stepWho(nowStep.s))} · waiting ${fmtDur(Date.now() - nowStep.when)} · ${doneN} of ${steps.length} done</span>`;
   else if (nowStep && nowStep.status === 'Amendment Requested') head = `<b>Amendment requested at ${esc(nowStep.s.fn)} · ${esc(levelName(nowStep.s.level))}</b><span>With the owner ${esc(user(obj.owner).name)} · resumes at this step after resubmission</span>`;
@@ -4068,11 +4157,11 @@ function viewAssemble() {
    <div class="canvas">${sheet(a, true, false)}</div>
    <div class="stack props-col"><section class="panel props"><div class="panel-head"><h3>Asset properties</h3></div><div class="panel-body form">
      <div class="field"><label for="ap-name">Asset name</label><input class="input" id="ap-name" data-asset-prop="name" data-id="${a.id}" value="${esc(a.name)}"></div>
-     <div class="field"><label for="ap-type">Material type</label><select class="select" id="ap-type" data-asset-prop="type" data-id="${a.id}">${activeOf(S.materialTypes, a.type).map(t => opt(t.id, a.type, t.name)).join('')}</select></div>
-     <div class="field"><span class="label">Products</span>${chipSelect('a-products', 'a-toggle', 'products', activeOf(S.products, a.products).map(p => [p.id, p.name, p.area]), a.products, { ph: 'Select products', noun: 'products', manage: 'products', extra: `data-id="${a.id}"` })}</div>
-     <div class="field"><span class="label">Countries</span>${chipSelect('a-markets', 'a-toggle', 'markets', activeOf(S.markets, a.markets).map(x => [x.id, x.name, x.id]), a.markets, { ph: 'Select countries', noun: 'countries', manage: 'markets', extra: `data-id="${a.id}"` })}</div>
-     <div class="field"><label for="ap-ch">Channel</label><select class="select" id="ap-ch" data-asset-prop="channel" data-id="${a.id}">${activeOf(S.channels, a.channel).map(c => opt(c.id, a.channel, c.name)).join('')}</select></div>
-     <div class="field"><label for="ap-aud">Audience</label><select class="select" id="ap-aud" data-asset-prop="audience" data-id="${a.id}">${activeOf(S.audiences, a.audience).map(c => opt(c.id, a.audience, c.name)).join('')}</select></div>
+     <div class="field">${labelRow('Material type', addNew('materials', 'asset:type:' + a.id), 'ap-type')}<select class="select" id="ap-type" data-asset-prop="type" data-id="${a.id}">${activeOf(S.materialTypes, a.type).map(t => opt(t.id, a.type, t.name)).join('')}</select></div>
+     <div class="field">${labelRow('Products', addNew('products', 'asset:products:' + a.id))}${chipSelect('a-products', 'a-toggle', 'products', activeOf(S.products, a.products).map(p => [p.id, p.name, p.area]), a.products, { ph: 'Select products', noun: 'products', extra: `data-id="${a.id}"` })}</div>
+     <div class="field">${labelRow('Countries', addNew('markets', 'asset:markets:' + a.id, 'country'))}${chipSelect('a-markets', 'a-toggle', 'markets', activeOf(S.markets, a.markets).map(x => [x.id, x.name, x.id]), a.markets, { ph: 'Select countries', noun: 'countries', extra: `data-id="${a.id}"` })}</div>
+     <div class="field">${labelRow('Channel', addNew('channels', 'asset:channel:' + a.id), 'ap-ch')}<select class="select" id="ap-ch" data-asset-prop="channel" data-id="${a.id}">${activeOf(S.channels, a.channel).map(c => opt(c.id, a.channel, c.name)).join('')}</select></div>
+     <div class="field">${labelRow('Audience', addNew('audiences', 'asset:audience:' + a.id), 'ap-aud')}<select class="select" id="ap-aud" data-asset-prop="audience" data-id="${a.id}">${activeOf(S.audiences, a.audience).map(c => opt(c.id, a.audience, c.name)).join('')}</select></div>
      <div class="field"><label for="ap-owner">Material Owner</label>${isAdmin(me()) || can(me(), 'manage_users') ? `<select class="select" id="ap-owner" data-asset-prop="owner" data-id="${a.id}">${ownerOptions(a.owner).map(u => opt(u.id, a.owner, u.name + ' · ' + roleLabel(u))).join('')}</select>` : `<div class="input" style="display:flex;align-items:center;background:var(--surface-2)">${esc(user(a.owner).name)}</div>`}</div>
      <div class="field"><label for="ap-disc">Local disclaimer</label><textarea class="textarea" id="ap-disc" rows="3" data-asset-prop="disclaimer" data-id="${a.id}" placeholder="Required for some countries — see Validation SOPs">${esc(a.disclaimer || '')}</textarea></div>
      <div class="stack" style="gap:8px"><span class="section-title">Module eligibility</span>
@@ -4374,17 +4463,40 @@ function viewRoles() {
   const how = [['user', 'User type', 'Administrator or a business user. Administrators always hold every permission.'], ['shieldcheck', 'Position', 'Member or Lead within a function. Workflows assign steps to a level.'], ['team', 'Team', 'People belong to one team; a workflow step can be limited to a team.'], ['key', 'Role', 'Function + position, e.g. Medical Lead. Permissions are set per role.'], ['check', 'Permissions', 'Pages a role can open and actions it can perform.'], ['workflow', 'Workflow authority', 'Member review / Lead review: which workflow steps the role may act on.'], ['award', 'Approval authority', 'Approve signs an approval step; Final approval signs the last one.']];
   const howP = `<section class="panel"><div class="panel-head"><h3>${icon('key', 'sm')} How permissions work</h3></div><div class="panel-body"><ol class="how-list">${how.map((h, i) => `<li><span class="how-n">${i + 1}</span><span class="how-i">${icon(h[0], 'sm')}</span><span><b>${esc(h[1])}</b><span>${esc(h[2])}</span></span></li>`).join('')}</ol><p class="muted" style="font-size:12.5px;margin-top:10px">A person can act on a workflow step only when their function, position, team, workflow authority and approval permission all match the step. Every change is recorded in the audit trail.</p></div></section>`;
   const cards = tab === 'Administration' ? roleCard('Administrator') : `<div class="role-grid">${LEVELS.map(l => roleCard(tab + '-' + l)).join('')}</div>`;
-  const matrix = F('rmatrix') ? viewRoleMatrix() : '';
-  return pageHead('Roles & Permissions', 'A role is a function plus a position (Member or Lead). Permissions apply to everyone in the role immediately.', `${btn(F('rmatrix') ? 'Hide comparison' : 'Compare all roles', 'role-matrix', 'ghost', '', 'layers')}${can(me(), 'manage_users') ? btn('Restore defaults', 'roles-reset', '', '', 'undo') : ''}`) +
+  const matrix = '';
+  return pageHead('Roles & Permissions', 'A role is a function plus a position (Member or Lead). Permissions apply to everyone in the role immediately.', `${btn('Compare all roles', 'role-compare', '', '', 'layers')}${can(me(), 'manage_users') ? btn('Restore defaults', 'roles-reset', '', '', 'undo') : ''}`) +
   `<div class="grid cols-2 roles-intro">${hier}${howP}</div>
   <div class="tabs" role="tablist" style="margin:18px 0 14px">${tabs.map(t => `<button class="tab ${tab === t ? 'active' : ''}" role="tab" aria-selected="${tab === t}" ${goAttr('roles', null, ` data-tab="${esc(t)}"`)}>${t === 'Administration' ? '' : fnBadge(t, 'sm')}${esc(t)}<span class="n">${S.users.filter(u => u.status === 'Active' && (t === 'Administration' ? isAdmin(u) : u.fn === t)).length}</span></button>`).join('')}</div>
   ${cards}${matrix}`;
 }
-// Optional comparison of every role side by side (read-only).
-function viewRoleMatrix() {
-  const ids = [...funcIds().flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator']; const groups = uniq(PERMS.map(p => p[2]));
-  return `<section class="panel table-wrap perm-wrap" style="margin-top:18px"><div class="panel-head"><h3>All roles compared</h3><span class="muted" style="font-size:12px">Read-only · edit a role from its card</span></div><table class="tbl no-pg perm-tbl"><thead><tr><th>Permission</th>${ids.map(r => `<th><div class="perm-h">${fnBadge(r === 'Administrator' ? 'Admin' : r.split('-')[0], 'sm')}<b>${esc(r === 'Administrator' ? 'Admin' : r.split('-')[0])}</b><span>${esc(r === 'Administrator' ? 'All' : levelName(r.split('-')[1]))}</span></div></th>`).join('')}</tr></thead><tbody>
-  ${groups.map(g => `<tr class="perm-group"><td colspan="${ids.length + 1}">${esc(g)}</td></tr>` + PERMS.filter(p => p[2] === g).map(p => `<tr><td class="perm-name">${esc(p[1])}</td>${ids.map(r => { const on = r === 'Administrator' || (S.roles[r] || []).includes(p[0]); return `<td class="perm-cell"><span class="pbox ${on ? 'on' : ''}" aria-label="${on ? 'Granted' : 'Not granted'}">${on ? icon('check', 'sm') : ''}</span></td>`; }).join('')}</tr>`).join('')).join('')}</tbody></table></section>`;
+/* Compare all roles: a tabbed popup over the real role permissions. Edits are a draft until Save; Cancel discards them. */
+const CMP_TABS = [['overview', 'Overview'], ['pages', 'Page access'], ['content', 'Content actions'], ['review', 'Review & approval'], ['admin', 'Administration'], ['special', 'Special permissions']];
+function cmpKeys(tab) {
+  const by = g => PERMS.filter(p => p[2] === g).map(p => p[0]);
+  const K = { pages: by('Access'), content: ['view', 'create', 'edit', 'submit', 'amend', 'create_version', 'withdraw', 'restore'], review: ['review', 'approve', 'request_amend', 'reject', 'auth_member', 'auth_lead', 'final_approve'], admin: by('Administration').filter(k => k !== 'manage_comments') };
+  const used = new Set(Object.values(K).flat()); K.special = PERMS.map(p => p[0]).filter(k => !used.has(k));
+  return (K[tab] || []).filter(k => PERMS.some(p => p[0] === k));
+}
+const cmpRoles = () => [...funcIds().flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator'];
+const cmpHas = (D, r, k) => r === 'Administrator' || (D[r] || []).includes(k);
+function cmpChanges(D) { const out = []; cmpRoles().filter(r => r !== 'Administrator').forEach(r => PERMS.forEach(([k]) => { const a = (S.roles[r] || []).includes(k), b = (D[r] || []).includes(k); if (a !== b) out.push([r, k, b]); })); return out; }
+function roleCompareModal(M) {
+  const D = M.d; const tab = M.tab || 'overview'; const roles = cmpRoles(); const edit = can(me(), 'manage_users'); const ch = cmpChanges(D);
+  const head = `<thead><tr><th class="cmp-perm">Permission</th>${roles.map(r => `<th class="cmp-role"><div>${fnBadge(r === 'Administrator' ? 'Admin' : r.split('-')[0], 'sm')}<b>${esc(r === 'Administrator' ? 'Admin' : r.split('-')[0])}</b><span>${esc(r === 'Administrator' ? 'All' : levelName(r.split('-')[1]))}</span></div></th>`).join('')}</tr></thead>`;
+  let body;
+  if (tab === 'overview') {
+    const cats = CMP_TABS.slice(1); const caps = [['create', 'Create'], ['submit', 'Submit'], ['review', 'Review'], ['approve', 'Approve'], ['final_approve', 'Final approval'], ['export', 'Export'], ['manage_users', 'Admin']];
+    body = `<div class="table-wrap"><table class="tbl no-pg cmp-tbl cmp-ov"><thead><tr><th>Role</th><th>People</th>${cats.map(c => `<th>${esc(c[1])}</th>`).join('')}<th>Key capabilities</th></tr></thead><tbody>${roles.map(r => { const n = S.users.filter(u => roleId(u) === r && u.status === 'Active').length;
+      return `<tr><td><div class="row nowrap" style="gap:6px">${fnBadge(r === 'Administrator' ? 'Admin' : r.split('-')[0], 'sm')}<b>${esc(roleName(r))}</b></div></td><td class="num">${n}</td>${cats.map(c => { const ks = cmpKeys(c[0]); const on = ks.filter(k => cmpHas(D, r, k)).length; return `<td><button type="button" class="cmp-count ${on === ks.length ? 'full' : on ? 'part' : 'none'}" data-act="cmp-tab" data-v="${c[0]}" title="Open ${esc(c[1])}"><span class="cmp-bar"><i style="width:${ks.length ? 100 * on / ks.length : 0}%"></i></span>${on}/${ks.length}</button></td>`; }).join('')}<td><div class="tags">${caps.filter(c => cmpHas(D, r, c[0])).map(c => `<span class="tag">${c[1]}</span>`).join('') || '<span class="muted">View only</span>'}</div></td></tr>`; }).join('')}</tbody></table></div>`;
+  } else {
+    const keys = cmpKeys(tab).filter(k => !M.diff || new Set(roles.filter(r => r !== 'Administrator').map(r => cmpHas(D, r, k))).size > 1);
+    body = `<div class="row" style="justify-content:space-between;margin-bottom:10px"><span class="muted" style="font-size:12.5px">${edit ? 'Tick to grant, untick to remove. Nothing changes until you save.' : 'Read only — editing needs the Manage users permission.'}</span><label class="row" style="gap:6px;font-size:12.5px">${toggleBtn(!!M.diff, 'cmp-diff', '', 'Only show differences')}Only show differences</label></div>
+    <div class="table-wrap cmp-wrap"><table class="tbl no-pg cmp-tbl">${head}<tbody>${keys.map(k => { const P = PERMS.find(p => p[0] === k); return `<tr><td class="cmp-perm"><b>${esc(P[1])}</b><span>${esc(P[3])}</span></td>${roles.map(r => { const on = cmpHas(D, r, k); const changed = r !== 'Administrator' && on !== (S.roles[r] || []).includes(k); const locked = r === 'Administrator' || !edit;
+      return `<td class="perm-cell ${changed ? 'changed' : ''}"><button type="button" class="pbox ${on ? 'on' : ''}" ${locked ? `disabled title="${r === 'Administrator' ? 'Administrators always have every permission' : 'Read only'}"` : `data-act="cmp-toggle" data-role="${r}" data-perm="${k}"`} role="checkbox" aria-checked="${on}" aria-label="${esc(P[1])} for ${esc(roleName(r))}">${on ? icon('check', 'sm') : ''}</button></td>`; }).join('')}</tr>`; }).join('') || `<tr><td colspan="${roles.length + 1}" class="muted">Every role has the same setting here.</td></tr>`}</tbody></table></div>`;
+  }
+  return modalShell('layers', '', 'Compare all roles', `${roles.length} roles · permissions from Roles & Permissions${ch.length ? ` · <b class="cmp-dirty">${ch.length} unsaved change${ch.length > 1 ? 's' : ''}</b>` : ''}`,
+    `<div class="tabs cmp-tabs" role="tablist">${CMP_TABS.map(t => `<button type="button" class="tab ${tab === t[0] ? 'active' : ''}" role="tab" aria-selected="${tab === t[0]}" data-act="cmp-tab" data-v="${t[0]}">${t[1]}${t[0] !== 'overview' ? `<span class="n">${cmpKeys(t[0]).length}</span>` : ''}</button>`).join('')}</div>${body}`,
+    `${ch.length ? `<span class="cmp-dirty">${icon('alert', 'sm')}${ch.length} unsaved change${ch.length > 1 ? 's' : ''}</span>` : ''}<span class="grow"></span>${btn(ch.length ? 'Cancel' : 'Close', 'cmp-cancel')}${edit ? btn('Save changes', 'cmp-save', 'primary', ch.length ? '' : 'disabled', 'check') : ''}`, 'xl');
 }
 function roleModal(M) {
   const rid = M.id; const has = S.roles[rid] || []; const groups = uniq(PERMS.map(p => p[2]));
@@ -4394,10 +4506,10 @@ function roleModal(M) {
 }
 
 /* ===== Organisation & configuration: generated from CONFIG (config.js) ===== */
-const viewTeams = () => viewConfig('teams');
-const viewProducts = () => viewConfig('products');
-const viewMarkets = () => viewConfig('markets');
-const viewMaterials = () => viewConfig('materials');
+const viewTeams = () => viewSettings('teams');
+const viewProducts = () => viewSettings('products');
+const viewMarkets = () => viewSettings('markets');
+const viewMaterials = () => viewSettings('materials');
 
 /* ===== Validation SOPs ===== */
 const typeLabel = id => S.moduleTypes.some(t => t.id === id) ? mtype(id).name : mat(id).name;
@@ -4417,16 +4529,34 @@ const SETTINGS = [
   ['Approved Library governance', [['libraryShowExpiring', 'Show expiring content in the library', 'bool', 'When off, content inside the expiry warning window is hidden from the library.']]],
   ['Approval settings', [['reviewSlaDays', 'Review SLA (days)', 'number', 'My Tasks marks a task High priority once it has waited longer than this, Medium after half of it.'], ['blockOnOpenComments', 'Block approval while comments are open', 'bool', 'Reviewers resolve or answer every open comment on the version before approving.'], ['requireSignature', 'Require password e-signature for approvals', 'bool', 'Approvers re-enter their password to sign.'], ['adminActsOnAnyStep', 'Administrators can act on any approval step', 'bool', 'Decisions are marked “Recorded by Administrator”.'], ['defaultModuleWorkflow', 'Default workflow for new modules', 'wf', ''], ['newVersionWorkflow', 'Default workflow for new versions', 'wf', 'Pre-selected when a new version of an approved module is submitted.'], ['assetStreamWorkflow', 'Workflow for assets made only of approved modules', 'wfa', 'Assets with new text use the workflow of their Material Type.']]]
 ];
-function viewSettings() {
-  if (!UI.setDraft) UI.setDraft = { ...S.settings };
-  const D = UI.setDraft; const dirty = SETTINGS.some(([, f]) => f.some(([k]) => String(D[k]) !== String(S.settings[k])));
-  const field = ([k, label, type, hint]) => { const id = 'st-' + k;
-    const ctl = type === 'bool' ? toggleBtn(!!D[k], 'set-bool', `data-k="${k}"`, label) : type === 'wf' || type === 'wfa' ? `<select class="select" id="${id}" data-set="${k}">${asWorkflows(type === 'wf' ? 'Module' : 'Asset').map(w => opt(w[0], D[k], w[1])).join('')}</select>` : `<input class="input" id="${id}" data-set="${k}" type="${type}" value="${esc(D[k])}" ${type === 'number' ? 'min="1"' : ''}>`;
-    return type === 'bool' ? `<div class="set-row"><div><b>${label}</b>${hint ? `<span class="muted">${hint}</span>` : ''}</div>${ctl}</div>` : `<div class="field"><label for="${id}">${label}</label>${ctl}${hint ? `<span class="hint">${hint}</span>` : ''}</div>`; };
-  return pageHead('Settings', 'System-wide rules for lifecycle, the Approved Library and approvals. Every change is recorded in the audit trail.', `${dirty ? btn('Discard', 'set-discard', 'ghost') : ''}${btn('Save settings', 'set-save', 'primary', dirty ? '' : 'disabled', 'check')}`) +
-  `<div class="grid cols-2">${SETTINGS.map(([title, fields]) => `<section class="panel"><div class="panel-head"><h3>${title}</h3></div><div class="panel-body form">${fields.map(field).join('')}</div></section>`).join('')}
-  <section class="panel"><div class="panel-head"><h3>Governance shortcuts</h3></div><div class="panel-body stack" style="gap:8px">${[['roles', 'key', 'Roles & Permissions'], ['functions', 'shieldcheck', 'Functions'], ['workflows', 'workflow', 'Workflows & review hierarchy'], ['sops', 'clipboard', 'Validation SOPs'], ['moduletypes', 'type', 'Module types'], ['channels', 'send', 'Channels'], ['audiences', 'users', 'Audiences'], ['references', 'quote', 'Reference library'], ['audit', 'history', 'Full audit trail'], ['reports', 'chart', 'All reports']].map(([r, ic, l]) => `<button class="task" ${goAttr(r)}>${icon(ic, 'sm')}<span class="body"><b>${l}</b></span>${icon('chevron', 'sm')}</button>`).join('')}</div></section>
-  <section class="panel"><div class="panel-head"><h3>Workspace data</h3></div><div class="panel-body stack"><p class="ink2" style="font-size:13px">Restore the initial SAJA workspace: products, countries, users, workflows, SOPs, modules, assets and the audit trail. This cannot be undone.</p><div>${btn('Restore initial workspace', 'reset-open', 'danger', '', 'undo')}</div></div></section></div>`;
+/* Settings: vertical tabs, each with its own management table or form. Every tab reads the same records used elsewhere. */
+const SET_GROUPS = { general: 'Organisation', lifecycle: 'Lifecycle rules', library: 'Approved Library governance', approval: 'Approval settings' };
+function settingsTabs() {
+  const anyAdmin = [ADMIN_VIEW];
+  return [
+    ['WORKSPACE', [['general', 'Organisation', 'settings', 'manage_settings'], ['lifecycle', 'Lifecycle rules', 'clock', 'manage_settings'], ['approval', 'Approval settings', 'shieldcheck', 'manage_settings'], ['library', 'Library governance', 'book', 'manage_settings']]],
+    ['REFERENCE DATA', ['products', 'markets', 'moduletypes', 'materials', 'channels', 'audiences', 'references'].map(k => [k, CONFIG[k].plural, CONFIG[k].icon, CONFIG[k].viewPerm || [CONFIG[k].perm, ...anyAdmin]])],
+    ['ORGANISATION', ['teams', 'functions'].map(k => [k, CONFIG[k].plural, CONFIG[k].icon, [CONFIG[k].perm, ...anyAdmin]])],
+    ['DATA', [['data', 'Workspace data', 'refresh', 'manage_settings']]]
+  ].map(([g, items]) => [g, items.filter(t => can(me(), t[3]))]).filter(g => g[1].length);
+}
+function viewSettings(tabArg) {
+  const groups = settingsTabs(); const all = groups.flatMap(g => g[1]); const want = tabArg || UI.route.p.tab;
+  const tab = all.some(t => t[0] === want) ? want : (all[0] || [])[0]; if (!tab) return `<div class="empty"><h4>No settings available for your role</h4></div>`;
+  const side = `<nav class="set-nav" aria-label="Settings sections">${groups.map(([g, items]) => `<div class="set-grp">${g}</div>${items.map(t => `<button type="button" class="set-tab ${t[0] === tab ? 'on' : ''}" ${goAttr('settings', null, ` data-tab="${t[0]}"`)} aria-current="${t[0] === tab ? 'page' : 'false'}">${icon(t[2], 'sm')}<span>${esc(t[1])}</span>${CONFIG[t[0]] ? `<span class="n">${CONFIG[t[0]].coll().length}</span>` : ''}</button>`).join('')}`).join('')}</nav>`;
+  let main;
+  if (CONFIG[tab]) main = viewConfig(tab);
+  else if (tab === 'data') main = pageHead('Workspace data', 'Restore the initial SAJA workspace: products, countries, users, workflows, SOPs, modules, assets and the audit trail.') + `<section class="panel"><div class="panel-body stack"><p class="ink2" style="font-size:13px">This cannot be undone. Uploaded files stored in this browser are removed.</p><div>${btn('Restore initial workspace', 'reset-open', 'danger', '', 'undo')}</div></div></section>`;
+  else {
+    if (!UI.setDraft) UI.setDraft = { ...S.settings };
+    const D = UI.setDraft; const dirty = SETTINGS.some(([, f]) => f.some(([k]) => String(D[k]) !== String(S.settings[k]))); const grp = SETTINGS.find(g => g[0] === SET_GROUPS[tab]);
+    const field = ([k, label, type, hint]) => { const id = 'st-' + k;
+      const ctl = type === 'bool' ? toggleBtn(!!D[k], 'set-bool', `data-k="${k}"`, label) : type === 'wf' || type === 'wfa' ? `<select class="select" id="${id}" data-set="${k}">${asWorkflows(type === 'wf' ? 'Module' : 'Asset').map(w => opt(w[0], D[k], w[1])).join('')}</select>` : `<input class="input" id="${id}" data-set="${k}" type="${type}" value="${esc(D[k])}" ${type === 'number' ? 'min="1"' : ''}>`;
+      return type === 'bool' ? `<div class="set-row"><div><b>${label}</b>${hint ? `<span class="muted">${hint}</span>` : ''}</div>${ctl}</div>` : `<div class="field"><label for="${id}">${label}</label>${ctl}${hint ? `<span class="hint">${hint}</span>` : ''}</div>`; };
+    main = pageHead(esc(grp[0]), 'System-wide rules. Every change is recorded in the audit trail with the previous and new value.', `${dirty ? btn('Discard', 'set-discard', 'ghost') : ''}${btn('Save settings', 'set-save', 'primary', dirty ? '' : 'disabled', 'check')}`) + (dirty ? `<div class="banner warn" style="margin-bottom:12px">${icon('alert')}<div class="txt"><b>Unsaved changes</b><p>Save to apply them, or discard.</p></div></div>` : '') +
+      `<section class="panel"><div class="panel-body form">${grp[1].map(field).join('')}</div></section>`;
+  }
+  return `<div class="set-shell">${side}<div class="set-main">${main}</div></div>`;
 }
 
 /* ---------- Configuration: one source of truth for every configurable list ----------
@@ -4493,6 +4623,8 @@ function setProductIndication(x, name) {
   S.indications.push({ id, name, product: x.id, active: true });
 }
 const cfgGet = (f, x) => f[3].get ? f[3].get(x) : x[f[0]];
+// Empty values for a new record of this kind.
+function cfgBlank(k) { const d = {}; CONFIG[k].fields.forEach(f => { d[f[0]] = f[2] === 'list' ? [] : f[2] === 'bool' ? false : f[2] === 'select' && f[3].req ? ((f[3].options()[0] || [])[0] || '') : ''; }); return d; }
 const cfgName = (k, x) => x[CONFIG[k].nameKey || 'name'];
 const cfgUsage = (k, x) => CONFIG[k].usage(x);
 const cfgUseCount = (k, x) => cfgUsage(k, x).reduce((n, g) => n + g[1].length, 0);
@@ -4554,6 +4686,7 @@ function cfgSave() {
     if (M.k === 'products' && !x.code) x.code = x.id.replace(/^P-/, 'P');
     if (M.k === 'functions') LEVELS.forEach(l => { S.roles[x.id + '-' + l] = defaultFnRole(x.reviews, l === 'Lead'); });
     log(C.label + ' created', C.label, { id: x.id }, 1, { next: cfgName(M.k, x) });
+    if (M.quick) { applyQuick(M.quick, x, M.back); UI.modal = M.back || null; save(); render(); toast(C.label + ' “' + cfgName(M.k, x) + '” added and selected'); return; }
     UI.modal = null; save();
     if (M.then) { M.then(x); return; }
     render(); toast(C.label + ' added');
@@ -4664,7 +4797,9 @@ function viewWorkflowNew() {
     </div>
     <div class="nwf-tools"><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === D.steps.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button type="button" class="btn icon sm danger" data-act="nwf-del" data-i="${i}" aria-label="Remove step">${icon('trash', 'sm')}</button></div>
   </div>`;
+  const back = UI.returnTo || (() => { try { return JSON.parse(sessionStorage.getItem('medlr-return') || 'null'); } catch (e) { return null; } })();
   return pageHead('New workflow', 'Build a review route step by step. Level and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) +
+  (back ? `<div class="banner info" style="margin-bottom:14px">${icon('layers')}<div class="txt"><b>You came from ${esc(back.draft && back.draft.title ? '“' + back.draft.title + '”' : 'the module form')}</b><p>Your module entries are kept. After you create this workflow you return to the form with it selected.</p></div>${btn('Back without creating', 'wf-return', 'sm')}</div>` : '') +
   wizBar('workflow', WSTEPS, D) +
   `<form class="grid cols-main ${D.anim ? (D.anim = false, 'wiz-anim') : ''}" data-form="workflow" novalidate><div class="stack">${wizHead(WSTEPS, D)}
   <section class="panel"${hid(0)}><div class="panel-head"><h3>Workflow details</h3></div><div class="panel-body form">
@@ -4701,12 +4836,12 @@ function wfIssues(D) {
 
 
 /* ---------- Controller: routing, modals, actions ---------- */
-const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, sops: viewSops, settings: viewSettings, item: viewConfigItem, references: () => viewConfig('references'), moduletypes: () => viewConfig('moduletypes'), channels: () => viewConfig('channels'), audiences: () => viewConfig('audiences'), functions: () => viewConfig('functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
+const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: viewUsers, user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, teams: viewTeams, roles: viewRoles, products: viewProducts, markets: viewMarkets, materials: viewMaterials, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, references: () => viewSettings('references'), moduletypes: () => viewSettings('moduletypes'), channels: () => viewSettings('channels'), audiences: () => viewSettings('audiences'), functions: () => viewSettings('functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
 const app = document.getElementById('app');
 
 function go(name, p = {}) {
   if (name === 'login' || name === 'forgot') { UI.modal = null; UI.f.resetSent = null; UI.f.forgotErr = null; UI.f.loginErr = null; }
-  if ((name === 'module-edit' || name === 'module-new') && (UI.route.name !== name || UI.route.p.id !== p.id)) UI.draft = null;
+  if ((name === 'module-edit' || name === 'module-new') && (UI.route.name !== name || UI.route.p.id !== p.id) && !UI.restoring) UI.draft = null;
   if (name === 'user-new' || name === 'user-edit') UI.udraft = null;
   if (name !== 'workflow') UI.wfDraft = null;
   if (name === 'workflow-new' && UI.route.name !== 'workflow-new') UI.nwf = null;
@@ -4773,7 +4908,7 @@ function toast(text) {
 }
 
 /* ===== Modals ===== */
-const modalShell = (icoName, tone, title, sub, body, foot, wide) => `<div class="scrim" data-act="modal-bg"><div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="m-title"><div class="modal-head"><div class="m-ico ${tone}">${icon(icoName)}</div><div style="flex:1;min-width:0"><h2 id="m-title">${title}</h2>${sub ? `<p class="ink2" style="margin-top:4px">${sub}</p>` : ''}</div><button class="btn icon sm" data-act="modal-close" aria-label="Close">${icon('x', 'sm')}</button></div><div class="modal-body">${body}</div><div class="modal-foot">${foot}</div></div></div>`;
+const modalShell = (icoName, tone, title, sub, body, foot, wide) => `<div class="scrim" data-act="modal-bg"><div class="modal ${wide ? (wide === 'xl' ? 'wide xl' : 'wide') : ''}" role="dialog" aria-modal="true" aria-labelledby="m-title"><div class="modal-head"><div class="m-ico ${tone}">${icon(icoName)}</div><div style="flex:1;min-width:0"><h2 id="m-title">${title}</h2>${sub ? `<p class="ink2" style="margin-top:4px">${sub}</p>` : ''}</div><button class="btn icon sm" data-act="modal-close" aria-label="Close">${icon('x', 'sm')}</button></div><div class="modal-body">${body}</div><div class="modal-foot">${foot}</div></div></div>`;
 function wfVisual(wf) {
   const groups = []; wf.steps.forEach(s => { const g = groups[groups.length - 1]; if (g && g.fn === s.fn && !isNotify(s)) g.steps.push(s); else groups.push({ fn: s.fn, steps: [s] }); });
   return `<div class="wf-groups">${groups.map((g, i) => `<div class="wf-group"><b>${isNotify(g.steps[0]) ? icon('mail', 'sm') + ' Email' : fnBadge(g.fn, 'sm') + ' ' + esc(g.fn)}</b><div class="stack" style="gap:6px;margin-top:8px">${g.steps.map(s => `<div class="row nowrap" style="gap:6px;font-size:12.5px">${isNotify(s) ? 'To ' + esc(notifyTo(s).length + ' ' + (notifyTo(s).length === 1 ? 'person' : 'people')) : lvl(s.level) + (s.req === 'approve' ? 'Approval' : 'Review')}</div>`).join('')}</div></div>${i < groups.length - 1 ? `<span class="wf-g-arrow">${icon('arrow', 'sm')}</span>` : ''}`).join('')}</div>`;
@@ -4802,6 +4937,7 @@ function viewModal() {
   if (M.type === 'step') return stepDetailModal(M);
   if (M.type === 'filters') return filterModal(M);
   if (M.type === 'role') return roleModal(M);
+  if (M.type === 'compare') return roleCompareModal(M);
   if (M.type === 'file') return fileViewerModal(M);
   if (M.type === 'version') {
     const obj = objById(M.kind, M.id); const v = verOf(obj, +M.v);
@@ -4859,12 +4995,12 @@ function viewModal() {
   if (M.type === 'asset-new') {
     const D = M.d;
     return modalShell('layers', '', 'Create asset', 'Choose the material type, products and countries. Only approved modules eligible for every selected country and the channel can be added.',
-      `<div class="fgrid"><div class="field"><label for="an-type">Material type</label><select class="select" id="an-type" data-an="type">${activeOf(S.materialTypes, D.type).map(t => opt(t.id, D.type, t.name)).join('')}</select></div>
+      `<div class="fgrid"><div class="field">${labelRow('Material type', addNew('materials', 'modal:type'), 'an-type')}<select class="select" id="an-type" data-an="type">${activeOf(S.materialTypes, D.type).map(t => opt(t.id, D.type, t.name)).join('')}</select></div>
       <div class="field"><label for="an-name">Asset name</label><input class="input ${M.err === 'name' ? 'invalid' : ''}" id="an-name" data-an="name" value="${esc(D.name)}">${M.err === 'name' ? '<span class="err">Give the asset a name.</span>' : ''}</div></div>
-      <div class="field"><span class="label">Products</span>${chipSelect('an-products', 'an-toggle', 'products', activeOf(S.products, D.products).map(p => [p.id, p.name, p.area]), D.products, { ph: 'Select products', noun: 'products' })}${M.err === 'products' ? '<span class="err">Select at least one product.</span>' : ''}</div>
-      <div class="field"><span class="label">Countries</span>${chipSelect('an-markets', 'an-toggle', 'markets', activeOf(S.markets, D.markets).map(x => [x.id, x.name, x.id]), D.markets, { ph: 'Select countries', noun: 'countries' })}${M.err === 'markets' ? '<span class="err">Select at least one country.</span>' : ''}</div>
-      <div class="fgrid"><div class="field"><label for="an-ch">Channel</label><select class="select" id="an-ch" data-an="channel">${activeOf(S.channels, D.channel).map(c => opt(c.id, D.channel, c.name)).join('')}</select></div>
-      <div class="field"><label for="an-aud">Audience</label><select class="select" id="an-aud" data-an="audience">${activeOf(S.audiences, D.audience).map(c => opt(c.id, D.audience, c.name)).join('')}</select></div></div>
+      <div class="field">${labelRow('Products', addNew('products', 'modal:products'))}${chipSelect('an-products', 'an-toggle', 'products', activeOf(S.products, D.products).map(p => [p.id, p.name, p.area]), D.products, { ph: 'Select products', noun: 'products' })}${M.err === 'products' ? '<span class="err">Select at least one product.</span>' : ''}</div>
+      <div class="field">${labelRow('Countries', addNew('markets', 'modal:markets', 'country'))}${chipSelect('an-markets', 'an-toggle', 'markets', activeOf(S.markets, D.markets).map(x => [x.id, x.name, x.id]), D.markets, { ph: 'Select countries', noun: 'countries' })}${M.err === 'markets' ? '<span class="err">Select at least one country.</span>' : ''}</div>
+      <div class="fgrid"><div class="field">${labelRow('Channel', addNew('channels', 'modal:channel'), 'an-ch')}<select class="select" id="an-ch" data-an="channel">${activeOf(S.channels, D.channel).map(c => opt(c.id, D.channel, c.name)).join('')}</select></div>
+      <div class="field">${labelRow('Audience', addNew('audiences', 'modal:audience'), 'an-aud')}<select class="select" id="an-aud" data-an="audience">${activeOf(S.audiences, D.audience).map(c => opt(c.id, D.audience, c.name)).join('')}</select></div></div>
       ${M.module ? `<div class="banner info">${icon('layers')}<div class="txt"><b>${esc(modById(M.module).title)}</b><p>Added to the asset if it is eligible for the selected products, countries and channel.</p></div></div>` : ''}`,
       `${btn('Cancel', 'modal-close')}${btn('Create & open assembly', 'asset-create', 'primary', '', 'arrow')}`, true);
   }
@@ -4894,9 +5030,10 @@ function viewModal() {
       <div class="fgrid"><div class="field"><label for="sop-rule">Requirement</label><select class="select" id="sop-rule" data-sop="rule">${Object.entries(SOP_RULES).map(([k, l]) => opt(k, D.rule, l)).join('')}</select></div>
       <div class="field"><label for="sop-app">Applies to</label><select class="select" id="sop-app" data-sop="appliesTo">${[['Both', 'Modules & assets'], ['Module', 'Modules'], ['Asset', 'Assets']].map(o => opt(o[0], D.appliesTo, o[1])).join('')}</select></div></div>
       ${D.rule === 'review_window' ? `<div class="field"><label for="sop-m">Maximum months to review date</label><input class="input" id="sop-m" type="number" min="1" data-sop="months" value="${esc(D.months || 12)}"></div>` : ''}
-      <div class="field"><span class="label">Content types <span class="muted">(none = all)</span></span>${multi('sop-toggle', 'types', [...S.moduleTypes.map(t => [t.id, t.name + ' (module)']), ...S.materialTypes.map(t => [t.id, t.name + ' (material)'])], D.types)}</div>
-      <div class="field"><span class="label">Products <span class="muted">(none = all)</span></span>${multi('sop-toggle', 'products', S.products.map(p => [p.id, p.name]), D.products)}</div>
-      <div class="field"><span class="label">Countries <span class="muted">(none = all)</span></span>${multi('sop-toggle', 'markets', S.markets.map(m => [m.id, m.name]), D.markets)}</div>
+      <p class="hint sop-scope-hint">${icon('info', 'sm')} Leave a list empty to apply the SOP to <b>all</b> values in that category, including ones added later. Selecting values limits the SOP to them.</p>
+      <div class="field">${labelRow('Content types <span class="muted">(none = all)</span>', addNew('moduletypes', 'modal:types', 'module type') + addNew('materials', 'modal:types', 'material type'))}${chipSelect('sop-types', 'sop-toggle', 'types', [...S.moduleTypes.map(t => [t.id, t.name, 'Module type' + (t.active ? '' : ' · inactive')]), ...S.materialTypes.map(t => [t.id, t.name, 'Material type' + (t.active ? '' : ' · inactive')])], D.types, { ph: 'All content types', noun: 'content types', below: true, bulk: 'sop-bulk', empty: 'All content types (none selected)' })}</div>
+      <div class="field">${labelRow('Products <span class="muted">(none = all)</span>', addNew('products', 'modal:products'))}${chipSelect('sop-products', 'sop-toggle', 'products', S.products.map(p => [p.id, p.name, p.area + (p.active ? '' : ' · inactive')]), D.products, { ph: 'All products', noun: 'products', below: true, bulk: 'sop-bulk', empty: 'All products (none selected)' })}</div>
+      <div class="field">${labelRow('Countries <span class="muted">(none = all)</span>', addNew('markets', 'modal:markets', 'country'))}${chipSelect('sop-markets', 'sop-toggle', 'markets', S.markets.map(m => [m.id, m.name, m.id + (m.active ? '' : ' · inactive')]), D.markets, { ph: 'All countries', noun: 'countries', below: true, bulk: 'sop-bulk', empty: 'All countries (none selected)' })}</div>
       <div class="field"><label for="sop-g">Guidance shown when it fails</label><textarea class="textarea" id="sop-g" rows="2" data-sop="guidance">${esc(D.guidance)}</textarea></div>`,
       `${btn('Cancel', 'modal-close')}${btn(M.id ? 'Save SOP' : 'Create SOP', 'sop-save', 'primary', '', 'check')}`, true);
   }
@@ -4928,10 +5065,23 @@ function newVersion(obj, kind, reason) {
 }
 
 const ACT = {
+  'sop-bulk': el => { const D = UI.modal.d; const k = el.dataset.k; D[k] = el.dataset.v === 'all' ? (k === 'types' ? [...S.moduleTypes, ...S.materialTypes] : k === 'products' ? S.products : S.markets).map(x => x.id) : []; render(); },
+  'cfg-quick': el => { const k = el.dataset.k; UI.modal = { type: 'cfg', k, d: cfgBlank(k), quick: el.dataset.field, back: UI.modal || null }; UI.msel = null; render(); setTimeout(() => { const f = document.querySelector('.modal [data-cfg]'); f && f.focus(); }, 30); },
+  'd-wf': el => { UI.draft.workflow = el.dataset.v; UI.msel = null; UI.mselq = ''; render(); },
+  // Leave the module form for Workflow Management and come back with every entry kept.
+  'wf-addnew': () => { UI.returnTo = { name: UI.route.name, p: { ...UI.route.p }, draft: UI.draft, field: 'workflow' }; try { sessionStorage.setItem('medlr-return', JSON.stringify(UI.returnTo)); } catch (e) { /* the in-memory copy is enough */ } go('workflow-new'); UI.nwf.appliesTo = 'Module'; render(); },
+  'wf-return': () => { returnToForm(null); },
   'file-open': el => { UI.modal = { type: 'file', id: el.dataset.file, z: 1, back: UI.modal && UI.modal.type !== 'file' ? UI.modal : null }; render(); },
   'fv-zoom': el => { const M = UI.modal; const d = +el.dataset.v; M.z = d === 0 ? 1 : Math.max(0.25, Math.min(4, Math.round((M.z + d * 0.25) * 100) / 100)); render(); },
   'role-edit': el => { UI.modal = { type: 'role', id: el.dataset.role }; render(); },
-  'role-matrix': () => { UI.f.rmatrix = UI.f.rmatrix ? '' : '1'; render(); },
+  'role-compare': () => { UI.modal = { type: 'compare', tab: 'overview', d: JSON.parse(JSON.stringify(S.roles)) }; render(); },
+  'cmp-tab': el => { UI.modal.tab = el.dataset.v; render(); },
+  'cmp-diff': () => { UI.modal.diff = !UI.modal.diff; render(); },
+  'cmp-toggle': el => { const D = UI.modal.d; const r = el.dataset.role, k = el.dataset.perm; const L = D[r] || (D[r] = []); const i = L.indexOf(k); i >= 0 ? L.splice(i, 1) : L.push(k); render(); },
+  'cmp-cancel': () => { const n = cmpChanges(UI.modal.d).length; if (n && !confirm('Discard ' + n + ' unsaved permission change' + (n > 1 ? 's' : '') + '?')) return; UI.modal = null; render(); },
+  'cmp-save': () => { const ch = cmpChanges(UI.modal.d); ch.forEach(([r, k, on]) => { const L = S.roles[r] || (S.roles[r] = []); const label = PERMS.find(x => x[0] === k)[1]; if (on) L.push(k); else L.splice(L.indexOf(k), 1);
+      logAdmin(on ? 'Permission granted' : 'Permission revoked', 'Role', r, { note: roleName(r) + ' · ' + label + ' · from Compare all roles', prev: on ? 'Not granted' : 'Granted', next: on ? 'Granted' : 'Not granted' }); });
+    UI.modal = null; save(); render(); toast(ch.length + ' permission change' + (ch.length > 1 ? 's' : '') + ' saved — authorisation updated'); },
   ...ANN_ACT,
   'flt-open': el => { const id = el.dataset.id; const d = {}; (FILTERS[id] || []).forEach(x => { d[x.k] = F(x.k); }); UI.modal = { type: 'filters', id, d }; render(); setTimeout(() => { const f = document.querySelector('.flt-grid input, .flt-grid select'); if (f) f.focus(); }, 30); },
   'flt-reset': () => { (FILTERS[UI.modal.id] || []).forEach(x => { UI.modal.d[x.k] = x.def || ''; }); render(); },
@@ -4945,7 +5095,7 @@ const ACT = {
   'msel-open': el => { UI.msel = UI.msel === el.dataset.id ? null : el.dataset.id; UI.mselq = ''; render(); setTimeout(() => { const i = document.getElementById('mselq-' + el.dataset.id); i && i.focus(); }, 20); },
   'ap-stage': el => { UI.f.apfn = UI.f.apfn === el.dataset.v && (UI.route.p.tab || 'review') === 'review' ? '' : el.dataset.v; go('tasks', { tab: 'review' }); },
   'msel-close': () => { UI.msel = null; UI.mselq = ''; render(); },
-  'modal-bg': (el, ev) => { if (ev.target === el) { UI.modal = null; render(); } },
+  'modal-bg': (el, ev) => { if (ev.target !== el) return; if (UI.modal && UI.modal.type === 'compare') { ACT['cmp-cancel'](); return; } UI.modal = UI.modal && UI.modal.back || null; render(); },
   'toggle-f': el => { const k = el.dataset.k; UI.f[k] = UI.f[k] === el.dataset.v ? '' : el.dataset.v; render(); },
   'set-f': el => { UI.f[el.dataset.k] = el.dataset.v; render(); },
   'clear-filters': el => { el.dataset.keys.split(',').forEach(k => { UI.f[k] = ''; }); render(); },
@@ -4973,12 +5123,13 @@ const ACT = {
     log('Reference created', 'Reference', { id: r.id }, 1, { next: r.title, note: refKind(r.kind) }); D.refs.push(r.id); D.newRefTitle = ''; D.newRefSource = ''; save(); render(); toast('Reference added to the library and attached'); },
 
   /* submission */
-  'submit-open': el => { const m = modById(el.dataset.id); const l = latest(m); const tw = mtype(m.type).workflow; UI.modal = { type: 'submit', id: m.id, wf: l.v > 1 && live(m) ? S.settings.newVersionWorkflow : tw && wfById(tw) && wfById(tw).active !== false ? tw : S.settings.defaultModuleWorkflow }; render(); },
+  'submit-open': el => { const m = modById(el.dataset.id); const l = latest(m); const own = m.workflow && eligibleModuleWorkflows().some(w => w.id === m.workflow) ? m.workflow : null; UI.modal = { type: 'submit', id: m.id, wf: own || (l.v > 1 && live(m) ? S.settings.newVersionWorkflow : suggestedWorkflow(m.type) || S.settings.defaultModuleWorkflow) }; render(); },
   'submit-wf': el => { UI.modal.wf = el.dataset.v; render(); },
   'submit-confirm': el => {
     const m = modById(el.dataset.id); const u = me(); if (validationIssues(m, 'Module').length) return;
     if (!canSubmit(u)) { setStatus(m, 'Awaiting Lead submission'); m.updatedAt = Date.now(); log('Sent to Content Lead', 'Module', m, null, { prev: 'Draft', next: 'Awaiting Lead submission' }); UI.modal = null; save(); render(); toast('Sent to the Content Lead for submission'); return; }
-    const mailed = startCycle(m, 'Module', UI.modal.wf || S.settings.defaultModuleWorkflow); save(); const st = curStep(m); UI.modal = null; render();
+    const wfId = UI.modal.wf || m.workflow || S.settings.defaultModuleWorkflow; if (m.workflow !== wfId) { log('Workflow changed', 'Module', m, null, { prev: m.workflow ? (wfById(m.workflow) || {}).name || m.workflow : '—', next: wfById(wfId).name }); m.workflow = wfId; }
+    const mailed = startCycle(m, 'Module', wfId); save(); const st = curStep(m); UI.modal = null; render();
     toast('Submitted · cycle ' + m.review.cycle + ' · now with ' + stepWho(st) + (assigneeFor(st).length ? ' (' + assigneeFor(st).map(x => x.name).join(', ') + ')' : '') + (mailed ? ' · email sent' : ''));
   },
   'resubmit-open': el => { UI.modal = { type: 'resubmit', kind: el.dataset.kind, id: el.dataset.id }; render(); },
@@ -5074,7 +5225,7 @@ const ACT = {
   'roles-reset': () => { const def = DEFAULT_ROLES(); Object.keys(S.roles).forEach(k => { if (!def[k]) def[k] = ['view']; }); S.roles = def; logAdmin('Permissions restored to defaults', 'Role', 'All roles', {}); save(); render(); toast('Role permissions restored to defaults'); },
 
   /* configuration (config.js) */
-  'cfg-new': el => { const k = el.dataset.k; const d = {}; CONFIG[k].fields.forEach(f => { d[f[0]] = f[2] === 'list' ? [] : f[2] === 'bool' ? false : f[2] === 'select' && f[3].req ? ((f[3].options()[0] || [])[0] || '') : ''; }); const back = UI.modal && UI.modal.type !== 'cfg' ? null : null; UI.modal = { type: 'cfg', k, d }; if (UI.route.name === 'user-new' || UI.route.name === 'user-edit') UI.modal.then = x => { UI.udraft.team = x.id; render(); toast('Team created'); }; render(); },
+  'cfg-new': el => { const k = el.dataset.k; const d = cfgBlank(k); const back = UI.modal && UI.modal.type !== 'cfg' ? null : null; UI.modal = { type: 'cfg', k, d }; if (UI.route.name === 'user-new' || UI.route.name === 'user-edit') UI.modal.then = x => { UI.udraft.team = x.id; render(); toast('Team created'); }; render(); },
   'cfg-edit': el => { const k = el.dataset.k; const x = CONFIG[k].coll().find(i => i.id === el.dataset.id); const d = JSON.parse(JSON.stringify(x)); CONFIG[k].fields.forEach(f => { if (f[3].get) d[f[0]] = f[3].get(x); }); UI.modal = { type: 'cfg', k, id: x.id, d }; render(); },
   'cfg-bool': el => { document.querySelectorAll('[data-cfg]').forEach(i => { UI.modal.d[i.dataset.cfg] = i.value; }); UI.modal.d[el.dataset.f] = !UI.modal.d[el.dataset.f]; render(); },
   'cfg-save': () => cfgSave(),
@@ -5108,7 +5259,7 @@ const ACT = {
     UI.setDraft = null; save(); render(); toast(n ? n + ' setting' + (n > 1 ? 's' : '') + ' saved' : 'No changes');
   },
   'reset-open': () => { UI.modal = { type: 'confirm-reset' }; render(); },
-  'reset-confirm': () => { const v = document.getElementById('m-confirm').value.trim(); if (v !== 'RESTORE') { UI.modal.err = true; render(); return; } mediaClear(); const pid = S.personaId; S = SEED(); S.signedIn = true; S.personaId = pid; UI.modal = null; UI.f = {}; UI.pg = {}; log('Workspace restored', 'Settings', { id: 'settings' }, 1, { note: 'Initial workspace restored' }); save(); go('home'); toast('Initial workspace restored'); },
+  'reset-confirm': () => { const v = document.getElementById('m-confirm').value.trim(); if (v !== 'RESTORE') { UI.modal.err = true; render(); return; } mediaClear(); const pid = S.personaId; S = linkModuleWorkflows(SEED()); S.signedIn = true; S.personaId = pid; UI.modal = null; UI.f = {}; UI.pg = {}; log('Workspace restored', 'Settings', { id: 'settings' }, 1, { note: 'Initial workspace restored' }); save(); go('home'); toast('Initial workspace restored'); },
 
   /* workflows */
   'wf-new': () => go('workflow-new'),
@@ -5146,13 +5297,22 @@ const ACT = {
 };
 
 /* Write actions on admin pages need the matching manage permission; Administration view access alone is read-only. */
-const ACT_PERM = { 'user-status': 'manage_users', 'perm-toggle': 'manage_users', 'role-save': 'manage_users', 'sop-new': 'manage_sops', 'sop-edit': 'manage_sops', 'sop-save': 'manage_sops', 'sop-active': 'manage_sops', 'wf-new': 'manage_workflows', 'wf-save': 'manage_workflows', 'wf-del': 'manage_workflows', 'wf-add': 'manage_workflows', 'wf-add-mail': 'manage_workflows', 'wf-active': 'manage_workflows', 'wf-open': 'manage_workflows', 'audit-export': 'export' };
+const ACT_PERM = { 'cmp-toggle': 'manage_users', 'cmp-save': 'manage_users', 'user-status': 'manage_users', 'perm-toggle': 'manage_users', 'role-save': 'manage_users', 'sop-new': 'manage_sops', 'sop-edit': 'manage_sops', 'sop-save': 'manage_sops', 'sop-active': 'manage_sops', 'wf-new': 'manage_workflows', 'wf-save': 'manage_workflows', 'wf-del': 'manage_workflows', 'wf-add': 'manage_workflows', 'wf-add-mail': 'manage_workflows', 'wf-active': 'manage_workflows', 'wf-open': 'manage_workflows', 'audit-export': 'export' };
 const ACT_ADMIN = ['cfg-new', 'cfg-edit', 'cfg-toggle', 'cfg-delete', 'cfg-save'];
 function actAllowed(act, el) {
   if (ACT_PERM[act]) return can(me(), ACT_PERM[act]);
   if (ACT_ADMIN.includes(act)) { const k = el.dataset.k || (UI.modal && UI.modal.k); return !CONFIG[k] || can(me(), CONFIG[k].perm); }
   return true;
 }
+// A new record created from "+ Add new" is selected in the form that asked for it.
+function applyQuick(field, x, back) {
+  const [scope, key, id] = field.split(':'); const put = D => { if (Array.isArray(D[key])) { if (!D[key].includes(x.id)) D[key].push(x.id); } else D[key] = x.id; };
+  if (scope === 'draft' && UI.draft) { put(UI.draft); if (key === 'products') UI.draft.indications = uniq(UI.draft.products.flatMap(pid => productInds(pid).map(i => i.id))); }
+  else if (scope === 'modal' && back && back.d) put(back.d);
+  else if (scope === 'asset') { const a = assetById(id); if (!a) return; if (Array.isArray(a[key])) { if (!a[key].includes(x.id)) ACT['a-toggle']({ dataset: { id, k: key, v: x.id } }); }
+    else { const prev = a[key]; a[key] = x.id; a.updatedAt = Date.now(); log('Asset updated', 'Asset', a, null, { note: key, prev: prev || '—', next: cfgName(CFG_OF_KEY[key] || 'materials', x) }); } }
+}
+const CFG_OF_KEY = { type: 'materials', channel: 'channels', audience: 'audiences' };
 /* ===== Event wiring ===== */
 document.addEventListener('click', ev => {
   const actEl = ev.target.closest('[data-act]'); const goEl = ev.target.closest('[data-go]');
@@ -5168,7 +5328,7 @@ document.addEventListener('click', ev => {
 });
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape' && UI.msel) { UI.msel = null; UI.mselq = ''; render(); return; }
-  if (ev.key === 'Escape') { if (UI.modal) { UI.modal = null; render(); } else if (UI.pop || UI.search) { UI.pop = null; UI.search = ''; render(); } }
+  if (ev.key === 'Escape') { if (UI.modal) { UI.modal = UI.modal.back || null; render(); } else if (UI.pop || UI.search) { UI.pop = null; UI.search = ''; render(); } }
   if (ev.key === 'Enter' && ev.target.matches && ev.target.matches('tr.click')) ev.target.click();
   if (ev.key === 'Enter' && UI.modal && UI.modal.type === 'filters' && ev.target.dataset && ev.target.dataset.fd) { ev.preventDefault(); ACT['flt-apply'](); }
 });
@@ -5283,6 +5443,7 @@ function wizAdvance(form) {
 }
 // Field-level audit entries for a module change.
 function logModuleDiff(m, before, D, v) {
+  if ((before.workflow || null) !== (D.workflow || null)) log('Workflow changed', 'Module', m, v, { prev: before.workflow ? (wfById(before.workflow) || {}).name || before.workflow : '—', next: D.workflow ? wfById(D.workflow).name : '—' });
   const add = D.refs.filter(r => !before.refs.includes(r)), rem = before.refs.filter(r => !D.refs.includes(r));
   if (!sameSet(before.products, D.products)) log('Product changed', 'Module', m, v, { prev: productsTxt(before.products), next: productsTxt(D.products) });
   if (!sameSet(before.markets, D.markets)) log('Country changed', 'Module', m, v, { prev: marketsTxt(before.markets), next: marketsTxt(D.markets) });
@@ -5303,7 +5464,7 @@ function logModuleDiff(m, before, D, v) {
 function saveModuleForm() {
   if (!wizAdvance('module')) return;
   const D = UI.draft; const p = UI.route.p; const now = Date.now();
-  const base = { title: D.title.trim(), type: D.type, owner: D.owner, products: [...D.products], indications: [...D.indications], audience: D.audience, markets: [...D.markets], channels: [...D.channels], reviewDate: fromISO(D.reviewDate), expiry: fromISO(D.expiry), updatedAt: now };
+  const base = { workflow: D.workflow || null, title: D.title.trim(), type: D.type, owner: D.owner, products: [...D.products], indications: [...D.indications], audience: D.audience, markets: [...D.markets], channels: [...D.channels], reviewDate: fromISO(D.reviewDate), expiry: fromISO(D.expiry), updatedAt: now };
   if (p.id) {
     const m = modById(p.id); const l = latest(m); const before = { ...m, body: l.body, refs: [...l.refs], media: l.media ? { ...l.media } : null };
     if (p.newVersion) {
@@ -5321,10 +5482,20 @@ function saveModuleForm() {
   S.modules.push(m); if (D.media && D.media.fileId) log('Media uploaded', 'Module', m, 1, { next: D.media.name + ' · ' + fmtSize(D.media.size), note: (D.media.algo || '') + ' ' + D.media.checksum });
   log('Module created', 'Module', m, 1, { next: 'Draft', note: mtype(m.type).name + ' · ' + productsTxt(m.products) + ' · ' + m.markets.join(', ') + ' · owner ' + user(m.owner).name }); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
 }
+// Back to the form that asked for a new record, with its entries restored and the new record selected.
+function returnToForm(newId) {
+  let R = UI.returnTo; if (!R) { try { R = JSON.parse(sessionStorage.getItem('medlr-return') || 'null'); } catch (e) { R = null; } }
+  UI.returnTo = null; try { sessionStorage.removeItem('medlr-return'); } catch (e) { /* nothing stored */ }
+  if (!R) { go('modules'); return; }
+  UI.restoring = true; go(R.name, R.p); UI.restoring = false; UI.draft = R.draft; if (newId && R.field) UI.draft[R.field] = newId; render();
+  toast(newId ? 'Workflow created and selected — your module entries are kept' : 'Back to your module — entries kept');
+}
 function saveWorkflowForm() {
   if (!wizAdvance('workflow')) return;
   const D = UI.nwf; const w = { id: uid('WF'), name: D.name.trim(), desc: D.desc.trim(), appliesTo: D.appliesTo || 'Module', active: true, steps: D.steps.map(s => ({ ...s })) };
-  S.workflows.push(w); logAdmin('Workflow created', 'Workflow', w.id, { next: w.steps.filter(s => !isNotify(s)).map(stepLabel).join(' → '), note: w.name }); save(); UI.nwf = null; go('workflow', { id: w.id }); toast('Workflow created · ' + reviewSteps(w).length + ' steps');
+  S.workflows.push(w); logAdmin('Workflow created', 'Workflow', w.id, { next: w.steps.filter(s => !isNotify(s)).map(stepLabel).join(' → '), note: w.name }); save(); UI.nwf = null;
+  if (UI.returnTo || sessionStorage.getItem('medlr-return')) { returnToForm(w.appliesTo === 'Module' ? w.id : null); return; }
+  go('workflow', { id: w.id }); toast('Workflow created · ' + reviewSteps(w).length + ' steps');
 }
 function saveUserForm() {
   if (!wizAdvance('user')) return;

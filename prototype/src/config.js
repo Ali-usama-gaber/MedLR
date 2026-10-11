@@ -62,6 +62,8 @@ function setProductIndication(x, name) {
   S.indications.push({ id, name, product: x.id, active: true });
 }
 const cfgGet = (f, x) => f[3].get ? f[3].get(x) : x[f[0]];
+// Empty values for a new record of this kind.
+function cfgBlank(k) { const d = {}; CONFIG[k].fields.forEach(f => { d[f[0]] = f[2] === 'list' ? [] : f[2] === 'bool' ? false : f[2] === 'select' && f[3].req ? ((f[3].options()[0] || [])[0] || '') : ''; }); return d; }
 const cfgName = (k, x) => x[CONFIG[k].nameKey || 'name'];
 const cfgUsage = (k, x) => CONFIG[k].usage(x);
 const cfgUseCount = (k, x) => cfgUsage(k, x).reduce((n, g) => n + g[1].length, 0);
@@ -123,6 +125,7 @@ function cfgSave() {
     if (M.k === 'products' && !x.code) x.code = x.id.replace(/^P-/, 'P');
     if (M.k === 'functions') LEVELS.forEach(l => { S.roles[x.id + '-' + l] = defaultFnRole(x.reviews, l === 'Lead'); });
     log(C.label + ' created', C.label, { id: x.id }, 1, { next: cfgName(M.k, x) });
+    if (M.quick) { applyQuick(M.quick, x, M.back); UI.modal = M.back || null; save(); render(); toast(C.label + ' “' + cfgName(M.k, x) + '” added and selected'); return; }
     UI.modal = null; save();
     if (M.then) { M.then(x); return; }
     render(); toast(C.label + ' added');
