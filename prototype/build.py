@@ -20,6 +20,10 @@ seed_media = {'img': media('infographic.jpg', 'image/jpeg', width=960, height=60
               'pdf': media('prescribing-info.pdf', 'application/pdf', pages=2, format='PDF · 2 pages')}
 seed_media['vid']['alt'] = alt('inhaler.webm', 'video/webm')  # WebM fallback for browsers without H.264
 js = js.replace("'__SEED_MEDIA__'", json.dumps(seed_media))
+# pdf.js 3.11.174 (Mozilla, Apache-2.0) is bundled so PDF preview and markup work without a CDN; its worker runs from a Blob.
+pdfjs = (root / 'vendor' / 'pdf.min.js').read_text(); pdfworker = (root / 'vendor' / 'pdf.worker.min.js').read_text()
+for name, code in (('pdf.min.js', pdfjs), ('pdf.worker.min.js', pdfworker)):
+    assert '</script' not in code.lower() and '<!--' not in code, name + ' cannot be inlined safely'
 stamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
 body = f'''<!-- SAJA MedLR build {stamp} -->
 <title>SAJA MedLR</title>
@@ -31,6 +35,8 @@ body = f'''<!-- SAJA MedLR build {stamp} -->
 </style>
 <div id="app"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<script>{pdfjs}</script>
+<script type="text/plain" id="pdfjs-worker">{pdfworker}</script>
 <script>
 "use strict";
 {js}

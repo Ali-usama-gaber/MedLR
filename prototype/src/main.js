@@ -9,6 +9,7 @@ function go(name, p = {}) {
   if (name !== 'workflow') UI.wfDraft = null;
   if (name === 'workflow-new' && UI.route.name !== 'workflow-new') UI.nwf = null;
   if (name !== 'settings') UI.setDraft = null;
+  if (UI.an && (UI.route.name !== name || UI.route.p.id !== p.id)) Object.assign(UI.an, { tool: null, sel: null, comp: null, men: null, edit: null, reply: null, seek: null });
   UI.route = { name, p }; UI.pop = null; UI.msel = null; UI.search = ''; UI.f.rvc = '';
   save(); render(); window.scrollTo(0, 0);
 }
@@ -99,6 +100,7 @@ function viewModal() {
   if (M.type === 'step') return stepDetailModal(M);
   if (M.type === 'filters') return filterModal(M);
   if (M.type === 'role') return roleModal(M);
+  if (M.type === 'file') return fileViewerModal(M);
   if (M.type === 'version') {
     const obj = objById(M.kind, M.id); const v = verOf(obj, +M.v);
     return modalShell('history', '', `Version ${v.v} · approval history`, `${esc(nameOf(obj))} · <span class="mono">${obj.id}</span>`, versionModalBody(obj, M.kind, v), `${v.approvedAt ? goBtn('Cover letter', 'cover', obj.id, '', 'award', ` data-k="${M.kind}" data-v="${v.v}"`) : ''}${btn('Close', 'modal-close', 'primary')}`, true);
@@ -224,6 +226,8 @@ function newVersion(obj, kind, reason) {
 }
 
 const ACT = {
+  'file-open': el => { UI.modal = { type: 'file', id: el.dataset.file, z: 1, back: UI.modal && UI.modal.type !== 'file' ? UI.modal : null }; render(); },
+  'fv-zoom': el => { const M = UI.modal; const d = +el.dataset.v; M.z = d === 0 ? 1 : Math.max(0.25, Math.min(4, Math.round((M.z + d * 0.25) * 100) / 100)); render(); },
   'role-edit': el => { UI.modal = { type: 'role', id: el.dataset.role }; render(); },
   'role-matrix': () => { UI.f.rmatrix = UI.f.rmatrix ? '' : '1'; render(); },
   ...ANN_ACT,
@@ -235,7 +239,7 @@ const ACT = {
   'tl-step': el => { UI.modal = { type: 'step', kind: el.dataset.kind, id: el.dataset.id, v: el.dataset.v, c: el.dataset.c, i: el.dataset.i }; render(); },
   pop: el => { UI.pop = UI.pop === el.dataset.pop ? null : el.dataset.pop; if (UI.pop === 'bell') S.notifSeen = Date.now(); render(); },
   logout: () => { log('Signed out', 'User', me(), 1); S.signedIn = false; save(); UI.modal = null; go('login'); },
-  'modal-close': () => { UI.modal = null; UI.msel = null; render(); },
+  'modal-close': () => { UI.modal = (UI.modal && UI.modal.back) || null; UI.msel = null; render(); },
   'msel-open': el => { UI.msel = UI.msel === el.dataset.id ? null : el.dataset.id; UI.mselq = ''; render(); setTimeout(() => { const i = document.getElementById('mselq-' + el.dataset.id); i && i.focus(); }, 20); },
   'ap-stage': el => { UI.f.apfn = UI.f.apfn === el.dataset.v && (UI.route.p.tab || 'review') === 'review' ? '' : el.dataset.v; go('tasks', { tab: 'review' }); },
   'msel-close': () => { UI.msel = null; UI.mselq = ''; render(); },
