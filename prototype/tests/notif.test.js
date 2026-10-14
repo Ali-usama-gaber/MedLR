@@ -5,7 +5,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
   const posts = []; await p.route('https://mail.example.test/**', async r => { posts.push(JSON.parse(r.request().postData())); await r.fulfill({ status: 200, body: '{}' }); });
   await p.route('https://fail.example.test/**', r => r.fulfill({ status: 503, body: '' }));
-  await p.goto('file:///home/user/MedLR/prototype/dist/index.html'); await p.evaluate(() => localStorage.clear()); await p.reload();
+  await p.goto(require('url').pathToFileURL(require('path').join(__dirname, '..', 'dist', 'index.html')).href); await p.evaluate(() => localStorage.clear()); await p.reload();
   const E = (f, a) => p.evaluate(f, a); const W = ms => p.waitForTimeout(ms || 150); const G = (r, o) => E(([r, o]) => go(r, o || {}), [r, o]).then(() => W(300));
   const login = async email => { await E(() => ACT.logout()); await W(); await p.fill('#login-email', email); await p.fill('#login-pass', 'pw'); await p.click('button[type=submit]'); await W(300); };
   const mention = async (text, uid) => { await p.click('#an-general'); await p.keyboard.type(text + ' @' + uid.slice(2, 5), { delay: 15 }); await W(200); await p.click(`.men-pop [data-v="${uid}"]`); await W(); await p.click('button[data-act=an-general]'); await W(250); };

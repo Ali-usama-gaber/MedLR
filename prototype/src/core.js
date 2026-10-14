@@ -25,7 +25,13 @@ function migrate7to8(s) {
   s.modules.forEach(m => { m.indications = (m.indications || []).map(ind); m.versions.forEach(v => { if (v.meta && v.meta.indications) v.meta.indications = v.meta.indications.map(ind); }); });
   s.annotations = s.annotations || []; s.settings = { reviewSlaDays: 3, blockOnOpenComments: true, ...s.settings }; s.version = 8; return s;
 }
-function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} }
+// When the browser refuses to store the workspace (storage full or blocked), say so once — otherwise the
+// changes would silently disappear on the next reload. The warning repeats only after storage worked again.
+let saveFailed = false;
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); saveFailed = false; }
+  catch (e) { if (!saveFailed && typeof toast === 'function') toast('Changes could not be saved in this browser (storage is full or blocked). They will be lost when the page is reloaded.', 'err'); saveFailed = true; }
+}
 
 /* helpers */
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -42,6 +48,10 @@ const uid = p => p + '-' + Math.random().toString(36).slice(2, 7);
 const toISO = t => { const x = new Date(t); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
 const fromISO = s => { if (!s) return null; const [y, m, dd] = s.split('-').map(Number); return new Date(y, m - 1, dd, 12).getTime(); };
 const uniq = a => [...new Set(a)];
+// Text that shows nothing: only spaces or invisible characters (zero-width space/joiner, BOM, soft hyphen, direction marks).
+const INVISIBLE = /[\s\u200B-\u200F\u2028-\u202F\u2060-\u2064\uFEFF\u00AD]/g;
+const clean = s => String(s == null ? '' : s).replace(/^[\s\u200B-\u200F\u2060-\u2064\uFEFF\u00AD]+|[\s\u200B-\u200F\u2060-\u2064\uFEFF\u00AD]+$/g, '');
+const blank = s => !String(s == null ? '' : s).replace(INVISIBLE, '');
 const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
 
 const me = () => S.users.find(u => u.id === S.personaId) || S.users.find(u => u.fn === 'Administrator');

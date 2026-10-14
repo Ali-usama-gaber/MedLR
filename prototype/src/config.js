@@ -107,8 +107,8 @@ function cfgModal(M) {
 function cfgSave() {
   const M = UI.modal; const C = CONFIG[M.k]; const D = M.d; const list = C.coll(); const errs = {};
   document.querySelectorAll('[data-cfg]').forEach(el => { D[el.dataset.cfg] = el.value; });
-  C.fields.forEach(f => { if (f[2] === 'list' && typeof D[f[0]] === 'string') D[f[0]] = D[f[0]].split(',').map(x => x.trim()).filter(Boolean); if (typeof D[f[0]] === 'string') D[f[0]] = D[f[0]].trim(); });
-  C.fields.forEach(f => { if (f[3].createOnly && M.id) return; const v = D[f[0]]; if (f[3].req && (Array.isArray(v) ? !v.length : !v)) errs[f[0]] = 'Required.'; });
+  C.fields.forEach(f => { if (f[2] === 'list' && typeof D[f[0]] === 'string') D[f[0]] = D[f[0]].split(',').map(clean).filter(x => !blank(x)); if (typeof D[f[0]] === 'string') D[f[0]] = clean(D[f[0]]); });
+  C.fields.forEach(f => { if (f[3].createOnly && M.id) return; const v = D[f[0]]; if (f[3].req && (Array.isArray(v) ? !v.length : blank(v))) errs[f[0]] = 'Required.'; });
   const nk = C.nameKey || 'name';
   if (D[nk] && list.some(x => x.id !== M.id && String(cfgName(M.k, x)).toLowerCase() === String(D[nk]).toLowerCase())) errs[nk] = 'Another ' + C.label.toLowerCase() + ' already uses this name.';
   if (C.codeId && !M.id) { if (M.k === 'markets') D.id = String(D.id || '').toUpperCase(); if (M.k === 'markets' && D.id && !/^[A-Z]{2,3}$/.test(D.id)) errs.id = 'Use two or three letters.'; if (list.some(x => x.id.toLowerCase() === String(D.id).toLowerCase())) errs.id = 'This code is already used.'; }
@@ -135,7 +135,7 @@ function cfgToggle(k, id) {
   const C = CONFIG[k]; const x = C.coll().find(i => i.id === id);
   if (x.active && C.blockDeactivate) { const why = C.blockDeactivate(x); if (why) { toast('Cannot deactivate: ' + why); return; } }
   x.active = !x.active; log(C.label + (x.active ? ' activated' : ' deactivated'), C.label, { id: x.id }, 1, { note: cfgName(k, x), prev: x.active ? 'Inactive' : 'Active', next: x.active ? 'Active' : 'Inactive' });
-  save(); render(); toast(cfgName(k, x) + (x.active ? ' activated' : ' deactivated'));
+  save(); render(); toast(cfgName(k, x) + (x.active ? ' activated' : ' deactivated'), 'ok');
 }
 function cfgDelete(k, id) {
   const C = CONFIG[k]; const list = C.coll(); const i = list.findIndex(x => x.id === id); const x = list[i];

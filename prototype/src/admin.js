@@ -351,7 +351,7 @@ function viewUserForm() {
 }
 function validateUser(D, editId) {
   const e = {};
-  if (!D.name.trim()) e.name = 'Enter the full name.';
+  if (blank(D.name)) e.name = 'Enter the full name.';
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(D.email)) e.email = 'Enter a valid email address.';
   else if (S.users.some(u => u.email.toLowerCase() === D.email.toLowerCase() && u.id !== editId)) e.email = 'A user with this email already exists.';
   if (!D.fn) e.fn = 'Choose a function.';

@@ -57,7 +57,7 @@ const WSTEPS = [['Details', ['name'], 'Name the review route and say when it is 
 const WF_APPLIES = [['Module', 'file', 'Modules', 'Offered when a module is submitted for MLR review'], ['Asset', 'layers', 'Assets', 'Used by Material Types and for assets made of approved modules']];
 function validateWf(D) {
   const e = {};
-  if (!D.name.trim()) e.name = 'Give the workflow a name.';
+  if (blank(D.name)) e.name = 'Give the workflow a name.';
   else if (S.workflows.some(w => w.name.toLowerCase() === D.name.trim().toLowerCase())) e.name = 'A workflow with this name already exists.';
   if (!D.steps.length) e.steps = 'Add at least one review step.';
   else { const bad = wfIssues(D).filter(x => x[0] === 'bad'); if (bad.length) e.steps = bad.map(x => x[1]).join(' '); }

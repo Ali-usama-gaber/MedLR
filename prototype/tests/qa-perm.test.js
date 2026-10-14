@@ -5,7 +5,7 @@ let fails = 0, n = 0; const ok = (c, m) => { n++; console.log((c ? 'PASS ' : 'FA
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
-  await p.goto('file:///home/user/MedLR/prototype/dist/index.html'); await p.evaluate(() => localStorage.clear()); await p.reload();
+  await p.goto(require('url').pathToFileURL(require('path').join(__dirname, '..', 'dist', 'index.html')).href); await p.evaluate(() => localStorage.clear()); await p.reload();
   const E = (f, a) => p.evaluate(f, a); const W = ms => p.waitForTimeout(ms || 150);
   const login = async email => { await E(() => ACT.logout()); await p.waitForSelector('#login-email'); await p.fill('#login-email', email); await p.fill('#login-pass', 'pw'); await p.click('button[type=submit]'); await p.waitForFunction(e => S.signedIn && me().email === e, email); await W(200); };
   // Inject a control with the given data-* and click it; optional setup runs first (e.g. a modal state + inputs).

@@ -2,7 +2,26 @@
 const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: () => viewHub('org', 'users'), user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, roles: viewRoles, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, refdata: () => viewHub('refdata'), org: () => viewHub('org'), products: () => viewHub('refdata', 'products'), markets: () => viewHub('refdata', 'markets'), moduletypes: () => viewHub('refdata', 'moduletypes'), materials: () => viewHub('refdata', 'materials'), channels: () => viewHub('refdata', 'channels'), audiences: () => viewHub('refdata', 'audiences'), references: () => viewHub('refdata', 'references'), teams: () => viewHub('org', 'teams'), functions: () => viewHub('org', 'functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
 const app = document.getElementById('app');
 
-function go(name, p = {}) {
+/* The current page lives in the URL hash (#/module?id=MOD-A-014&tab=versions), so browser Back/Forward,
+   refresh, bookmarks and shared links open the same page. The app still navigates only through go(). */
+function routeHash(name, p) {
+  const q = Object.keys(p || {}).filter(k => p[k] != null && p[k] !== '' && typeof p[k] !== 'object' && typeof p[k] !== 'function').map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k])).join('&');
+  return '#/' + encodeURIComponent(name) + (q ? '?' + q : '');
+}
+function parseHash(h) {
+  const m = /^#\/([^?]+)(?:\?(.*))?$/.exec(h || ''); if (!m) return null;
+  let name; try { name = decodeURIComponent(m[1]); } catch (e) { return null; }
+  if (!ROUTES[name]) return null;
+  const p = {}; (m[2] || '').split('&').filter(Boolean).forEach(kv => { const i = kv.indexOf('='); try { const k = decodeURIComponent(i < 0 ? kv : kv.slice(0, i)); const v = i < 0 ? '' : decodeURIComponent(kv.slice(i + 1)); p[k] = v === 'true' ? true : v; } catch (e) {} });
+  return { name, p };
+}
+function syncHash(replace) {
+  const r = UI.route; let url;
+  if (!S.signedIn || r.name === 'login' || r.name === 'forgot') { if (!location.hash) return; url = location.pathname + location.search; }
+  else { url = routeHash(r.name, r.p); if (location.hash === url) return; }
+  try { history[replace ? 'replaceState' : 'pushState'](null, '', url); } catch (e) {}
+}
+function go(name, p = {}, fromHistory) {
   if (name === 'settings' && p.tab && typeof hubOf === 'function' && hubOf(p.tab)) { name = p.tab; p = {}; } // old Settings links to moved lists
   if (name === 'login' || name === 'forgot') { UI.modal = null; UI.f.resetSent = null; UI.f.forgotErr = null; UI.f.loginErr = null; }
   if ((name === 'module-edit' || name === 'module-new') && (UI.route.name !== name || UI.route.p.id !== p.id)) UI.draft = null;
@@ -12,8 +31,14 @@ function go(name, p = {}) {
   if (name !== 'settings') UI.setDraft = null;
   if (UI.an && (UI.route.name !== name || UI.route.p.id !== p.id)) Object.assign(UI.an, { tool: null, sel: null, comp: null, men: null, edit: null, reply: null, seek: null });
   UI.route = { name, p }; UI.pop = null; UI.msel = null; UI.search = ''; UI.f.rvc = '';
-  save(); render(); window.scrollTo(0, 0);
+  save(); syncHash(!!fromHistory); render(); window.scrollTo(0, 0);
 }
+// Browser Back / Forward: open the page in the URL; an open dialog closes first, like Escape.
+window.addEventListener('popstate', () => {
+  if (!S.signedIn) { const t = parseHash(location.hash); if (t && t.name !== 'login' && t.name !== 'forgot') UI.after = t; return; } // opens after sign-in
+  const t = parseHash(location.hash) || { name: 'home', p: {} };
+  UI.modal = null; go(t.name, t.p, true);
+});
 
 /* In-place DOM patching. Re-rendering used to replace the whole app with innerHTML, which destroyed and rebuilt every
    element on each interaction (images and PDF pages redrawn, videos restarted, panel scroll reset) — it looked like a reload.
@@ -122,9 +147,12 @@ function paginateTables() {
     t.after(el);
   });
 }
-function toast(text) {
-  const box = document.getElementById('toasts'); const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status');
-  t.innerHTML = icon('check', 'sm') + '<span>' + esc(text) + '</span>'; box.appendChild(t); while (box.children.length > 2) box.firstChild.remove(); setTimeout(() => t.remove(), 3600);
+// Refusals and failures read differently from confirmations: alert icon, warning colour, announced assertively, shown longer.
+const TOAST_ERR = /^(you |your role|cannot|could not|changes could not|it is in use|only |give |enter |write |add an active|this (workflow|module|file|[a-z]+ module accepts)|the file is larger|an active|export is not|content and media)/i;
+function toast(text, kind) {
+  const box = document.getElementById('toasts'); const t = document.createElement('div'); const err = kind === 'err' || (kind !== 'ok' && TOAST_ERR.test(String(text)));
+  t.className = 'toast' + (err ? ' err' : ''); t.setAttribute('role', err ? 'alert' : 'status');
+  t.innerHTML = icon(err ? 'alert' : 'check', 'sm') + '<span>' + esc(text) + '</span>'; box.appendChild(t); while (box.children.length > 2) box.firstChild.remove(); setTimeout(() => t.remove(), err ? 6000 : 3600);
 }
 
 /* ===== Modals ===== */
@@ -403,9 +431,9 @@ const ACT = {
   'an-toggle': el => { const arr = UI.modal.d[el.dataset.k]; const i = arr.indexOf(el.dataset.v); i >= 0 ? arr.splice(i, 1) : arr.push(el.dataset.v); render(); },
   'asset-create': () => {
     const M = UI.modal; const D = M.d; const nm = document.getElementById('an-name'); if (nm) D.name = nm.value;
-    if (!D.name.trim()) { M.err = 'name'; render(); return; } if (!D.products.length) { M.err = 'products'; render(); return; } if (!D.markets.length) { M.err = 'markets'; render(); return; }
+    if (blank(D.name)) { M.err = 'name'; render(); return; } if (!D.products.length) { M.err = 'products'; render(); return; } if (!D.markets.length) { M.err = 'markets'; render(); return; }
     const now = Date.now();
-    const a = { id: nextAssetId(), name: D.name.trim(), type: D.type, products: [...D.products], markets: [...D.markets], channel: D.channel, audience: D.audience, owner: me().id, disclaimer: '', blocks: [], versions: [{ v: 1, body: '', refs: [], createdAt: now, createdBy: me().id, reason: 'Initial version', status: 'Draft', cycles: [], approvedAt: null, approvedBy: null }], createdAt: now, updatedAt: now, review: null, resume: null };
+    const a = { id: nextAssetId(), name: clean(D.name), type: D.type, products: [...D.products], markets: [...D.markets], channel: D.channel, audience: D.audience, owner: me().id, disclaimer: '', blocks: [], versions: [{ v: 1, body: '', refs: [], createdAt: now, createdBy: me().id, reason: 'Initial version', status: 'Draft', cycles: [], approvedAt: null, approvedBy: null }], createdAt: now, updatedAt: now, review: null, resume: null };
     log('Asset created', 'Asset', a, 1, { next: 'Draft', note: D.type });
     if (M.module) { const m = modById(M.module); if (eligibility(m, a).ok) { a.blocks.push({ id: uid('b'), kind: 'module', moduleId: m.id, v: live(m).v }); log('Module reused', 'Asset', a, 1, { note: m.id + ' v' + live(m).v + ' added' }); } }
     S.assets.push(a); UI.modal = null; save(); go('assemble', { id: a.id }); toast('Asset created — add approved modules from the left');
@@ -426,7 +454,7 @@ const ACT = {
   },
   'asset-version': el => { UI.modal = { type: 'asset-version', id: el.dataset.id }; render(); setTimeout(() => { const t = document.getElementById('m-note'); t && t.focus(); }, 30); },
   'asset-version-confirm': () => { const M = UI.modal; const note = document.getElementById('m-note').value.trim(); if (note.length < 5) { M.err = true; M.note = note; render(); return; } const a = assetById(M.id); const nv = newVersion(a, 'Asset', note); a.blocks.forEach(b => { if (b.kind === 'new') b.approved = false; }); UI.modal = null; save(); go('assemble', { id: a.id }); toast('Version ' + nv + ' created'); },
-  'replace-version': el => { const a = assetById(el.dataset.asset); const m = modById(el.dataset.module); const b = a.blocks.find(x => x.moduleId === m.id); const from = b.v; b.v = live(m).v; log('Asset updated', 'Asset', a, null, { note: 'Module version replaced · ' + m.id, prev: m.id + ' v' + from, next: m.id + ' v' + b.v }); save(); render(); toast(a.name + ' now uses ' + m.id + ' v' + b.v); },
+  'replace-version': el => { const a = assetById(el.dataset.asset); const m = modById(el.dataset.module); const b = a.blocks.find(x => x.moduleId === m.id); const from = b.v; b.v = live(m).v; log('Asset updated', 'Asset', a, null, { note: 'Module version replaced · ' + m.id, prev: m.id + ' v' + from, next: m.id + ' v' + b.v }); save(); render(); toast(a.name + ' now uses ' + m.id + ' v' + b.v, 'ok'); },
 
   /* audit */
   'audit-user': el => { Object.assign(UI.f, { uuser: el.dataset.id, uq: '', ucat: '', uobj: '' }); go('audit'); },
@@ -449,8 +477,8 @@ const ACT = {
   'u-fn': el => { const D = UI.udraft; D.fn = el.dataset.v; const t = S.teams.find(x => x.id === D.team); if (!t || t.fn !== D.fn) { const first = S.teams.find(x => x.fn === D.fn); D.team = first ? first.id : ''; } render(); },
   'u-level': el => { UI.udraft.level = el.dataset.v; render(); },
   'u-status': el => { UI.udraft.status = el.dataset.v; render(); },
-  'user-status': el => { const x = S.users.find(u => u.id === el.dataset.id); if (x.id === me().id) { toast('You cannot deactivate your own account'); return; } const prev = x.status; x.status = x.status === 'Active' ? 'Inactive' : 'Active'; logAdmin(x.status === 'Active' ? 'User activated' : 'User deactivated', 'User', x.id, { prev, next: x.status, note: x.name }); save(); render(); toast(x.name + ' is now ' + x.status.toLowerCase()); },
-  'perm-toggle': el => { const r = el.dataset.role, p = el.dataset.perm; const list = S.roles[r] || (S.roles[r] = []); const i = list.indexOf(p); const label = PERMS.find(x => x[0] === p)[1]; i >= 0 ? list.splice(i, 1) : list.push(p); logAdmin(i >= 0 ? 'Permission revoked' : 'Permission granted', 'Role', r, { note: roleName(r) + ' · ' + label, prev: i >= 0 ? 'Granted' : 'Not granted', next: i >= 0 ? 'Not granted' : 'Granted' }); save(); render(); toast(label + (i >= 0 ? ' removed from ' : ' granted to ') + roleName(r)); },
+  'user-status': el => { const x = S.users.find(u => u.id === el.dataset.id); if (x.id === me().id) { toast('You cannot deactivate your own account'); return; } const prev = x.status; x.status = x.status === 'Active' ? 'Inactive' : 'Active'; logAdmin(x.status === 'Active' ? 'User activated' : 'User deactivated', 'User', x.id, { prev, next: x.status, note: x.name }); save(); render(); toast(x.name + ' is now ' + x.status.toLowerCase(), 'ok'); },
+  'perm-toggle': el => { const r = el.dataset.role, p = el.dataset.perm; const list = S.roles[r] || (S.roles[r] = []); const i = list.indexOf(p); const label = PERMS.find(x => x[0] === p)[1]; i >= 0 ? list.splice(i, 1) : list.push(p); logAdmin(i >= 0 ? 'Permission revoked' : 'Permission granted', 'Role', r, { note: roleName(r) + ' · ' + label, prev: i >= 0 ? 'Granted' : 'Not granted', next: i >= 0 ? 'Not granted' : 'Granted' }); save(); render(); toast(label + (i >= 0 ? ' removed from ' : ' granted to ') + roleName(r), 'ok'); },
   'roles-reset': () => { const def = DEFAULT_ROLES(); Object.keys(S.roles).forEach(k => { if (!def[k]) def[k] = ['view']; }); S.roles = def; logAdmin('Permissions restored to defaults', 'Role', 'All roles', {}); save(); render(); toast('Role permissions restored to defaults'); },
 
   /* configuration (config.js) */
@@ -471,8 +499,8 @@ const ACT = {
   'sop-toggle': el => { const arr = UI.modal.d[el.dataset.k]; const i = arr.indexOf(el.dataset.v); i >= 0 ? arr.splice(i, 1) : arr.push(el.dataset.v); render(); },
   'sop-save': () => {
     const M = UI.modal; const D = M.d; ['name', 'guidance'].forEach(k => { const e = document.querySelector(`[data-sop="${k}"]`); if (e) D[k] = e.value; });
-    if (!D.name.trim()) { M.err = true; render(); return; }
-    const data = { name: D.name.trim(), rule: D.rule, appliesTo: D.appliesTo, scope: { types: [...D.types], products: [...D.products], markets: [...D.markets] }, guidance: D.guidance.trim(), months: +D.months || 12 };
+    if (blank(D.name)) { M.err = true; render(); return; }
+    const data = { name: clean(D.name), rule: D.rule, appliesTo: D.appliesTo, scope: { types: [...D.types], products: [...D.products], markets: [...D.markets] }, guidance: D.guidance.trim(), months: +D.months || 12 };
     if (M.id) { const s = S.sops.find(x => x.id === M.id); const prev = s.name + ' · ' + SOP_RULES[s.rule] + ' · ' + sopScopeTxt(s); Object.assign(s, data); logAdmin('SOP updated', 'SOP', s.id, { prev, next: s.name + ' · ' + SOP_RULES[s.rule] + ' · ' + sopScopeTxt(s) }); toast('SOP updated'); }
     else { const n = Math.max(0, ...S.sops.map(s => +s.id.slice(4))) + 1; const s = { id: 'SOP-' + String(n).padStart(2, '0'), ...data, active: true }; S.sops.push(s); logAdmin('SOP created', 'SOP', s.id, { next: s.name + ' · ' + SOP_RULES[s.rule] + ' · ' + sopScopeTxt(s) }); toast('SOP created — it now applies to new submissions and approvals'); }
     UI.modal = null; save(); render();
@@ -515,7 +543,7 @@ const ACT = {
   'wf-discard': () => { UI.wfDraft = null; render(); },
   'wf-save': () => {
     const D = UI.wfDraft; const w = wfById(D.id); if (wfIssues(D).some(x => x[0] === 'bad')) return;
-    D.name = (D.name || '').trim(); if (!D.name || S.workflows.some(x => x.id !== w.id && !x.hidden && x.name.toLowerCase() === D.name.toLowerCase())) { toast('Give the workflow a unique name'); return; }
+    D.name = clean(D.name); if (blank(D.name) || S.workflows.some(x => x.id !== w.id && !x.hidden && x.name.toLowerCase() === D.name.toLowerCase())) { toast('Give the workflow a unique name'); return; }
     if (D.active === false && w.active !== false && [...Object.values(S.settings)].includes(w.id)) { toast('This workflow is a default in Settings — choose another default first'); return; }
     if (D.active === false && S.materialTypes.some(t => t.active && t.workflow === w.id)) { toast('An active Material Type uses this workflow — change it first'); return; }
     [['name', 'Name'], ['desc', 'Description'], ['appliesTo', 'Applies to']].forEach(([k, l]) => { if ((w[k] || '') !== (D[k] || '')) logAdmin('Workflow updated', 'Workflow', w.id, { note: l, prev: w[k] || '', next: D[k] || '' }); });
@@ -639,7 +667,9 @@ document.addEventListener('submit', ev => {
     if (!email || !ev.target.password.value) { UI.f.loginErr = 'Enter your email and password.'; render(); return; }
     if (!x) { UI.f.loginErr = 'No account uses that email address.'; render(); return; }
     if (x.status !== 'Active') { UI.f.loginErr = 'This account is inactive. Ask an administrator to reactivate it.'; render(); return; }
-    S.personaId = x.id; S.signedIn = true; UI.f.loginErr = null; log('Signed in', 'User', x, 1); save(); go('home');
+    // A link opened while signed out (e.g. a shared module URL) opens after sign-in.
+    const after = UI.after; UI.after = null;
+    S.personaId = x.id; S.signedIn = true; UI.f.loginErr = null; log('Signed in', 'User', x, 1); save(); after ? go(after.name, after.p) : go('home');
   }
   if (f === 'forgot') { const e = ev.target.email.value.trim(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { UI.f.forgotErr = 'Enter a valid email address.'; render(); return; } UI.f.forgotErr = null; UI.f.resetSent = e; render(); }
   if (f === 'module') saveModuleForm();
@@ -761,6 +791,24 @@ function saveUserForm() {
   const x = { id: uid('u'), ...data }; S.users.push(x); logAdmin('User created', 'User', x.id, { next: roleLabel(x), note: x.name + ' · ' + x.email }); save(); UI.udraft = null; go('user', { id: x.id }); toast('Invitation sent to ' + x.email);
 }
 
+/* Several tabs share one workspace: when another tab saves, this tab takes its data (its own sign-in,
+   open page and unsaved form entries stay), so a later save here never overwrites the other tab's work. */
+window.addEventListener('storage', e => {
+  if (e.key !== STORE_KEY || !e.newValue) return;
+  let s; try { s = JSON.parse(e.newValue); } catch (err) { return; }
+  if (!s || s.version !== 8) return;
+  const pid = S.personaId, signed = S.signedIn;
+  S = linkModuleWorkflows(s); S.personaId = pid; S.signedIn = signed;
+  if (UI.modal && UI.modal.id && UI.modal.kind && !objById(UI.modal.kind, UI.modal.id)) UI.modal = null;
+  render();
+});
+
+// Open the page named in the URL (deep link, bookmark or refresh); signed out, open it after sign-in.
+(function initRoute() {
+  const t = parseHash(location.hash);
+  if (t && t.name !== 'login' && t.name !== 'forgot') { if (S.signedIn) UI.route = t; else UI.after = t; }
+  syncHash(true);
+})();
 render();
 
 /* ---------- Drag and drop: modules → asset canvas, block reorder, workflow step reorder ---------- */

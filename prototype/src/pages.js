@@ -516,7 +516,7 @@ function viewModuleForm() {
 function validateDraft(D) {
   const e = {};
   if (!D.type) e.type = 'Choose a module type.';
-  if (!D.title.trim()) e.title = 'Give the module a name.';
+  if (blank(D.title)) e.title = 'Give the module a name.';
   const media = D.type && isMediaType(D.type);
   if (media && !(D.media && D.media.fileId)) e.file = 'Upload the ' + kindLabel(kindOfType(D.type)).toLowerCase() + ' file.';
   if (D.body.trim().length < 8) e.body = media ? 'Describe the file (used as alt text and for search).' : 'Write the module content (at least a short sentence).';

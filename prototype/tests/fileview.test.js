@@ -3,7 +3,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, ignoreHTTPSErrors: true, acceptDownloads: true }); const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message)); let downloads = 0; p.on('download', () => downloads++);
-  await p.goto('file:///home/user/MedLR/prototype/dist/index.html'); await p.evaluate(() => localStorage.clear()); await p.reload();
+  await p.goto(require('url').pathToFileURL(require('path').join(__dirname, '..', 'dist', 'index.html')).href); await p.evaluate(() => localStorage.clear()); await p.reload();
   await p.fill('#login-pass', 'x'); await p.click('button[type=submit]'); await p.waitForTimeout(300);
   const E = (f, a) => p.evaluate(f, a); const W = ms => p.waitForTimeout(ms || 150);
   ok(!(await E(() => document.documentElement.innerHTML.includes('Open PDF'))), 'no action is labelled “Open PDF”');

@@ -3,7 +3,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
 (async () => {
   const b = await chromium.launch();
   const open = async (vp) => { const p = await b.newPage({ viewport: vp }); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
-    await p.goto('file:///home/user/MedLR/prototype/dist/index.html'); await p.evaluate(() => localStorage.clear()); await p.reload(); return [p, errs]; };
+    await p.goto(require('url').pathToFileURL(require('path').join(__dirname, '..', 'dist', 'index.html')).href); await p.evaluate(() => localStorage.clear()); await p.reload(); return [p, errs]; };
   const login = async (p, email) => { await p.evaluate(() => ACT.logout()); await p.waitForTimeout(150); await p.fill('#login-email', email); await p.fill('#login-pass', 'pw'); await p.click('button[type=submit]'); await p.waitForTimeout(300); };
   const SECS = ['hx-t-tasks', 'hx-t-pipe', 'hx-t-perf', 'hx-t-act', 'hx-t-rec', 'hx-t-due', 'hx-t-ov'];
   let [p, errs] = await open({ width: 1440, height: 900 });

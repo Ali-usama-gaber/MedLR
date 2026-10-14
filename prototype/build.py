@@ -7,9 +7,10 @@ dist/artifact.html     – same content without the document skeleton (for hosti
 import base64, datetime, pathlib
 root = pathlib.Path(__file__).parent
 src = root / 'src'
+U = 'utf-8'  # explicit, so the build gives the same output on Windows (cp1252 default) and Linux
 logo = 'data:image/png;base64,' + base64.b64encode((root / 'assets' / 'saja-logo.png').read_bytes()).decode()
-css = (src / 'styles.css').read_text()
-js = '\n'.join((src / f).read_text() for f in ['data.js', 'icons.js', 'core.js', 'media.js', 'charts.js', 'pages.js', 'review.js', 'admin.js', 'config.js', 'workflows.js', 'main.js']).replace("'__LOGO__'", repr(logo))
+css = (src / 'styles.css').read_text(encoding=U)
+js = '\n'.join((src / f).read_text(encoding=U) for f in ['data.js', 'icons.js', 'core.js', 'media.js', 'charts.js', 'pages.js', 'review.js', 'admin.js', 'config.js', 'workflows.js', 'main.js']).replace("'__LOGO__'", repr(logo))
 import hashlib, json
 def media(fn, mime, **meta):
     b = (root / 'assets' / 'seed-media' / fn).read_bytes()
@@ -21,10 +22,10 @@ seed_media = {'img': media('infographic.jpg', 'image/jpeg', width=960, height=60
 seed_media['vid']['alt'] = alt('inhaler.webm', 'video/webm')  # WebM fallback for browsers without H.264
 js = js.replace("'__SEED_MEDIA__'", json.dumps(seed_media))
 # pdf.js 3.11.174 (Mozilla, Apache-2.0) is bundled so PDF preview and markup work without a CDN; its worker runs from a Blob.
-pdfjs = (root / 'vendor' / 'pdf.min.js').read_text(); pdfworker = (root / 'vendor' / 'pdf.worker.min.js').read_text()
+pdfjs = (root / 'vendor' / 'pdf.min.js').read_text(encoding=U); pdfworker = (root / 'vendor' / 'pdf.worker.min.js').read_text(encoding=U)
 for name, code in (('pdf.min.js', pdfjs), ('pdf.worker.min.js', pdfworker)):
     assert '</script' not in code.lower() and '<!--' not in code, name + ' cannot be inlined safely'
-stamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 body = f'''<!-- SAJA MedLR build {stamp} -->
 <title>SAJA MedLR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,6 +44,6 @@ body = f'''<!-- SAJA MedLR build {stamp} -->
 </script>
 '''
 dist = root / 'dist'; dist.mkdir(exist_ok=True)
-(dist / 'artifact.html').write_text(body)
-(dist / 'index.html').write_text('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' + body.replace('<div id="app">', '</head>\n<body>\n<div id="app">', 1) + '</body>\n</html>\n')
+(dist / 'artifact.html').write_text(body, encoding=U, newline='\n')
+(dist / 'index.html').write_text(encoding=U, newline='\n', data='<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' + body.replace('<div id="app">', '</head>\n<body>\n<div id="app">', 1) + '</body>\n</html>\n')
 print('built', len(body) // 1024, 'KB')

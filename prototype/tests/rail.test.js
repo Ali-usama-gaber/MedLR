@@ -4,7 +4,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   const b = await chromium.launch();
   for (const [w, h, label] of [[1440, 900, 'desktop'], [960, 600, 'desktop at 150% browser zoom'], [820, 1180, 'tablet'], [390, 844, 'phone']]) {
     const p = await b.newPage({ viewport: { width: w, height: h } }); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('file:///home/user/MedLR/prototype/dist/index.html'); await p.evaluate(() => localStorage.clear()); await p.reload();
+    await p.goto(require('url').pathToFileURL(require('path').join(__dirname, '..', 'dist', 'index.html')).href); await p.evaluate(() => localStorage.clear()); await p.reload();
     await p.fill('#login-email', 'ali.usama@saja.com'); await p.fill('#login-pass', 'pw'); await p.click('button[type=submit]'); await p.waitForTimeout(300);
     for (const [route, id] of [['review', 'MOD-B-007'], ['asset-review', await p.evaluate(() => (S.assets.find(a => a.review) || {}).id)], ['review', 'MOD-B-020']]) {
       if (!id) continue;

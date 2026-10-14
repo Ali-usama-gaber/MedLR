@@ -40,7 +40,7 @@ const CASES = [
   const b = await chromium.launch();
   for (const [vl, vp] of VPS) {
     const p = await b.newPage({ viewport: vp }); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
-    await p.goto('file:///home/user/MedLR/prototype/dist/index.html'); await p.evaluate(() => localStorage.clear()); await p.reload();
+    await p.goto(require('url').pathToFileURL(require('path').join(__dirname, '..', 'dist', 'index.html')).href); await p.evaluate(() => localStorage.clear()); await p.reload();
     let who = null;
     for (const [label, u, route, params, opener, kind] of CASES) {
       if (who !== u) { await p.evaluate(() => ACT.logout()); await p.waitForTimeout(100); await p.fill('#login-email', ({ ali: 'ali.usama', ahmed: 'ahmed.ali', sara: 'sara.ahmed' })[u] + '@saja.com'); await p.fill('#login-pass', 'pw'); await p.click('button[type=submit]'); await p.waitForTimeout(250); who = u; }

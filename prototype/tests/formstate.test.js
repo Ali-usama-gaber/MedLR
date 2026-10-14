@@ -3,8 +3,9 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1440, height: 900 } }); const D = __dirname;
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
-  let navs = 0; p.on('framenavigated', f => { if (f === p.mainFrame()) navs++; });
-  await p.goto('file:///home/user/MedLR/prototype/dist/index.html'); await p.evaluate(() => localStorage.clear()); await p.reload(); navs = 0;
+  // Count full document loads only: in-app page changes update the URL hash (same document) and are not reloads.
+  let navs = 0; p.on('load', () => navs++);
+  await p.goto(require('url').pathToFileURL(require('path').join(__dirname, '..', 'dist', 'index.html')).href); await p.evaluate(() => localStorage.clear()); await p.reload(); navs = 0;
   const E = (f, a) => p.evaluate(f, a); const W = ms => p.waitForTimeout(ms || 150);
   const sub = async () => { await p.click('#content button[type=submit]'); await W(); };
   await p.fill('#login-email', 'ali.usama@saja.com'); await p.fill('#login-pass', 'pw'); await p.click('button[type=submit]'); await W(300);

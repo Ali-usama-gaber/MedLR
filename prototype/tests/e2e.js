@@ -6,7 +6,7 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
   const submitBtn = async () => { if (await p.evaluate(() => /^module-(new|edit)$/.test(UI.route.name) && UI.draft && UI.draft.step === 3 && !UI.draft.workflow)) { await p.click('[data-act=msel-open][data-id=d-wf]'); await p.waitForTimeout(80); await p.click('.wfp-opt'); await p.waitForTimeout(80); } await p.click('button[type=submit]'); };
   const flt = async (k, v) => { await p.click('[data-act=flt-open]'); await p.waitForTimeout(60); const el = await p.$('#fd-' + k); if ((await el.evaluate(e => e.tagName)) === 'SELECT') await p.selectOption('#fd-' + k, v); else await p.fill('#fd-' + k, v); await p.click('[data-act=flt-apply]'); await p.waitForTimeout(80); };
   const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('file:///home/user/MedLR/prototype/dist/index.html');
+  await p.goto(require('url').pathToFileURL(require('path').join(__dirname, '..', 'dist', 'index.html')).href);
   const E = (f, a) => p.evaluate(f, a); const W = ms => p.waitForTimeout(ms || 120);
   const pick = async (id, vals) => { await p.click(`[data-msel=${id}] .msel-add`); await W(60); for (const v of vals) { await p.click(`[data-msel=${id}] .msel-opt[data-v="${v}"]`); await W(40); } await p.keyboard.press('Escape'); await W(80); };
 

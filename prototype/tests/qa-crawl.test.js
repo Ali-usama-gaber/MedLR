@@ -7,7 +7,7 @@ const SKIP_ACT = ['logout', 'reset-confirm', 'print', 'audit-export'];
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
-  await p.goto('file:///home/user/MedLR/prototype/dist/index.html'); await p.evaluate(() => localStorage.clear()); await p.reload();
+  await p.goto(require('url').pathToFileURL(require('path').join(__dirname, '..', 'dist', 'index.html')).href); await p.evaluate(() => localStorage.clear()); await p.reload();
   const E = (f, a) => p.evaluate(f, a);
   const login = async email => { await E(() => ACT.logout()); await p.waitForSelector('#login-email'); await p.fill('#login-email', email); await p.fill('#login-pass', 'pw'); await p.click('button[type=submit]'); await p.waitForFunction(e => S.signedIn && me().email === e, email); };
   // 1) every page for every role: allowed pages render without errors, the rest show the access message
