@@ -38,7 +38,6 @@ function filterModal(M) {
   return modalShell('filter', '', 'Filter', n ? n + ' filter' + (n > 1 ? 's' : '') + ' selected' : 'Narrow the list. Nothing changes until you apply.', `<div class="fgrid flt-grid">${defs.map(field).join('')}</div>`,
     `<button class="btn ghost" data-act="flt-reset">Clear all</button><span class="grow"></span>${btn('Cancel', 'modal-close')}${btn('Apply filters', 'flt-apply', 'primary', '', 'check')}`);
 }
-const clearBtn = keys => keys.some(k => F(k)) ? btn('Clear filters', 'clear-filters', 'ghost sm', `data-keys="${keys.join(',')}"`) : '';
 // Clickable status strip above a list: [label, count, tone, sub, filterKey, filterValue]
 function statStrip(items) {
   return `<div class="kpis strip">${items.map(it => { const on = it[4] && F(it[4]) === it[5]; return `<button class="kpi ${on ? 'on' : ''}" ${it[4] === 'go' ? goAttr(it[5]) : it[4] ? `data-act="toggle-f" data-k="${it[4]}" data-v="${esc(it[5])}" aria-pressed="${on}"` : ''}><span class="k-label">${it[2] ? `<span class="k-dot ${it[2]}"></span>` : ''}${it[0]}</span><b>${it[1]}</b>${it[3] ? `<span class="k-sub">${it[3]}</span>` : ''}</button>`; }).join('')}</div>`;
@@ -178,9 +177,6 @@ function viewForgot() {
 }
 
 /* ===== Home — a personal workspace that adapts to the role ===== */
-function avgStepDays(filterFn, sinceDays = 90) { const t = stepTimes(allCycles().filter(c => (c.end || Date.now()) > Date.now() - sinceDays * DAY)).filter(filterFn); return t.length ? avg(t.map(x => x.ms)) : 0; }
-function moduleRow(m) { return `<button class="task" ${goAttr('module', m.id)}>${typeIco(m.type)}<span class="body"><b>${esc(m.title)}</b><span><span class="mono">${m.id} · v${latest(m).v}</span> · ${esc(productsTxt(m.products))} · ${esc(m.markets.join(', '))} · ${ago(m.updatedAt)}</span></span>${chip(lifeStatus(m))}${icon('chevron', 'sm')}</button>`; }
-function homeList(title, items, empty, more) { return `<section class="panel"><div class="panel-head"><h3>${title}</h3><span class="chip plain">${items.length}</span><span class="grow"></span>${more || ''}</div>${items.length ? items.slice(0, 5).join('') : `<div class="empty"><p>${empty}</p></div>`}</section>`; }
 /* Home: a personal workspace. Every figure is computed from the current workspace and links to where it comes from.
    Admin sees system-wide numbers; reviewers see all content they review; content owners see their team's content. */
 const TASK_GROUPS = [['review', 'Pending review', 'Waiting for a reviewer at the current step'], ['amend', 'Amendment requested', 'Back with the owner; resumes at the same step'], ['submit', 'Awaiting submission', 'Prepared, not yet in a cycle'], ['rejected', 'Rejected', 'Needs a new version (full cycle)']];
@@ -568,7 +564,6 @@ function viewModule() {
   `<div class="tabs" role="tablist" style="margin-bottom:16px">${tabs.map(t => `<button class="tab ${tab === t[0] ? 'active' : ''}" role="tab" aria-selected="${tab === t[0]}" ${goAttr('module', m.id, ` data-tab="${t[0]}"`)}>${t[1]}${t[2] ? `<span class="n">${t[2]}</span>` : ''}</button>`).join('')}</div>` +
   (tab === 'overview' ? viewModuleOverview(m) : tab === 'comments' ? commentsTab(m) : tab === 'approval' ? viewApprovalTab(m, 'Module') : tab === 'versions' ? viewVersions(m, 'Module') : tab === 'lifecycle' ? viewModuleLifecycle(m) : auditTable(S.audit.filter(e => e.objId === m.id), true));
 }
-function refsList(ids) { return ids.length ? `<div class="stack" style="gap:8px">${ids.map((r, i) => { const R = refById(r); return `<div class="ref"><span class="n">${i + 1}</span><div><b>${esc(R.title)}</b><br><span class="muted">${esc(R.source)} · ${esc(refKind(R.kind))}</span></div></div>`; }).join('')}</div>` : '<p class="muted">No references.</p>'; }
 const lastWf = o => { const c = o.review || o.resume ? curCycle(o) : latest(o).cycles.slice(-1)[0]; return c ? wfById(c.wf) : o.workflow ? wfById(o.workflow) : null; };
 function metaKV(m, v) {
   const lv = live(m); const wf = lastWf(m);

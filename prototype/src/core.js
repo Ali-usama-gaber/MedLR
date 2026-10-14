@@ -5,7 +5,7 @@ const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, modal: null,
 
 function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return linkModuleWorkflows(s); if (s && s.version === 7) return linkModuleWorkflows(migrate7to8(s)); } } catch (e) {} return linkModuleWorkflows(SEED()); }
 // Every module records the workflow chosen for it. Older records take it from their approval history; drafts with no history stay unset until someone chooses.
-function linkModuleWorkflows(s) { s.notifications = s.notifications || []; s.notifSeenBy = s.notifSeenBy || {}; (s.teams || []).forEach(t => { if (t.active === undefined) t.active = true; }); if (s.settings.mentionEmail === undefined) s.settings.mentionEmail = true; if (s.settings.notifyEndpoint === undefined) s.settings.notifyEndpoint = ''; s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
+function linkModuleWorkflows(s) { s.notifications = s.notifications || []; s.notifSeenBy = s.notifSeenBy || {}; (s.teams || []).forEach(t => { if (t.active === undefined) t.active = true; }); if (s.settings.mentionEmail === undefined) s.settings.mentionEmail = true; if (s.settings.notifyEndpoint === undefined) s.settings.notifyEndpoint = ''; if (s.settings.idleSignOutMin === undefined) s.settings.idleSignOutMin = 30; s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
 // v7 → v8 keeps every user-created record: indications become records, permissions gain page access and authority, annotations start empty.
 function migrate7to8(s) {
   const valid = new Set(PERMS.map(p => p[0]));
@@ -106,7 +106,6 @@ const sameTeam = (u, o) => !!o && (o.owner === u.id || user(o.owner).team === u.
 const canEditObj = (u, o) => isAdmin(u) || (can(u, 'edit') && (sameTeam(u, o) || can(u, 'manage')));
 const canAmendObj = (u, o) => isAdmin(u) || (can(u, 'amend') && (sameTeam(u, o) || can(u, 'manage')));
 const canSubmit = u => can(u, 'submit');
-const roleIds = () => [...funcIds(true).flatMap(f => LEVELS.map(l => f + '-' + l)), 'Administrator'];
 
 function authority(fn, level) {
   if (fn === 'Administrator') return { short: 'Full system control', long: 'Manages users, roles, permissions, workflows, SOPs and all configuration, sees every report and the full audit trail, and can act on any approval step.', final: true };
@@ -183,6 +182,39 @@ function mediaTx(mode, fn) { return mediaDB().then(db => new Promise((res, rej) 
 // Keeps the file for this session even if the browser refuses persistent storage.
 function mediaPut(id, blob) { MEDIA.urls[id] = URL.createObjectURL(blob); return mediaTx('readwrite', st => st.put(blob, id)).then(() => true, () => false); }
 function mediaClear() { MEDIA.urls = {}; MEDIA.pending = {}; return mediaTx('readwrite', st => st.clear()).catch(() => {}); }
+// Every uploaded file referenced by the workspace, as { fileId: Blob } (for workspace backups).
+function mediaAll() {
+  const ids = uniq([...S.modules, ...S.assets].flatMap(o => o.versions.map(v => v.media && v.media.fileId)).filter(id => id && !id.startsWith('seed:')));
+  return Promise.all(ids.map(id => mediaTx('readonly', st => st.get(id)).then(b => [id, b], () => [id, null]))).then(r => Object.fromEntries(r.filter(x => x[1])));
+}
+
+/* ---------- Workspace backup ----------
+   One JSON file holds the whole workspace and every uploaded file (base64), so it can be restored in another
+   browser or after the browser data was cleared. The import checks the format before anything is replaced. */
+const BACKUP_FORMAT = 'saja-medlr-workspace';
+const blobToB64 = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+const b64ToBlob = (s, type) => { const bin = atob(s); const a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return new Blob([a], { type: type || 'application/octet-stream' }); };
+async function workspaceBackup() {
+  const files = await mediaAll(); const media = {};
+  for (const [id, b] of Object.entries(files)) media[id] = { type: b.type, data: await blobToB64(b) };
+  const data = JSON.parse(JSON.stringify(S)); delete data.signedIn; delete data.personaId;
+  return { format: BACKUP_FORMAT, version: S.version, exportedAt: new Date().toISOString(), org: S.settings.orgName, counts: { modules: S.modules.length, assets: S.assets.length, users: S.users.length, audit: S.audit.length, files: Object.keys(media).length }, data, media };
+}
+// Returns an error message, or null when the backup can be restored.
+function backupProblem(b) {
+  if (!b || typeof b !== 'object' || b.format !== BACKUP_FORMAT) return 'This is not a SAJA MedLR workspace backup.';
+  const d = b.data; if (!d || typeof d !== 'object') return 'The backup has no workspace data.';
+  if (d.version !== 8 && d.version !== 7) return 'This backup was made by a version of MedLR this app cannot read (format ' + d.version + ').';
+  for (const k of ['users', 'modules', 'assets', 'workflows', 'roles', 'settings', 'audit']) if (!d[k] || typeof d[k] !== 'object') return 'The backup is incomplete (missing ' + k + ').';
+  if (!d.users.some(u => u.fn === 'Administrator' && u.status === 'Active')) return 'The backup has no active administrator, so nobody could manage it.';
+  return null;
+}
+async function workspaceRestore(b) {
+  const d = b.data; const s = d.version === 7 ? migrate7to8(d) : d;
+  await mediaClear();
+  for (const [id, f] of Object.entries(b.media || {})) { try { await mediaPut(id, b64ToBlob(f.data, f.type)); } catch (e) {} }
+  return linkModuleWorkflows(s);
+}
 // Returns a URL for the file, null while it loads (the page re-renders when ready) or 'missing'.
 function mediaUrl(fileId) {
   if (!fileId) return 'missing';

@@ -147,6 +147,15 @@ function paginateTables() {
     t.after(el);
   });
 }
+// Saves a file: through the claude.ai downloads capability when hosted there, otherwise a normal browser download.
+function saveFile(filename, data, type, done) {
+  if (window.claude && typeof window.claude.use === 'function') {
+    window.claude.use('downloads').then(dl => { if (!dl) { toast('Export is not available in this view'); return; } dl.save({ filename, data }).then(() => toast(done, 'ok'), e => { if (e && e.code !== 'declined') toast('Export is not available in this view'); }); });
+    return;
+  }
+  try { const a = document.createElement('a'); const url = URL.createObjectURL(new Blob([data], { type })); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000); toast(done, 'ok'); }
+  catch (e) { toast('Export is not available in this browser'); }
+}
 // Refusals and failures read differently from confirmations: alert icon, warning colour, announced assertively, shown longer.
 const TOAST_ERR = /^(you |your role|cannot|could not|changes could not|it is in use|only |give |enter |write |add an active|this (workflow|module|file|[a-z]+ module accepts)|the file is larger|an active|export is not|content and media)/i;
 function toast(text, kind) {
@@ -286,6 +295,13 @@ function viewModal() {
       <div class="field">${labelRow('Countries <span class="muted">(none = all)</span>', addNew('markets', 'modal:markets', 'country'))}${chipSelect('sop-markets', 'sop-toggle', 'markets', S.markets.map(m => [m.id, m.name, m.id + (m.active ? '' : ' · inactive')]), D.markets, { ph: 'All countries', noun: 'countries', below: true, bulk: 'sop-bulk', empty: 'All countries (none selected)' })}</div>
       <div class="field"><label for="sop-g">Guidance shown when it fails</label><textarea class="textarea" id="sop-g" rows="2" data-sop="guidance">${esc(D.guidance)}</textarea></div>`,
       `${btn('Cancel', 'modal-close')}${btn(M.id ? 'Save SOP' : 'Create SOP', 'sop-save', 'primary', '', 'check')}`, true);
+  }
+  if (M.type === 'confirm-import') {
+    const c = M.backup.counts || {}; const when = M.backup.exportedAt ? fmtDT(Date.parse(M.backup.exportedAt)) : 'unknown date';
+    return modalShell('alert', 'bad', 'Replace this workspace with the backup?', 'Everything in this browser is replaced. Download a backup of the current workspace first if you may need it.',
+      `<dl class="kv"><dt>Backup of</dt><dd>${esc(M.backup.org || '—')}</dd><dt>Made</dt><dd>${esc(when)}</dd><dt>Contains</dt><dd>${c.modules || 0} modules · ${c.assets || 0} assets · ${c.users || 0} users · ${c.audit || 0} audit events · ${c.files || 0} files</dd></dl>
+      <div class="field"><label for="m-confirm">Type RESTORE to confirm</label><input class="input ${M.err ? 'invalid' : ''}" id="m-confirm" autocomplete="off">${M.err ? '<span class="err">Type RESTORE in capitals.</span>' : ''}</div>`,
+      `${btn('Cancel', 'modal-close')}${btn(M.busy ? 'Restoring…' : 'Replace workspace', 'ws-import-confirm', 'danger', M.busy ? 'disabled' : '', 'upload')}`);
   }
   if (M.type === 'confirm-reset') {
     return modalShell('alert', 'bad', 'Restore the initial workspace?', 'All modules, assets, users, workflows, SOPs, settings and the audit trail return to their initial state. This cannot be undone.', `<div class="field"><label for="m-confirm">Type RESTORE to confirm</label><input class="input ${M.err ? 'invalid' : ''}" id="m-confirm" autocomplete="off">${M.err ? '<span class="err">Type RESTORE in capitals.</span>' : ''}</div>`, `${btn('Cancel', 'modal-close')}${btn('Restore workspace', 'reset-confirm', 'danger', '', 'undo')}`);
@@ -461,16 +477,27 @@ const ACT = {
   'audit-export': () => { if (!can(me(), 'export')) { toast('Your role cannot export'); return; }
     const rows = auditRows().sort((a, b) => b.ts - a.ts); const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     const csv = [['Date', 'Time', 'User', 'Role', 'Action', 'Object type', 'Object ID', 'Object', 'Version', 'Products', 'Countries', 'Previous value', 'New value', 'Note'].map(q).join(','), ...rows.map(e => [fmtD(e.ts), fmtT(e.ts), user(e.user).name, e.role, e.action, e.objType, e.objId, objName(e), e.version, productsTxt(e.products), (e.markets || []).join(' '), e.prev, e.next, e.note].map(q).join(','))].join('\n');
-    const filename = 'saja-medlr-audit-' + toISO(Date.now()) + '.csv';
-    // Inside the claude.ai viewer, files go through the downloads capability; elsewhere a normal browser download.
-    if (window.claude && typeof window.claude.use === 'function') {
-      window.claude.use('downloads').then(dl => {
-        if (!dl) { toast('Export is not available in this view'); return; }
-        dl.save({ filename, data: csv }).then(() => toast('Exported ' + rows.length + ' audit events'), e => { if (e && e.code !== 'declined') toast('Export is not available in this view'); });
-      });
-      return;
-    }
-    try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); toast('Exported ' + rows.length + ' audit events'); } catch (e) { toast('Export is not available in this browser'); }
+    saveFile('saja-medlr-audit-' + toISO(Date.now()) + '.csv', csv, 'text/csv', 'Exported ' + rows.length + ' audit events');
+  },
+  /* workspace backup */
+  'ws-export': async el => {
+    if (el) el.disabled = true; toast('Preparing the backup…', 'ok');
+    try { const b = await workspaceBackup(); saveFile('saja-medlr-backup-' + toISO(Date.now()) + '.json', JSON.stringify(b), 'application/json', 'Backup downloaded · ' + b.counts.modules + ' modules, ' + b.counts.assets + ' assets, ' + b.counts.files + ' files');
+      logAdmin('Workspace backed up', 'Settings', 'settings', { note: b.counts.modules + ' modules · ' + b.counts.assets + ' assets · ' + b.counts.audit + ' audit events · ' + b.counts.files + ' files' }); save(); }
+    catch (e) { toast('Could not create the backup: ' + (e && e.message || e), 'err'); }
+    if (el) el.disabled = false;
+  },
+  'ws-import-confirm': async () => {
+    const M = UI.modal; const v = document.getElementById('m-confirm').value.trim(); if (v !== 'RESTORE') { M.err = true; render(); return; }
+    const pid = S.personaId; M.busy = true; render();
+    try {
+      const next = await workspaceRestore(M.backup);
+      // The person restoring stays signed in when they exist (and are active) in the backup; otherwise its administrator.
+      const keep = next.users.find(u => u.id === pid && u.status === 'Active' && u.email === me().email) || next.users.find(u => u.fn === 'Administrator' && u.status === 'Active');
+      S = next; S.signedIn = true; S.personaId = keep.id; UI.modal = null; UI.f = {}; UI.pg = {}; UI.draft = null;
+      log('Workspace restored', 'Settings', { id: 'settings' }, 1, { note: 'From backup of ' + (M.backup.exportedAt || '').slice(0, 10) + ' · ' + M.backup.counts.modules + ' modules · ' + M.backup.counts.files + ' files' });
+      save(); go('home'); toast('Workspace restored from the backup');
+    } catch (e) { M.busy = false; render(); toast('Could not restore the backup: ' + (e && e.message || e), 'err'); }
   },
 
   /* users and roles */
@@ -515,7 +542,7 @@ const ACT = {
   'set-save': () => {
     const D = UI.setDraft; let n = 0;
     const ep = String(D.notifyEndpoint || '').trim(); if (ep && !/^https:\/\/[^\s/]+\.[^\s]+$/i.test(ep)) { toast('Email delivery endpoint must be a full https:// address', 'err'); return; } if ('notifyEndpoint' in D) D.notifyEndpoint = ep;
-    SETTINGS.forEach(([, fields]) => fields.forEach(([k, label, type]) => { let val = D[k]; if (type === 'number') val = Math.max(1, Math.round(+val || 1)); if (String(val) !== String(S.settings[k])) { const show = x => type === 'bool' ? (x ? 'On' : 'Off') : type === 'wf' || type === 'wfa' ? (wfById(x) || {}).name : String(x); logAdmin('Setting changed', 'Settings', 'settings', { note: label, prev: show(S.settings[k]), next: show(val) }); S.settings[k] = val; n++; } }));
+    SETTINGS.forEach(([, fields]) => fields.forEach(([k, label, type]) => { let val = D[k]; if (type === 'number') val = Math.max(1, Math.round(+val || 1)); if (type === 'number0') val = Math.max(0, Math.round(+val || 0)); if (String(val) !== String(S.settings[k])) { const show = x => type === 'bool' ? (x ? 'On' : 'Off') : type === 'wf' || type === 'wfa' ? (wfById(x) || {}).name : String(x); logAdmin('Setting changed', 'Settings', 'settings', { note: label, prev: show(S.settings[k]), next: show(val) }); S.settings[k] = val; n++; } }));
     UI.setDraft = null; save(); render(); toast(n ? n + ' setting' + (n > 1 ? 's' : '') + ' saved' : 'No changes');
   },
   'reset-open': () => { UI.modal = { type: 'confirm-reset' }; render(); },
@@ -569,6 +596,7 @@ const editAsset = el => { const a = actAsset(el); return !!a && canEditObj(me(),
 const ACT_GUARD = {
   'roles-reset': () => can(me(), 'manage_users'),
   'reset-open': () => can(me(), 'manage_settings'), 'reset-confirm': () => can(me(), 'manage_settings'),
+  'ws-export': () => can(me(), 'manage_settings'), 'ws-import-confirm': () => can(me(), 'manage_settings') && !!(UI.modal && UI.modal.backup),
   'set-save': () => can(me(), 'manage_settings'), 'set-bool': () => can(me(), 'manage_settings'),
   'sop-save': () => can(me(), 'manage_sops'),
   decide: el => decideOk(me(), actObj(el), el.dataset.d), 'decide-confirm': () => { const M = UI.modal || {}; return M.type === 'decide' && decideOk(me(), objById(M.kind, M.id), M.d); },
@@ -648,13 +676,13 @@ document.addEventListener('change', ev => {
   if (textual && (t.dataset.dm || t.dataset.d || t.dataset.u || t.dataset.an || t.dataset.sop || t.dataset.set)) return;
   if (t.dataset.d) { UI.draft[t.dataset.d] = t.value; render(); return; }
   if (t.dataset.actChange === 'd-file') { uploadModuleFile(t.files && t.files[0]); return; }
+  if (t.dataset.actChange === 'ws-import') { const f = t.files && t.files[0]; t.value = ''; if (f && can(me(), 'manage_settings')) readBackupFile(f); return; }
   if (t.dataset.actChange === 'd-addref' && t.value) { UI.draft.refs.push(t.value); render(); return; }
   if (t.dataset.actChange === 'sign-att') { UI.modal.att = t.checked; UI.modal.err = null; render(); return; }
   if (t.dataset.u) { UI.udraft[t.dataset.u] = t.value; render(); return; }
   if (t.dataset.an) { const D = UI.modal.d; D[t.dataset.an] = t.value; if (t.dataset.an === 'type') { const mt = mat(t.value); D.channel = mt.channel; D.name = mt.name + ' — ' + (D.name.split('—')[1] || '').trim(); } render(); return; }
   if (t.dataset.sop) { UI.modal.d[t.dataset.sop] = t.value; render(); return; }
   if (t.dataset.set) { UI.setDraft[t.dataset.set] = t.value; render(); return; }
-  if (false && t.dataset.mtWf) { const mt = S.materialTypes.find(x => x.id === t.dataset.mtWf); const prev = (wfById(mt.workflow) || {}).name; mt.workflow = t.value; logAdmin('Material type updated', 'Material type', mt.id, { note: mt.name + ' workflow', prev, next: wfById(t.value).name }); save(); render(); toast(mt.name + ' now uses ' + wfById(t.value).name); return; }
   if (t.dataset.w || t.dataset.wfn || t.dataset.nwfn) return;
   if (t.dataset.nwf) { const st = UI.nwf.steps[+t.dataset.i]; st[t.dataset.nwf] = t.value; if (t.dataset.nwf === 'fn') st.team = ''; if (st.team === '') delete st.team; render(); return; }
   if (t.dataset.wf) { const st = UI.wfDraft.steps[UI.wfSel]; st[t.dataset.wf] = t.value; if (t.dataset.wf === 'fn') st.team = ''; if (st.team === '') delete st.team; render(); return; }
@@ -676,6 +704,13 @@ document.addEventListener('submit', ev => {
   if (f === 'user') saveUserForm();
   if (f === 'workflow') saveWorkflowForm();
 });
+
+/* ===== Workspace backup file: read and check it, then ask for confirmation ===== */
+async function readBackupFile(file) {
+  let b; try { b = JSON.parse(await file.text()); } catch (e) { toast('This file is not a MedLR backup (it is not valid JSON)', 'err'); return; }
+  const why = backupProblem(b); if (why) { toast(why, 'err'); return; }
+  UI.modal = { type: 'confirm-import', backup: b }; render(); setTimeout(() => { const i = document.getElementById('m-confirm'); i && i.focus(); }, 30);
+}
 
 /* ===== File upload for media & document modules ===== */
 async function fileChecksum(buf) {
@@ -802,6 +837,26 @@ window.addEventListener('storage', e => {
   if (UI.modal && UI.modal.id && UI.modal.kind && !objById(UI.modal.kind, UI.modal.id)) UI.modal = null;
   render();
 });
+
+/* Automatic sign-out after inactivity (Settings › Approval settings; 21 CFR Part 11 §11.300 session control).
+   Activity in any tab counts: the last activity time is shared through localStorage. One minute before sign-out
+   a warning appears; any activity keeps the session. The sign-out is recorded in the audit trail. */
+const IDLE_KEY = 'saja-medlr-active';
+let idleLast = Date.now(), idleWarned = false, idleBeat = 0;
+function idleTouch() {
+  idleLast = Date.now(); if (idleWarned) { idleWarned = false; const w = document.getElementById('idle-warn'); if (w) w.remove(); }
+  if (idleLast - idleBeat > 5000) { idleBeat = idleLast; try { localStorage.setItem(IDLE_KEY, String(idleLast)); } catch (e) {} }
+}
+['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(t => document.addEventListener(t, idleTouch, { passive: true, capture: true }));
+window.addEventListener('storage', e => { if (e.key === IDLE_KEY && +e.newValue > idleLast) { idleLast = +e.newValue; idleTouch(); } });
+function idleCheck() {
+  const min = +S.settings.idleSignOutMin || 0; if (!S.signedIn || !min) return;
+  const shared = +(localStorage.getItem(IDLE_KEY) || 0); if (shared > idleLast) idleLast = shared;
+  const left = idleLast + min * 60000 - Date.now();
+  if (left <= 0) { const w = document.getElementById('idle-warn'); if (w) w.remove(); idleWarned = false; log('Signed out automatically', 'User', me(), 1, { note: 'No activity for ' + min + ' min' }); S.signedIn = false; save(); UI.modal = null; UI.draft = null; UI.udraft = null; UI.after = { name: UI.route.name, p: UI.route.p }; go('login'); UI.f.loginErr = 'You were signed out after ' + min + ' minutes without activity. Sign in to continue.'; render(); return; }
+  if (left <= 60000 && !idleWarned) { idleWarned = true; const box = document.getElementById('toasts'); const t = document.createElement('div'); t.id = 'idle-warn'; t.className = 'toast err'; t.setAttribute('role', 'alert'); t.innerHTML = icon('clock', 'sm') + '<span>You will be signed out in 1 minute because of inactivity. Move the mouse or press a key to stay signed in.</span>'; box.appendChild(t); }
+}
+setInterval(idleCheck, 15000);
 
 // Open the page named in the URL (deep link, bookmark or refresh); signed out, open it after sign-in.
 (function initRoute() {

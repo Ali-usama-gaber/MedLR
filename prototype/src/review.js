@@ -19,7 +19,6 @@ const ANN_STYLES = {
   ink: ['Freehand', 'pen'], rect: ['Rectangle', 'square'], ellipse: ['Ellipse', 'circle'], arrow: ['Arrow', 'arrowne']
 };
 const SHAPES = ['ink', 'rect', 'ellipse', 'arrow'];
-const TEXT_STYLES = ['comment', 'highlight', 'underline', 'strike', 'insert', 'replace', 'note'];
 // Comment text is required for these; markup styles take an optional note.
 const NEEDS_TEXT = ['comment', 'replace', 'note'];
 const annUI = () => UI.an || (UI.an = { flt: 'all', q: '', fa: '', ft: '', fm: '', sort: 'loc', focus: null, sel: null, comp: null, edit: null, reply: null, tool: null, vals: {}, men: null, hist: { u: [], r: [] } });

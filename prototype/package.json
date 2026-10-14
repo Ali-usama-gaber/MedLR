@@ -1,0 +1,21 @@
+{
+  "name": "saja-medlr",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SAJA MedLR — interactive MLR prototype (no backend, browser-only)",
+  "type": "commonjs",
+  "scripts": {
+    "build": "python build.py",
+    "test": "node tests/run.js",
+    "test:parallel": "node tests/run.js --parallel",
+    "test:probe": "node tests/jinx-probe.js",
+    "qa:shots": "node tests/qa-shots.js",
+    "fonts": "node vendor/fetch-fonts.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

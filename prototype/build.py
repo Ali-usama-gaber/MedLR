@@ -25,15 +25,24 @@ js = js.replace("'__SEED_MEDIA__'", json.dumps(seed_media))
 pdfjs = (root / 'vendor' / 'pdf.min.js').read_text(encoding=U); pdfworker = (root / 'vendor' / 'pdf.worker.min.js').read_text(encoding=U)
 for name, code in (('pdf.min.js', pdfjs), ('pdf.worker.min.js', pdfworker)):
     assert '</script' not in code.lower() and '<!--' not in code, name + ' cannot be inlined safely'
+# Fonts are inlined (Latin subsets, SIL OFL 1.1) so the app looks the same offline. Refresh: node vendor/fetch-fonts.js
+fontdir = root / 'vendor' / 'fonts'
+fonts = (fontdir / 'fonts.css').read_text(encoding=U)
+for f in sorted(fontdir.glob('*.woff2')):
+    fonts = fonts.replace('url(%s)' % f.name, 'url(data:font/woff2;base64,%s)' % base64.b64encode(f.read_bytes()).decode())
+assert 'url(http' not in fonts and '.woff2)' not in fonts, 'a font file referenced in fonts.css is missing'
+favicon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#12291f"/><path d="M9 16.5l4.5 4.5L23 11.5" fill="none" stroke="#5fe0a0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 body = f'''<!-- SAJA MedLR build {stamp} -->
 <title>SAJA MedLR</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,{base64.b64encode(favicon.encode()).decode()}">
+<style>
+{fonts}
+</style>
 <style>
 {css}
 </style>
+<noscript><div style="max-width:520px;margin:15vh auto;padding:24px;font:16px/1.5 system-ui,sans-serif;color:#17201c;border:1px solid #e6ebe8;border-radius:14px">SAJA MedLR needs JavaScript. Turn JavaScript on in your browser, then reload this page.</div></noscript>
 <div id="app"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <script>{pdfjs}</script>
@@ -43,7 +52,12 @@ body = f'''<!-- SAJA MedLR build {stamp} -->
 {js}
 </script>
 '''
+page = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="theme-color" content="#12291f">\n' + body.replace('<noscript>', '</head>\n<body>\n<noscript>', 1) + '</body>\n</html>\n'
 dist = root / 'dist'; dist.mkdir(exist_ok=True)
 (dist / 'artifact.html').write_text(body, encoding=U, newline='\n')
-(dist / 'index.html').write_text(encoding=U, newline='\n', data='<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' + body.replace('<div id="app">', '</head>\n<body>\n<div id="app">', 1) + '</body>\n</html>\n')
-print('built', len(body) // 1024, 'KB')
+(dist / 'index.html').write_text(page, encoding=U, newline='\n')
+# The published copy (GitHub Pages serves /docs). dist/ is a local build output and is not committed.
+docs = root.parent / 'docs'
+if docs.is_dir():
+    (docs / 'index.html').write_text(page, encoding=U, newline='\n')
+print('built', len(body) // 1024, 'KB -> dist/index.html, dist/artifact.html' + (', docs/index.html' if docs.is_dir() else ''))

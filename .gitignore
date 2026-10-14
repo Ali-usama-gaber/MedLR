@@ -1,0 +1,8 @@
+prototype/dist/
+prototype/vendor/fonts/*.woff2
+prototype/tests/.style-baseline.json
+prototype/tests/.css-unused.json
+prototype/tests/.css-dead.json
+prototype/tests/.css-pruned.txt
+node_modules/
+npm-debug.log*

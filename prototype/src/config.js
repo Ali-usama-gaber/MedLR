@@ -160,7 +160,6 @@ function hubEntries(h) {
   return [...(H.extra || []).filter(e => can(me(), e.perm)).map(e => ({ ...e, plural: e.label })),
     ...H.keys.filter(k => can(me(), cfgViewPerm(k))).map(k => { const C = CONFIG[k]; return { k, plural: C.plural, icon: C.icon, sub: C.sub, coll: C.coll, active: x => !!x.active, used: x => cfgUseCount(k, x) > 0, objType: C.label, manage: canManageCfg(k), cfg: true }; })];
 }
-const hubKeys = h => hubEntries(h).map(e => e.k);
 // Route permissions and the sidebar entries follow the entities' own permissions.
 Object.keys(HUBS).forEach(h => { const ex = HUBS[h].extra || []; ROUTE_PERM[h] = [...new Set([...HUBS[h].keys.flatMap(cfgViewPerm), ...ex.flatMap(e => e.perm)])]; HUBS[h].keys.forEach(k => { ROUTE_PERM[k] = cfgViewPerm(k); NAV_OF[k] = h; }); ex.forEach(e => { NAV_OF[e.k] = h; }); const n = NAV.find(x => x[0] === h); if (n) n[4] = ROUTE_PERM[h]; });
 function hubLastChange(objType) { let t = 0; S.audit.forEach(e => { if (e.objType === objType && e.ts > t) t = e.ts; }); return t; }

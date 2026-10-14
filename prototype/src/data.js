@@ -129,7 +129,7 @@ const SEED = () => {
     version: 8,
     personaId: 'u-ali',
     signedIn: false,
-    settings: { orgName: 'SAJA Pharma', expiryWarnDays: 45, reviewReminderDays: 30, defaultValidityMonths: 12, libraryShowExpiring: true, requireSignature: true, adminActsOnAnyStep: true, reviewSlaDays: 3, blockOnOpenComments: true, defaultModuleWorkflow: 'WF-STD', assetStreamWorkflow: 'WF-ASSET-STREAM', newVersionWorkflow: 'WF-LOW' },
+    settings: { orgName: 'SAJA Pharma', expiryWarnDays: 45, reviewReminderDays: 30, defaultValidityMonths: 12, libraryShowExpiring: true, requireSignature: true, adminActsOnAnyStep: true, reviewSlaDays: 3, blockOnOpenComments: true, defaultModuleWorkflow: 'WF-STD', assetStreamWorkflow: 'WF-ASSET-STREAM', newVersionWorkflow: 'WF-LOW', idleSignOutMin: 30 },
     roles: DEFAULT_ROLES(),
     products: [
       { id: 'P-A', name: 'Product A', code: 'PA', area: 'Cardiology', active: true },
