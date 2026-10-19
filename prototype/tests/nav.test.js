@@ -16,8 +16,8 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   ok(!tabs.some(t => /Products|Countries|Teams|Functions|References|Channels|Audiences/.test(t)), 'Settings keeps only preferences (' + tabs.join(', ') + ')');
   await p.click('.side .nav-item[title="Reference Data"]'); await W(300);
   const rows = await E(() => [...document.querySelectorAll('.hub-tbl tbody tr')].map(r => [r.querySelector('b').textContent, +r.cells[1].textContent]));
-  const real = await E(() => ({ Products: S.products.length, Countries: S.markets.length, 'Module Types': S.moduleTypes.length, 'Material Types': S.materialTypes.length, Channels: S.channels.length, Audiences: S.audiences.length, References: S.references.length }));
-  ok(rows.length === 7 && rows.every(([k, v]) => real[k] === v), 'overview counts computed from records ' + JSON.stringify(rows));
+  const real = await E(() => ({ Products: S.products.length, Countries: S.markets.length, 'Module Types': S.moduleTypes.length, 'Material Types': S.materialTypes.length, Channels: S.channels.length, Audiences: S.audiences.length, References: S.references.length, 'Reference Kinds': S.refKinds.length }));
+  ok(rows.length === 8 && rows.every(([k, v]) => real[k] === v), 'overview counts computed from records ' + JSON.stringify(rows));
   // counts update live after adding a product
   await p.click('.set-tab:has-text("Products")'); await W(300);
   ok(await E(() => UI.route.name === 'products' && !!document.querySelector('.crumbs')), 'Products opens inside Reference Data with breadcrumbs');
