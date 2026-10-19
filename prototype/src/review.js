@@ -24,6 +24,14 @@ const NEEDS_TEXT = ['comment', 'replace', 'note'];
 const annUI = () => UI.an || (UI.an = { flt: 'all', q: '', fa: '', ft: '', fm: '', sort: 'loc', focus: null, sel: null, comp: null, edit: null, reply: null, tool: null, vals: {}, men: null, hist: { u: [], r: [] } });
 const annsFor = (obj, v) => S.annotations.filter(a => a.objType === kindOf(obj) && a.objId === obj.id && a.version === v).sort((x, y) => x.ts - y.ts);
 const annNo = (obj, a) => annsFor(obj, a.version).indexOf(a) + 1;
+/* A comment belongs to the file it was made on (a.fileId). A version can hold several file revisions (amendments
+   replace the file within the version); markers are drawn only on their own file. Comments made on an earlier file,
+   or whose file could not be determined for old data, are listed as history and never re-anchored onto a new file. */
+const verFileId = (obj, v) => { const x = obj.versions ? verOf(obj, v) : null; return x && x.media ? x.media.fileId || null : null; };
+const annOnFile = (obj, a) => { const f = verFileId(obj, a.version); return !f || a.fileId === f; };
+const annsOnFile = (obj, v) => annsFor(obj, v).filter(a => annOnFile(obj, a));
+const annsEarlierFile = (obj, v) => annsFor(obj, v).filter(a => !annOnFile(obj, a));
+const annFileLabel = (obj, a) => { const x = verOf(obj, a.version); const f = x && [...(x.files || [])].find(f => f.fileId === a.fileId); return a.fileId && f ? 'File revision ' + (f.rev || 1) + ' · ' + f.name : 'Earlier file (not recorded)'; };
 // Open findings raised by reviewers (owner notes never block an approval).
 const blockingAnns = obj => annsFor(obj, latest(obj).v).filter(a => a.status === 'open' && a.author !== obj.owner);
 const annIsMine = a => a.author === me().id;
@@ -91,7 +99,7 @@ function shapeSVG(x, cls, attrs) {
   return `<polyline class="${cls}" points="${x.pts.map(p => p[0] * 100 + ',' + p[1] * 100).join(' ')}" ${sw} ${attrs}/>`;
 }
 function annRegions(obj, v, target, page, editable) {
-  const U = annUI(); const list = annsFor(obj, v).filter(a => onSurface(a, target, page));
+  const U = annUI(); const list = annsOnFile(obj, v).filter(a => onSurface(a, target, page));
   const tAttr = a => a.anchor.t != null ? `data-an-t="${a.anchor.t}"` : '';
   const pin = (a, x, y) => `<i class="an-pin s-${a.style}${a.status === 'resolved' ? ' res' : ''}" style="left:${x * 100}%;top:${y * 100}%" data-an="${a.id}" data-act="an-focus" data-id="${a.id}" ${tAttr(a)}>${annNo(obj, a)}</i>`;
   const html = list.map(a => { const x = a.anchor; const f = U.focus === a.id ? ' an-focus' : ''; const r_ = a.status === 'resolved' ? ' res' : '';
@@ -161,7 +169,7 @@ function reviewCanvas(obj, editable) {
     const md = v.media; const k = mediaKindOf(md);
     if (editable && md && (k !== 'document' || (PDFR[md.fileId] && PDFR[md.fileId].pages))) rail = toolRail(k);
     if (k === 'image') body = `<div class="an-media"><div class="an-frame">${mediaView(md)}${annRegions(obj, v.v, 'file', 0, editable)}</div></div>`;
-    else if (k === 'video') { const ts = annsFor(obj, v.v).filter(a => a.anchor.t != null); const dur = md.duration || Math.max(1, ...ts.map(a => a.anchor.t + 1));
+    else if (k === 'video') { const ts = annsOnFile(obj, v.v).filter(a => a.anchor.t != null); const dur = md.duration || Math.max(1, ...ts.map(a => a.anchor.t + 1));
       body = `<div class="an-media"><div class="an-vframe">${mediaView(md)}<div class="an-vlayer ${U.tool && U.tool !== 'play' ? 'tool-on' : ''}">${annRegions(obj, v.v, 'file', 0, editable && U.tool && U.tool !== 'play')}</div></div><div class="an-tl" aria-label="Comment timeline"><span class="an-tl-track">${ts.map(a => `<button type="button" class="an-tl-m s-${a.style} ${a.status === 'resolved' ? 'res' : ''} ${U.focus === a.id ? 'an-focus' : ''}" style="left:${Math.min(100, 100 * a.anchor.t / dur)}%" data-an-tl="${a.id}" data-act="an-go" data-id="${a.id}" title="${esc(fmtSecs(a.anchor.t) + ' — ' + a.text)}">${annNo(obj, a)}</button>`).join('')}</span><span class="an-tl-l"><span>0:00</span><span>${fmtSecs(dur)}</span></span></div>${editable ? `<div class="row" style="gap:8px;margin-top:8px"><button class="btn sm" data-act="an-time">${icon('message', 'sm')}Comment at current time</button><span class="muted" style="font-size:12px">Pause where the comment applies; choose a drawing tool to mark the frame.</span></div>` : ''}</div>`; }
     else body = md ? pdfReview(obj, v.v, md, editable) : mediaView(md);
     body = `<div class="fp-bar">${icon(mediaKindOf(md) === 'image' ? 'image' : mediaKindOf(md) === 'video' ? 'video' : 'file', 'sm')}<b>${esc(md ? md.name : '')}</b><span class="muted">${esc(md ? (md.format || md.mime) + ' · ' + fmtSize(md.size) : '')}</span><span class="grow"></span>${fileMenu(md, obj.id + ' · v' + v.v + ' · ' + v.status)}</div>` + body + `<p class="media-desc">${esc(v.body)}</p>`;
@@ -217,7 +225,7 @@ async function deliverEmail(n) {
 
 /* --- comments panel --- */
 function commentsPanel(obj, editable) {
-  const U = annUI(); const v = latest(obj).v; const all = annsFor(obj, v); const open = all.filter(a => a.status === 'open'); const meId = me().id;
+  const U = annUI(); const v = latest(obj).v; const all = annsOnFile(obj, v); const earlier = annsEarlierFile(obj, v); const open = all.filter(a => a.status === 'open'); const meId = me().id;
   const q = (U.q || '').toLowerCase();
   let list = all.filter(a => (U.flt === 'all' || a.status === U.flt) && (!U.fa || a.author === U.fa) && (!U.ft || a.style === U.ft) && (!U.fm || (U.fm === 'me' ? (a.mentions || []).includes(meId) || a.replies.some(r => (r.mentions || []).includes(meId)) : U.fm === 'any' ? (a.mentions || []).length || a.replies.some(r => (r.mentions || []).length) : (a.mentions || []).includes(U.fm)))
     && (!q || [a.text, a.replacement, annLabel(a), user(a.author).name, ...a.replies.map(r => r.text)].join(' ').toLowerCase().includes(q)));
@@ -247,7 +255,8 @@ function commentsPanel(obj, editable) {
       <div class="an-fgrid">${fsel_('fa', 'Author', [['', 'All authors'], ...authors.map(id => [id, user(id).name])])}${fsel_('ft', 'Type', [['', 'All types'], ...types.map(t => [t, ANN_STYLES[t][0]])])}${fsel_('fm', 'Mentions', [['', 'Any mentions'], ['me', 'Mentions me'], ['any', 'Has a mention'], ...mentioned.map(id => [id, '@' + user(id).name])])}${fsel_('sort', 'Sort', [['loc', 'By location'], ['author', 'By author'], ['date', 'Newest first']])}</div>${nAct ? `<button type="button" class="linklike" data-act="an-fclear">Clear filters</button>` : ''}</div>
     ${blocking && S.settings.blockOnOpenComments && obj.review ? `<div class="an-block">${icon('lock', 'sm')}${blocking} open reviewer comment${blocking > 1 ? 's' : ''} — resolve before approving.</div>` : ''}
     <div class="an-body">${composer}${editable && !comp ? `<div class="an-gen">${menField('an-general', 'General comment on v' + v + ' (no anchor) — type @ to mention', 2)}<div class="row" style="justify-content:flex-end">${btn('Add general comment', 'an-general', 'sm', '', 'message')}</div></div>` : ''}
-    ${list.length ? list.map(card).join('') : `<p class="muted an-empty">${all.length ? 'No comments match.' : editable ? 'No comments yet. Select text, drag an area, pick a drawing tool or add a general comment.' : 'No comments on this version.'}</p>`}</div></section>`;
+    ${list.length ? list.map(card).join('') : `<p class="muted an-empty">${all.length ? 'No comments match.' : editable ? 'No comments yet. Select text, drag an area, pick a drawing tool or add a general comment.' : 'No comments on this file.'}</p>`}
+    ${earlier.length ? `<div class="an-earlier" data-earlier="${earlier.length}"><span class="section-title">Made on an earlier file · v${v}</span>${earlier.map(a => `<div class="an-hist"><span class="tag">${esc(annFileLabel(obj, a))}</span>${card(a)}</div>`).join('')}</div>` : ''}</div></section>`;
 }
 
 /* --- creating, editing and tracking annotations (with undo / redo) --- */
@@ -255,7 +264,7 @@ const annObj = a => objById(a.objType, a.objId);
 const annClone = a => JSON.parse(JSON.stringify(a));
 function annCreate(obj, anchor, style, text, replacement, mentions) {
   const u = me(); const c = annCtx(obj);
-  const a = { id: uid('an'), objType: kindOf(obj), objId: obj.id, version: latest(obj).v, cycle: c.cycle, step: c.step, stepIdx: c.stepIdx, anchor, style, text: text || '', replacement: replacement || '', mentions: mentions || [], author: u.id, role: roleLabel(u), ts: Date.now(), status: 'open', replies: [] };
+  const a = { id: uid('an'), objType: kindOf(obj), objId: obj.id, version: latest(obj).v, fileId: verFileId(obj, latest(obj).v), cycle: c.cycle, step: c.step, stepIdx: c.stepIdx, anchor, style, text: text || '', replacement: replacement || '', mentions: mentions || [], author: u.id, role: roleLabel(u), ts: Date.now(), status: 'open', replies: [] };
   S.annotations.push(a); annLog('Comment created', obj, a, { next: (ANN_STYLES[style][0]) + (text ? ': ' + text : '') + (replacement ? ' → ' + replacement : '') });
   notifyMentions(obj, a, a.mentions, 'Comment');
   if (obj.review) obj.review.startedBy = obj.review.startedBy || u.id;

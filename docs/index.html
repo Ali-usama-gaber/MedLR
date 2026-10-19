@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#12291f">
-<!-- SAJA MedLR build 2026-10-19 11:07 UTC -->
+<!-- SAJA MedLR build 2026-10-19 12:17 UTC -->
 <title>SAJA MedLR</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzEyMjkxZiIvPjxwYXRoIGQ9Ik05IDE2LjVsNC41IDQuNUwyMyAxMS41IiBmaWxsPSJub25lIiBzdHJva2U9IiM1ZmUwYTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=">
 <style>
@@ -3133,7 +3133,9 @@ const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, modal: null,
 
 function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return linkModuleWorkflows(s); if (s && s.version === 7) return linkModuleWorkflows(migrate7to8(s)); } } catch (e) {} return linkModuleWorkflows(SEED()); }
 // Every module records the workflow chosen for it. Older records take it from their approval history; drafts with no history stay unset until someone chooses.
-function linkModuleWorkflows(s) { s.notifications = s.notifications || []; s.notifSeenBy = s.notifSeenBy || {}; (s.teams || []).forEach(t => { if (t.active === undefined) t.active = true; }); if (s.settings.mentionEmail === undefined) s.settings.mentionEmail = true; if (s.settings.notifyEndpoint === undefined) s.settings.notifyEndpoint = ''; if (s.settings.idleSignOutMin === undefined) s.settings.idleSignOutMin = 30; if (s.settings.maxUploadMb === undefined) s.settings.maxUploadMb = 50; if (!s.refKinds) s.refKinds = REF_KINDS.map(([id, name]) => ({ id, name, evidence: EVIDENCE_KINDS.includes(id), active: true })); s.moduleTypes.forEach(t => { if (!t.sops) t.sops = []; }); s.channels.forEach(c => { if (!c.sops) c.sops = []; }); s.modules.forEach(m => m.versions.forEach(v => { if (!Array.isArray(v.sopLinks)) v.sopLinks = []; })); s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
+function linkModuleWorkflows(s) { s.notifications = s.notifications || []; s.notifSeenBy = s.notifSeenBy || {}; (s.teams || []).forEach(t => { if (t.active === undefined) t.active = true; }); if (s.settings.mentionEmail === undefined) s.settings.mentionEmail = true; if (s.settings.notifyEndpoint === undefined) s.settings.notifyEndpoint = ''; if (s.settings.idleSignOutMin === undefined) s.settings.idleSignOutMin = 30; if (s.settings.maxUploadMb === undefined) s.settings.maxUploadMb = 50; if (!s.refKinds) s.refKinds = REF_KINDS.map(([id, name]) => ({ id, name, evidence: EVIDENCE_KINDS.includes(id), active: true })); s.moduleTypes.forEach(t => { if (!t.sops) t.sops = []; }); s.channels.forEach(c => { if (!c.sops) c.sops = []; }); s.modules.forEach(m => m.versions.forEach(v => { if (!Array.isArray(v.sopLinks)) v.sopLinks = []; }));
+  (s.annotations || []).forEach(a => { if (a.fileId !== undefined || a.objType !== 'Module') return; const m = s.modules.find(x => x.id === a.objId); const v = m && m.versions.find(x => x.v === a.version);
+    if (!v || !v.media) { a.fileId = null; return; } if (!(v.files || []).length) a.fileId = v.media.fileId || null; else { a.fileId = null; a.fileUnlinked = true; } }); s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
 // v7 → v8 keeps every user-created record: indications become records, permissions gain page access and authority, annotations start empty.
 function migrate7to8(s) {
   const valid = new Set(PERMS.map(p => p[0]));
@@ -3447,7 +3449,9 @@ const stepTeamTxt = s => s.team ? team(s.team).name : 'Any ' + s.fn + ' team';
 /* audit */
 function log(action, kind, obj, version, extra = {}) {
   const u = me();
-  S.audit.push({ id: uid('a'), ts: Date.now(), user: u.id, role: roleLabel(u), action, objType: kind, objId: obj ? obj.id : '', version: version || (obj && obj.versions ? latest(obj).v : 1), products: obj && obj.products ? [...obj.products] : [], markets: obj && obj.markets ? [...obj.markets] : [], note: '', prev: '', next: '', ...extra });
+  const ver = version || (obj && obj.versions ? latest(obj).v : 1); const vo = obj && obj.versions ? obj.versions.find(x => x.v === ver) : null;
+  const cyc = extra.cycle != null ? extra.cycle : obj && (obj.review || obj.resume) && vo === latest(obj) ? (obj.review || obj.resume).cycle : vo && vo.cycles.length ? vo.cycles[vo.cycles.length - 1].n : null;
+  S.audit.push({ id: uid('a'), ts: Date.now(), user: u.id, role: roleLabel(u), action, objType: kind, objId: obj ? obj.id : '', version: ver, cycle: cyc, fileId: vo && vo.media ? vo.media.fileId || null : null, products: obj && obj.products ? [...obj.products] : [], markets: obj && obj.markets ? [...obj.markets] : [], note: '', prev: '', next: '', ...extra });
 }
 function logAssigned(obj, kind) {
   const st = curStep(obj); if (!st || isNotify(st)) return;
@@ -3469,6 +3473,12 @@ function runNotifies(obj, kind) {
 }
 
 function setStatus(obj, s) { latest(obj).status = s; }
+// Files are immutable: replacing a version's file keeps the old one (and its stored binary) in v.files with its revision.
+function replaceVersionFile(v, media) {
+  const old = v.media; if (old && old.fileId === media.fileId) return v.media;
+  v.files = v.files || []; if (old && old.fileId) v.files.push({ ...old, rev: old.rev || 1, replacedAt: Date.now(), replacedBy: me().id });
+  v.media = { ...media, rev: old && old.fileId ? (old.rev || 1) + 1 : media.rev || 1 }; return v.media;
+}
 // Start a full approval cycle from the first step.
 function startCycle(obj, kind, wfId) {
   const v = latest(obj); const n = v.cycles.length + 1;
@@ -3512,7 +3522,7 @@ function finalise(obj, kind) {
    reject  — Reject: back to the owner; a new version restarts the FULL cycle */
 function decide(obj, kind, decision, note) {
   const st = curStep(obj); const cyc = curCycle(obj); const v = latest(obj).v; const u = me(); const now = Date.now();
-  const rec = { step: obj.review.step, fn: st.fn, level: st.level, req: st.req, by: u.id, role: roleLabel(u), startedAt: obj.review.stepStartedAt, at: now, note: note || '', admin: isAdmin(u) };
+  const lm = latest(obj).media; const rec = { step: obj.review.step, fn: st.fn, level: st.level, req: st.req, by: u.id, role: roleLabel(u), startedAt: obj.review.stepStartedAt, at: now, note: note || '', admin: isAdmin(u), fileId: lm ? lm.fileId || null : null, fileRev: lm ? lm.rev || 1 : null };
   const onBehalf = isAdmin(u) ? ' (recorded by Administrator)' : '';
   if (decision === 'pass' || decision === 'approve') {
     rec.decision = decision === 'approve' ? 'Approved' : 'Reviewed'; cyc.decisions.push(rec);
@@ -4400,12 +4410,24 @@ function viewVersions(obj, kind) {
   return `<section class="panel table-wrap"><table class="tbl list-tbl"><thead><tr><th>Version</th><th>Created</th><th>Reason for change</th><th>Status</th><th>Cycles</th><th>Approvers</th><th>Approved</th><th>Review date</th><th style="text-align:right">Actions</th></tr></thead><tbody>${[...obj.versions].reverse().map(v => { const apr = uniq(v.cycles.flatMap(c => c.decisions.filter(x => x.decision === 'Approved').map(x => user(x.by).name))); const am = v.cycles.reduce((n, c) => n + (c.amendments || 0), 0), rj = v.cycles.filter(c => c.outcome === 'Rejected').length; const mt = metaOf(obj, v);
     return `<tr class="click" data-act="version-open" data-kind="${kind}" data-id="${obj.id}" data-v="${v.v}" tabindex="0"><td>${vtag(v.v)}</td><td class="nw">${fmtD(v.createdAt)}<br><span class="muted" style="font-size:12px">${esc(user(v.createdBy).name)}</span></td><td style="max-width:280px;font-size:12.5px">${esc(v.reason || '—')}${v.media ? `<br><span class="muted">${icon('file', 'sm')} ${esc(v.media.name)} · ${esc(String(v.media.checksum || '').slice(0, 8))}${v.files && v.files.length ? ' · file revision ' + (v.media.rev || v.files.length + 1) : ''}</span>` : ''}</td><td>${chip(v.status)}</td><td class="num nw">${v.cycles.length}${am ? `<br><span class="muted" style="font-size:11.5px">${am} amendment${am > 1 ? 's' : ''}</span>` : ''}${rj ? `<br><span class="muted" style="font-size:11.5px">${rj} rejected</span>` : ''}</td><td style="font-size:12.5px">${esc(apr.join(', ') || '—')}</td><td class="nw">${v.approvedAt ? fmtD(v.approvedAt) : '—'}</td><td class="nw">${kind === 'Module' && mt.reviewDate ? fmtD(mt.reviewDate) : '—'}</td><td style="text-align:right"><div class="row nowrap" style="justify-content:flex-end;gap:6px"><button class="btn icon sm" data-act="version-open" data-kind="${kind}" data-id="${obj.id}" data-v="${v.v}" title="Approval history" aria-label="Approval history of v${v.v}">${icon('history', 'sm')}</button>${v.approvedAt ? `<button class="btn icon sm" ${goAttr('cover', obj.id, ` data-k="${kind}" data-v="${v.v}"`)} title="Cover letter" aria-label="Cover letter for v${v.v}">${icon('award', 'sm')}</button>` : ''}</div></td></tr>`; }).join('')}</tbody></table></section>`;
 }
+// Comments of one version, grouped by the file they were made on (never mixed across versions).
+function versionComments(obj, v) {
+  const list = annsFor(obj, v.v); if (!list.length) return '<p class="muted" style="margin-bottom:12px">No comments on this version.</p>';
+  const files = [...(v.files || []), ...(v.media ? [v.media] : [])]; const groups = files.length > 1 || list.some(a => a.fileUnlinked) ? [...files.map(f => [f.fileId, 'File revision ' + (f.rev || 1) + ' · ' + f.name + (f === v.media ? ' (current)' : '')]), [null, 'File not recorded (older data)']] : [[undefined, '']];
+  return `<div class="field" style="margin-bottom:12px" data-ver-comments="${v.v}"><span class="label">Comments on v${v.v} · ${list.length}</span>${groups.map(([fid, label]) => { const g = fid === undefined ? list : list.filter(a => (a.fileId || null) === fid); return g.length ? `${label ? `<span class="section-title" style="margin-top:6px">${esc(label)}</span>` : ''}${g.map(a => `<div class="row nowrap" style="gap:8px;font-size:12.5px;align-items:flex-start" data-ann-row="${a.id}"><span class="tag">${esc(annLabel(a))}</span><span style="flex:1">${esc(a.text || a.replacement || ANN_STYLES[a.style][0])}${a.replies.length ? ' <span class="muted">· ' + a.replies.length + ' repl' + (a.replies.length > 1 ? 'ies' : 'y') + '</span>' : ''}</span><span class="muted nw">${esc(user(a.author).name)} · cycle ${a.cycle} · ${chip(a.status === 'open' ? 'Open' : 'Resolved')}</span></div>`).join('')}` : ''; }).join('')}</div>`;
+}
+// Activity of one version from the audit trail: uploads, comments, submissions and decisions, each with its cycle.
+function versionActivity(obj, v) {
+  const ev = S.audit.filter(e => e.objId === obj.id && e.version === v.v).sort((x, y) => x.ts - y.ts);
+  return ev.length ? `<details class="fv-info" style="margin-bottom:12px"><summary>Activity on v${v.v} · ${ev.length}</summary><div class="timeline">${ev.map(e => `<div class="tl-item"><div style="min-width:0;font-size:12.5px"><b>${esc(e.action)}</b>${e.note ? ' · ' + esc(e.note) : ''}<br><span class="muted">${esc(user(e.user).name)} · ${fmtDT(e.ts)}${e.cycle ? ' · cycle ' + e.cycle : ''}</span></div></div>`).join('')}</div></details>` : '';
+}
 function versionModalBody(obj, kind, v) {
   const mt = metaOf(obj, v);
   return `<dl class="kv" style="grid-template-columns:120px 1fr;margin-bottom:12px"><dt>Created</dt><dd>${fmtDT(v.createdAt)} · ${esc(user(v.createdBy).name)}</dd><dt>Reason</dt><dd>${esc(v.reason || '—')}</dd><dt>Status</dt><dd>${chip(v.status)}</dd>${v.approvedAt ? `<dt>Approved</dt><dd>${fmtDT(v.approvedAt)} · ${esc(user(v.approvedBy).name)}</dd>` : ''}<dt>Products</dt><dd>${esc(productsTxt(mt.products))}</dd><dt>Countries</dt><dd>${esc(marketsTxt(mt.markets))}</dd>${kind === 'Module' ? `<dt>Channels</dt><dd>${esc(channelsTxt(mt.channels))}</dd>` : `<dt>Channel</dt><dd>${esc(chan(mt.channel).name)}</dd>`}<dt>Audience</dt><dd>${esc(aud(mt.audience).name)}</dd></dl>
   ${kind === 'Module' && v.media ? `<div class="media-stage sm" style="margin-bottom:10px">${filePreview(v.media, obj.id + ' · v' + v.v + ' · ' + v.status)}</div>${mediaFactsKV(v.media)}${mediaRules(v.media)}` : ''}
   ${kind === 'Module' && v.files && v.files.length ? `<div class="field" style="margin-bottom:12px"><span class="label">Earlier files in v${v.v}</span>${[...v.files].reverse().map(f => `<div class="row nowrap" style="gap:8px;font-size:12.5px">${icon('file', 'sm')}<span>Revision ${f.rev || 1} · ${esc(f.name)} · ${esc(fmtSize(f.size))} · uploaded ${f.uploadedAt ? fmtD(f.uploadedAt) : '—'} by ${esc(user(f.uploadedBy || v.createdBy).name)} · replaced ${fmtD(f.replacedAt)}</span><span class="grow"></span>${fileMenu(f, obj.id + ' · v' + v.v + ' · revision ' + (f.rev || 1))}</div>`).join('')}</div>` : ''}
   ${kind === 'Module' ? `<div class="comment" style="margin-bottom:12px"><p style="font-size:13.5px">${esc(v.body)}</p>${v.refs.length ? `<p class="muted" style="font-size:12px;margin-top:6px">References: ${v.refs.map(r => esc(refById(r).title)).join(' · ')}</p>` : ''}</div>` : ''}
+  ${versionComments(obj, v)}${versionActivity(obj, v)}
   ${v.cycles.length ? v.cycles.map(c => `<div class="cycle"><div class="row" style="gap:8px;margin-bottom:8px"><b>Cycle ${c.n}</b>${chip(c.outcome)}<span class="muted" style="font-size:12px">${esc((wfById(c.wf) || {}).name || c.wf)} · ${fmtD(c.start)}${c.end ? ' → ' + fmtD(c.end) + ' · ' + fmtDur(c.end - c.start) : ''}${c.amendments ? ' · ' + c.amendments + ' amendment' + (c.amendments > 1 ? 's' : '') : ''}</span></div>${decisionsList(c.decisions)}</div>`).join('') : '<p class="muted">Not submitted for review.</p>'}`;
 }
 const LIFE = ['Draft', 'In Review', 'Approved', 'Active', 'Expiring', 'Review Required', 'Superseded', 'Archived'];
@@ -4577,6 +4599,14 @@ const NEEDS_TEXT = ['comment', 'replace', 'note'];
 const annUI = () => UI.an || (UI.an = { flt: 'all', q: '', fa: '', ft: '', fm: '', sort: 'loc', focus: null, sel: null, comp: null, edit: null, reply: null, tool: null, vals: {}, men: null, hist: { u: [], r: [] } });
 const annsFor = (obj, v) => S.annotations.filter(a => a.objType === kindOf(obj) && a.objId === obj.id && a.version === v).sort((x, y) => x.ts - y.ts);
 const annNo = (obj, a) => annsFor(obj, a.version).indexOf(a) + 1;
+/* A comment belongs to the file it was made on (a.fileId). A version can hold several file revisions (amendments
+   replace the file within the version); markers are drawn only on their own file. Comments made on an earlier file,
+   or whose file could not be determined for old data, are listed as history and never re-anchored onto a new file. */
+const verFileId = (obj, v) => { const x = obj.versions ? verOf(obj, v) : null; return x && x.media ? x.media.fileId || null : null; };
+const annOnFile = (obj, a) => { const f = verFileId(obj, a.version); return !f || a.fileId === f; };
+const annsOnFile = (obj, v) => annsFor(obj, v).filter(a => annOnFile(obj, a));
+const annsEarlierFile = (obj, v) => annsFor(obj, v).filter(a => !annOnFile(obj, a));
+const annFileLabel = (obj, a) => { const x = verOf(obj, a.version); const f = x && [...(x.files || [])].find(f => f.fileId === a.fileId); return a.fileId && f ? 'File revision ' + (f.rev || 1) + ' · ' + f.name : 'Earlier file (not recorded)'; };
 // Open findings raised by reviewers (owner notes never block an approval).
 const blockingAnns = obj => annsFor(obj, latest(obj).v).filter(a => a.status === 'open' && a.author !== obj.owner);
 const annIsMine = a => a.author === me().id;
@@ -4644,7 +4674,7 @@ function shapeSVG(x, cls, attrs) {
   return `<polyline class="${cls}" points="${x.pts.map(p => p[0] * 100 + ',' + p[1] * 100).join(' ')}" ${sw} ${attrs}/>`;
 }
 function annRegions(obj, v, target, page, editable) {
-  const U = annUI(); const list = annsFor(obj, v).filter(a => onSurface(a, target, page));
+  const U = annUI(); const list = annsOnFile(obj, v).filter(a => onSurface(a, target, page));
   const tAttr = a => a.anchor.t != null ? `data-an-t="${a.anchor.t}"` : '';
   const pin = (a, x, y) => `<i class="an-pin s-${a.style}${a.status === 'resolved' ? ' res' : ''}" style="left:${x * 100}%;top:${y * 100}%" data-an="${a.id}" data-act="an-focus" data-id="${a.id}" ${tAttr(a)}>${annNo(obj, a)}</i>`;
   const html = list.map(a => { const x = a.anchor; const f = U.focus === a.id ? ' an-focus' : ''; const r_ = a.status === 'resolved' ? ' res' : '';
@@ -4714,7 +4744,7 @@ function reviewCanvas(obj, editable) {
     const md = v.media; const k = mediaKindOf(md);
     if (editable && md && (k !== 'document' || (PDFR[md.fileId] && PDFR[md.fileId].pages))) rail = toolRail(k);
     if (k === 'image') body = `<div class="an-media"><div class="an-frame">${mediaView(md)}${annRegions(obj, v.v, 'file', 0, editable)}</div></div>`;
-    else if (k === 'video') { const ts = annsFor(obj, v.v).filter(a => a.anchor.t != null); const dur = md.duration || Math.max(1, ...ts.map(a => a.anchor.t + 1));
+    else if (k === 'video') { const ts = annsOnFile(obj, v.v).filter(a => a.anchor.t != null); const dur = md.duration || Math.max(1, ...ts.map(a => a.anchor.t + 1));
       body = `<div class="an-media"><div class="an-vframe">${mediaView(md)}<div class="an-vlayer ${U.tool && U.tool !== 'play' ? 'tool-on' : ''}">${annRegions(obj, v.v, 'file', 0, editable && U.tool && U.tool !== 'play')}</div></div><div class="an-tl" aria-label="Comment timeline"><span class="an-tl-track">${ts.map(a => `<button type="button" class="an-tl-m s-${a.style} ${a.status === 'resolved' ? 'res' : ''} ${U.focus === a.id ? 'an-focus' : ''}" style="left:${Math.min(100, 100 * a.anchor.t / dur)}%" data-an-tl="${a.id}" data-act="an-go" data-id="${a.id}" title="${esc(fmtSecs(a.anchor.t) + ' — ' + a.text)}">${annNo(obj, a)}</button>`).join('')}</span><span class="an-tl-l"><span>0:00</span><span>${fmtSecs(dur)}</span></span></div>${editable ? `<div class="row" style="gap:8px;margin-top:8px"><button class="btn sm" data-act="an-time">${icon('message', 'sm')}Comment at current time</button><span class="muted" style="font-size:12px">Pause where the comment applies; choose a drawing tool to mark the frame.</span></div>` : ''}</div>`; }
     else body = md ? pdfReview(obj, v.v, md, editable) : mediaView(md);
     body = `<div class="fp-bar">${icon(mediaKindOf(md) === 'image' ? 'image' : mediaKindOf(md) === 'video' ? 'video' : 'file', 'sm')}<b>${esc(md ? md.name : '')}</b><span class="muted">${esc(md ? (md.format || md.mime) + ' · ' + fmtSize(md.size) : '')}</span><span class="grow"></span>${fileMenu(md, obj.id + ' · v' + v.v + ' · ' + v.status)}</div>` + body + `<p class="media-desc">${esc(v.body)}</p>`;
@@ -4770,7 +4800,7 @@ async function deliverEmail(n) {
 
 /* --- comments panel --- */
 function commentsPanel(obj, editable) {
-  const U = annUI(); const v = latest(obj).v; const all = annsFor(obj, v); const open = all.filter(a => a.status === 'open'); const meId = me().id;
+  const U = annUI(); const v = latest(obj).v; const all = annsOnFile(obj, v); const earlier = annsEarlierFile(obj, v); const open = all.filter(a => a.status === 'open'); const meId = me().id;
   const q = (U.q || '').toLowerCase();
   let list = all.filter(a => (U.flt === 'all' || a.status === U.flt) && (!U.fa || a.author === U.fa) && (!U.ft || a.style === U.ft) && (!U.fm || (U.fm === 'me' ? (a.mentions || []).includes(meId) || a.replies.some(r => (r.mentions || []).includes(meId)) : U.fm === 'any' ? (a.mentions || []).length || a.replies.some(r => (r.mentions || []).length) : (a.mentions || []).includes(U.fm)))
     && (!q || [a.text, a.replacement, annLabel(a), user(a.author).name, ...a.replies.map(r => r.text)].join(' ').toLowerCase().includes(q)));
@@ -4800,7 +4830,8 @@ function commentsPanel(obj, editable) {
       <div class="an-fgrid">${fsel_('fa', 'Author', [['', 'All authors'], ...authors.map(id => [id, user(id).name])])}${fsel_('ft', 'Type', [['', 'All types'], ...types.map(t => [t, ANN_STYLES[t][0]])])}${fsel_('fm', 'Mentions', [['', 'Any mentions'], ['me', 'Mentions me'], ['any', 'Has a mention'], ...mentioned.map(id => [id, '@' + user(id).name])])}${fsel_('sort', 'Sort', [['loc', 'By location'], ['author', 'By author'], ['date', 'Newest first']])}</div>${nAct ? `<button type="button" class="linklike" data-act="an-fclear">Clear filters</button>` : ''}</div>
     ${blocking && S.settings.blockOnOpenComments && obj.review ? `<div class="an-block">${icon('lock', 'sm')}${blocking} open reviewer comment${blocking > 1 ? 's' : ''} — resolve before approving.</div>` : ''}
     <div class="an-body">${composer}${editable && !comp ? `<div class="an-gen">${menField('an-general', 'General comment on v' + v + ' (no anchor) — type @ to mention', 2)}<div class="row" style="justify-content:flex-end">${btn('Add general comment', 'an-general', 'sm', '', 'message')}</div></div>` : ''}
-    ${list.length ? list.map(card).join('') : `<p class="muted an-empty">${all.length ? 'No comments match.' : editable ? 'No comments yet. Select text, drag an area, pick a drawing tool or add a general comment.' : 'No comments on this version.'}</p>`}</div></section>`;
+    ${list.length ? list.map(card).join('') : `<p class="muted an-empty">${all.length ? 'No comments match.' : editable ? 'No comments yet. Select text, drag an area, pick a drawing tool or add a general comment.' : 'No comments on this file.'}</p>`}
+    ${earlier.length ? `<div class="an-earlier" data-earlier="${earlier.length}"><span class="section-title">Made on an earlier file · v${v}</span>${earlier.map(a => `<div class="an-hist"><span class="tag">${esc(annFileLabel(obj, a))}</span>${card(a)}</div>`).join('')}</div>` : ''}</div></section>`;
 }
 
 /* --- creating, editing and tracking annotations (with undo / redo) --- */
@@ -4808,7 +4839,7 @@ const annObj = a => objById(a.objType, a.objId);
 const annClone = a => JSON.parse(JSON.stringify(a));
 function annCreate(obj, anchor, style, text, replacement, mentions) {
   const u = me(); const c = annCtx(obj);
-  const a = { id: uid('an'), objType: kindOf(obj), objId: obj.id, version: latest(obj).v, cycle: c.cycle, step: c.step, stepIdx: c.stepIdx, anchor, style, text: text || '', replacement: replacement || '', mentions: mentions || [], author: u.id, role: roleLabel(u), ts: Date.now(), status: 'open', replies: [] };
+  const a = { id: uid('an'), objType: kindOf(obj), objId: obj.id, version: latest(obj).v, fileId: verFileId(obj, latest(obj).v), cycle: c.cycle, step: c.step, stepIdx: c.stepIdx, anchor, style, text: text || '', replacement: replacement || '', mentions: mentions || [], author: u.id, role: roleLabel(u), ts: Date.now(), status: 'open', replies: [] };
   S.annotations.push(a); annLog('Comment created', obj, a, { next: (ANN_STYLES[style][0]) + (text ? ': ' + text : '') + (replacement ? ' → ' + replacement : '') });
   notifyMentions(obj, a, a.mentions, 'Comment');
   if (obj.review) obj.review.startedBy = obj.review.startedBy || u.id;
@@ -6094,7 +6125,7 @@ function afterDecision(obj, kind, r) {
 function newVersion(obj, kind, reason) {
   const l = latest(obj); const nv = l.v + 1;
   if (kind === 'Asset') l.blocks = JSON.parse(JSON.stringify(obj.blocks));
-  obj.versions.push({ v: nv, ...(kind === 'Module' ? { sopLinks: configuredSops(obj, 'Module') } : {}), body: kind === 'Asset' ? '' : l.body, refs: kind === 'Asset' ? [] : [...l.refs], media: l.media ? { ...l.media } : undefined, createdAt: Date.now(), createdBy: me().id, reason, status: 'Draft', cycles: [], approvedAt: null, approvedBy: null });
+  obj.versions.push({ v: nv, ...(kind === 'Module' ? { sopLinks: configuredSops(obj, 'Module') } : {}), body: kind === 'Asset' ? '' : l.body, refs: kind === 'Asset' ? [] : [...l.refs], media: l.media ? (({ rev, replacedAt, replacedBy, ...md }) => md)(l.media) : undefined, createdAt: Date.now(), createdBy: me().id, reason, status: 'Draft', cycles: [], approvedAt: null, approvedBy: null });
   obj.resume = null; obj.review = null; obj.updatedAt = Date.now();
   log('Version created', kind, obj, nv, { prev: 'v' + l.v + ' ' + l.status, next: 'v' + nv + ' Draft', note: reason });
   return nv;
@@ -6544,10 +6575,9 @@ async function reworkUpload(id, file) {
   if (r.error) { UI.rework = { id, err: r.error }; render(); return; }
   const old = l.media || {}; const facts = md => md.name + ' · ' + fmtSize(md.size) + ' · ' + String(md.checksum || '').slice(0, 12);
   if (mode === 'amend') {
-    l.files = l.files || []; if (old.fileId) l.files.push({ ...old, replacedAt: Date.now(), replacedBy: me().id });
-    r.media.rev = (old.rev || 1) + 1; l.media = r.media; m.updatedAt = Date.now();
-    log('Media replaced', 'Module', m, l.v, { prev: old.name ? facts(old) : '', next: facts(r.media), note: 'File revision ' + r.media.rev + ' of v' + l.v + ' uploaded for the amendment' });
-    UI.rework = null; save(); render(); toast('File revision ' + r.media.rev + ' uploaded — resubmit to resume at ' + m.resume.fn + ' ' + levelName(m.resume.level));
+    replaceVersionFile(l, r.media); m.updatedAt = Date.now();
+    log('Media replaced', 'Module', m, l.v, { prev: old.name ? facts(old) : '', next: facts(r.media), note: 'File revision ' + l.media.rev + ' of v' + l.v + ' uploaded for the amendment' });
+    UI.rework = null; save(); render(); toast('File revision ' + l.media.rev + ' uploaded — resubmit to resume at ' + m.resume.fn + ' ' + levelName(m.resume.level));
   } else {
     const nv = newVersion(m, 'Module', 'New file uploaded after rejection'); const v = latest(m); v.media = { ...r.media, source: old.source || '', usage: old.usage || '' };
     log('Media uploaded', 'Module', m, nv, { prev: old.name ? facts(old) : '', next: facts(v.media), note: (v.media.algo || '') + ' ' + v.media.checksum });
@@ -6601,7 +6631,7 @@ function saveModuleForm() {
       logModuleDiff(m, before, D, nv); save(); UI.draft = null; go('module', { id: m.id });
       toast('Version ' + nv + ' created' + (live(m) ? ' — v' + live(m).v + ' stays live until v' + nv + ' is approved' : ' — submitting it restarts the full approval cycle')); return;
     }
-    Object.assign(m, base); if (statusOf(m) !== 'Amendment Requested') l.sopLinks = configuredSops(m, 'Module'); l.body = D.body.trim(); l.refs = [...D.refs]; if (D.media) l.media = { ...D.media };
+    Object.assign(m, base); if (statusOf(m) !== 'Amendment Requested') l.sopLinks = configuredSops(m, 'Module'); l.body = D.body.trim(); l.refs = [...D.refs]; if (D.media) { if (l.media && l.media.fileId && D.media.fileId !== l.media.fileId) replaceVersionFile(l, D.media); else l.media = { ...(l.media || {}), ...D.media }; }
     logModuleDiff(m, before, D, l.v);
     if (statusOf(m) === 'Amendment Requested') { m.amendNote = D.reason.trim(); log('Amended', 'Module', m, l.v, { note: D.reason.trim() }); }
     save(); UI.draft = null; go('module', { id: m.id }); toast(statusOf(m) === 'Amendment Requested' ? 'Changes saved — resubmit to resume approval' : 'Changes saved'); return;

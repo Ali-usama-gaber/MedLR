@@ -324,7 +324,7 @@ function afterDecision(obj, kind, r) {
 function newVersion(obj, kind, reason) {
   const l = latest(obj); const nv = l.v + 1;
   if (kind === 'Asset') l.blocks = JSON.parse(JSON.stringify(obj.blocks));
-  obj.versions.push({ v: nv, ...(kind === 'Module' ? { sopLinks: configuredSops(obj, 'Module') } : {}), body: kind === 'Asset' ? '' : l.body, refs: kind === 'Asset' ? [] : [...l.refs], media: l.media ? { ...l.media } : undefined, createdAt: Date.now(), createdBy: me().id, reason, status: 'Draft', cycles: [], approvedAt: null, approvedBy: null });
+  obj.versions.push({ v: nv, ...(kind === 'Module' ? { sopLinks: configuredSops(obj, 'Module') } : {}), body: kind === 'Asset' ? '' : l.body, refs: kind === 'Asset' ? [] : [...l.refs], media: l.media ? (({ rev, replacedAt, replacedBy, ...md }) => md)(l.media) : undefined, createdAt: Date.now(), createdBy: me().id, reason, status: 'Draft', cycles: [], approvedAt: null, approvedBy: null });
   obj.resume = null; obj.review = null; obj.updatedAt = Date.now();
   log('Version created', kind, obj, nv, { prev: 'v' + l.v + ' ' + l.status, next: 'v' + nv + ' Draft', note: reason });
   return nv;
@@ -774,10 +774,9 @@ async function reworkUpload(id, file) {
   if (r.error) { UI.rework = { id, err: r.error }; render(); return; }
   const old = l.media || {}; const facts = md => md.name + ' · ' + fmtSize(md.size) + ' · ' + String(md.checksum || '').slice(0, 12);
   if (mode === 'amend') {
-    l.files = l.files || []; if (old.fileId) l.files.push({ ...old, replacedAt: Date.now(), replacedBy: me().id });
-    r.media.rev = (old.rev || 1) + 1; l.media = r.media; m.updatedAt = Date.now();
-    log('Media replaced', 'Module', m, l.v, { prev: old.name ? facts(old) : '', next: facts(r.media), note: 'File revision ' + r.media.rev + ' of v' + l.v + ' uploaded for the amendment' });
-    UI.rework = null; save(); render(); toast('File revision ' + r.media.rev + ' uploaded — resubmit to resume at ' + m.resume.fn + ' ' + levelName(m.resume.level));
+    replaceVersionFile(l, r.media); m.updatedAt = Date.now();
+    log('Media replaced', 'Module', m, l.v, { prev: old.name ? facts(old) : '', next: facts(r.media), note: 'File revision ' + l.media.rev + ' of v' + l.v + ' uploaded for the amendment' });
+    UI.rework = null; save(); render(); toast('File revision ' + l.media.rev + ' uploaded — resubmit to resume at ' + m.resume.fn + ' ' + levelName(m.resume.level));
   } else {
     const nv = newVersion(m, 'Module', 'New file uploaded after rejection'); const v = latest(m); v.media = { ...r.media, source: old.source || '', usage: old.usage || '' };
     log('Media uploaded', 'Module', m, nv, { prev: old.name ? facts(old) : '', next: facts(v.media), note: (v.media.algo || '') + ' ' + v.media.checksum });
@@ -831,7 +830,7 @@ function saveModuleForm() {
       logModuleDiff(m, before, D, nv); save(); UI.draft = null; go('module', { id: m.id });
       toast('Version ' + nv + ' created' + (live(m) ? ' — v' + live(m).v + ' stays live until v' + nv + ' is approved' : ' — submitting it restarts the full approval cycle')); return;
     }
-    Object.assign(m, base); if (statusOf(m) !== 'Amendment Requested') l.sopLinks = configuredSops(m, 'Module'); l.body = D.body.trim(); l.refs = [...D.refs]; if (D.media) l.media = { ...D.media };
+    Object.assign(m, base); if (statusOf(m) !== 'Amendment Requested') l.sopLinks = configuredSops(m, 'Module'); l.body = D.body.trim(); l.refs = [...D.refs]; if (D.media) { if (l.media && l.media.fileId && D.media.fileId !== l.media.fileId) replaceVersionFile(l, D.media); else l.media = { ...(l.media || {}), ...D.media }; }
     logModuleDiff(m, before, D, l.v);
     if (statusOf(m) === 'Amendment Requested') { m.amendNote = D.reason.trim(); log('Amended', 'Module', m, l.v, { note: D.reason.trim() }); }
     save(); UI.draft = null; go('module', { id: m.id }); toast(statusOf(m) === 'Amendment Requested' ? 'Changes saved — resubmit to resume approval' : 'Changes saved'); return;

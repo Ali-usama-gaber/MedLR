@@ -5,7 +5,9 @@ const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, modal: null,
 
 function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return linkModuleWorkflows(s); if (s && s.version === 7) return linkModuleWorkflows(migrate7to8(s)); } } catch (e) {} return linkModuleWorkflows(SEED()); }
 // Every module records the workflow chosen for it. Older records take it from their approval history; drafts with no history stay unset until someone chooses.
-function linkModuleWorkflows(s) { s.notifications = s.notifications || []; s.notifSeenBy = s.notifSeenBy || {}; (s.teams || []).forEach(t => { if (t.active === undefined) t.active = true; }); if (s.settings.mentionEmail === undefined) s.settings.mentionEmail = true; if (s.settings.notifyEndpoint === undefined) s.settings.notifyEndpoint = ''; if (s.settings.idleSignOutMin === undefined) s.settings.idleSignOutMin = 30; if (s.settings.maxUploadMb === undefined) s.settings.maxUploadMb = 50; if (!s.refKinds) s.refKinds = REF_KINDS.map(([id, name]) => ({ id, name, evidence: EVIDENCE_KINDS.includes(id), active: true })); s.moduleTypes.forEach(t => { if (!t.sops) t.sops = []; }); s.channels.forEach(c => { if (!c.sops) c.sops = []; }); s.modules.forEach(m => m.versions.forEach(v => { if (!Array.isArray(v.sopLinks)) v.sopLinks = []; })); s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
+function linkModuleWorkflows(s) { s.notifications = s.notifications || []; s.notifSeenBy = s.notifSeenBy || {}; (s.teams || []).forEach(t => { if (t.active === undefined) t.active = true; }); if (s.settings.mentionEmail === undefined) s.settings.mentionEmail = true; if (s.settings.notifyEndpoint === undefined) s.settings.notifyEndpoint = ''; if (s.settings.idleSignOutMin === undefined) s.settings.idleSignOutMin = 30; if (s.settings.maxUploadMb === undefined) s.settings.maxUploadMb = 50; if (!s.refKinds) s.refKinds = REF_KINDS.map(([id, name]) => ({ id, name, evidence: EVIDENCE_KINDS.includes(id), active: true })); s.moduleTypes.forEach(t => { if (!t.sops) t.sops = []; }); s.channels.forEach(c => { if (!c.sops) c.sops = []; }); s.modules.forEach(m => m.versions.forEach(v => { if (!Array.isArray(v.sopLinks)) v.sopLinks = []; }));
+  (s.annotations || []).forEach(a => { if (a.fileId !== undefined || a.objType !== 'Module') return; const m = s.modules.find(x => x.id === a.objId); const v = m && m.versions.find(x => x.v === a.version);
+    if (!v || !v.media) { a.fileId = null; return; } if (!(v.files || []).length) a.fileId = v.media.fileId || null; else { a.fileId = null; a.fileUnlinked = true; } }); s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
 // v7 → v8 keeps every user-created record: indications become records, permissions gain page access and authority, annotations start empty.
 function migrate7to8(s) {
   const valid = new Set(PERMS.map(p => p[0]));
@@ -319,7 +321,9 @@ const stepTeamTxt = s => s.team ? team(s.team).name : 'Any ' + s.fn + ' team';
 /* audit */
 function log(action, kind, obj, version, extra = {}) {
   const u = me();
-  S.audit.push({ id: uid('a'), ts: Date.now(), user: u.id, role: roleLabel(u), action, objType: kind, objId: obj ? obj.id : '', version: version || (obj && obj.versions ? latest(obj).v : 1), products: obj && obj.products ? [...obj.products] : [], markets: obj && obj.markets ? [...obj.markets] : [], note: '', prev: '', next: '', ...extra });
+  const ver = version || (obj && obj.versions ? latest(obj).v : 1); const vo = obj && obj.versions ? obj.versions.find(x => x.v === ver) : null;
+  const cyc = extra.cycle != null ? extra.cycle : obj && (obj.review || obj.resume) && vo === latest(obj) ? (obj.review || obj.resume).cycle : vo && vo.cycles.length ? vo.cycles[vo.cycles.length - 1].n : null;
+  S.audit.push({ id: uid('a'), ts: Date.now(), user: u.id, role: roleLabel(u), action, objType: kind, objId: obj ? obj.id : '', version: ver, cycle: cyc, fileId: vo && vo.media ? vo.media.fileId || null : null, products: obj && obj.products ? [...obj.products] : [], markets: obj && obj.markets ? [...obj.markets] : [], note: '', prev: '', next: '', ...extra });
 }
 function logAssigned(obj, kind) {
   const st = curStep(obj); if (!st || isNotify(st)) return;
@@ -341,6 +345,12 @@ function runNotifies(obj, kind) {
 }
 
 function setStatus(obj, s) { latest(obj).status = s; }
+// Files are immutable: replacing a version's file keeps the old one (and its stored binary) in v.files with its revision.
+function replaceVersionFile(v, media) {
+  const old = v.media; if (old && old.fileId === media.fileId) return v.media;
+  v.files = v.files || []; if (old && old.fileId) v.files.push({ ...old, rev: old.rev || 1, replacedAt: Date.now(), replacedBy: me().id });
+  v.media = { ...media, rev: old && old.fileId ? (old.rev || 1) + 1 : media.rev || 1 }; return v.media;
+}
 // Start a full approval cycle from the first step.
 function startCycle(obj, kind, wfId) {
   const v = latest(obj); const n = v.cycles.length + 1;
@@ -384,7 +394,7 @@ function finalise(obj, kind) {
    reject  — Reject: back to the owner; a new version restarts the FULL cycle */
 function decide(obj, kind, decision, note) {
   const st = curStep(obj); const cyc = curCycle(obj); const v = latest(obj).v; const u = me(); const now = Date.now();
-  const rec = { step: obj.review.step, fn: st.fn, level: st.level, req: st.req, by: u.id, role: roleLabel(u), startedAt: obj.review.stepStartedAt, at: now, note: note || '', admin: isAdmin(u) };
+  const lm = latest(obj).media; const rec = { step: obj.review.step, fn: st.fn, level: st.level, req: st.req, by: u.id, role: roleLabel(u), startedAt: obj.review.stepStartedAt, at: now, note: note || '', admin: isAdmin(u), fileId: lm ? lm.fileId || null : null, fileRev: lm ? lm.rev || 1 : null };
   const onBehalf = isAdmin(u) ? ' (recorded by Administrator)' : '';
   if (decision === 'pass' || decision === 'approve') {
     rec.decision = decision === 'approve' ? 'Approved' : 'Reviewed'; cyc.decisions.push(rec);
