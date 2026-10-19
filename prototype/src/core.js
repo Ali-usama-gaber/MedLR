@@ -137,11 +137,13 @@ function lifeStatus(m) {
   if (m.archived) return 'Archived';
   const st = statusOf(m);
   if (st !== 'Approved') return st;
-  if (m.expiry && m.expiry < Date.now()) return 'Review Required';
-  if (m.expiry && daysTo(m.expiry) <= S.settings.expiryWarnDays) return 'Expiring';
-  return usedInApproved(m.id) ? 'Active' : 'Approved';
+  return libraryStatus(m) || st; // same expiry/usage rule as the library
 }
 // Library status of the approved version, even while a newer version is being worked on.
+// One rule for "approved and still valid" (usable in new materials) and one for "shown in the Approved Library"
+// (also honours Settings → Show expiring content). Every page, count and filter uses these two.
+const libValid = m => ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '');
+const inLibrary = m => libValid(m) && (S.settings.libraryShowExpiring !== false || libraryStatus(m) !== 'Expiring');
 function libraryStatus(m) {
   if (m.archived || !live(m)) return null; const exp = liveMeta(m).expiry;
   if (exp && exp < Date.now()) return 'Review Required';

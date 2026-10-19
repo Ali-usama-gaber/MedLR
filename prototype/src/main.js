@@ -125,7 +125,7 @@ function countUp(root) {
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   root.querySelectorAll('.kpi b, .sb-legend b').forEach(el => {
     const m = /^(\d+)(%?)$/.exec(el.textContent.trim()); if (!m) return; const to = +m[1]; if (to < 2) return;
-    const t0 = performance.now(), dur = 650; const tick = now => { const k = Math.min(1, (now - t0) / dur); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + m[2]; if (k < 1) requestAnimationFrame(tick); };
+    const t0 = performance.now(), dur = 650; const tick = now => { const k = Math.max(0, Math.min(1, (now - t0) / dur)); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + m[2]; if (k < 1) requestAnimationFrame(tick); };
     el.textContent = '0' + m[2]; requestAnimationFrame(tick);
   });
 }

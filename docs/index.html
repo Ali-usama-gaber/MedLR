@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#12291f">
-<!-- SAJA MedLR build 2026-10-19 10:15 UTC -->
+<!-- SAJA MedLR build 2026-10-19 11:07 UTC -->
 <title>SAJA MedLR</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzEyMjkxZiIvPjxwYXRoIGQ9Ik05IDE2LjVsNC41IDQuNUwyMyAxMS41IiBmaWxsPSJub25lIiBzdHJva2U9IiM1ZmUwYTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=">
 <style>
@@ -3265,11 +3265,13 @@ function lifeStatus(m) {
   if (m.archived) return 'Archived';
   const st = statusOf(m);
   if (st !== 'Approved') return st;
-  if (m.expiry && m.expiry < Date.now()) return 'Review Required';
-  if (m.expiry && daysTo(m.expiry) <= S.settings.expiryWarnDays) return 'Expiring';
-  return usedInApproved(m.id) ? 'Active' : 'Approved';
+  return libraryStatus(m) || st; // same expiry/usage rule as the library
 }
 // Library status of the approved version, even while a newer version is being worked on.
+// One rule for "approved and still valid" (usable in new materials) and one for "shown in the Approved Library"
+// (also honours Settings → Show expiring content). Every page, count and filter uses these two.
+const libValid = m => ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '');
+const inLibrary = m => libValid(m) && (S.settings.libraryShowExpiring !== false || libraryStatus(m) !== 'Expiring');
 function libraryStatus(m) {
   if (m.archived || !live(m)) return null; const exp = liveMeta(m).expiry;
   if (exp && exp < Date.now()) return 'Review Required';
@@ -3813,7 +3815,7 @@ function viewShell(inner) {
   const nav = NAV.map((n, i) => {
     if (n.length === 1) { const items = []; for (let j = i + 1; j < NAV.length && NAV[j].length > 1; j++) items.push(NAV[j]); return items.some(x => !x[4] || can(u, x[4])) ? `<div class="nav-label">${n[0]}</div>` : ''; }
     if (n[4] && !can(u, n[4])) return '';
-    const count = n[3] === 'tasks' && nTasks ? nTasks : n[3] === 'mods' ? S.modules.filter(m => !m.archived).length : 0;
+    const count = n[3] === 'tasks' && nTasks ? nTasks : n[3] === 'mods' ? S.modules.length : 0;
     return `<button class="nav-item ${active === n[0] ? 'active' : ''} ${n[5] || ''}" title="${n[1]}" ${goAttr(n[0])} ${active === n[0] ? 'aria-current="page"' : ''}>${icon(n[2])}<span>${n[1] === 'Approved Library' ? '<span class="lbl-full">Approved </span>Library' : n[1]}</span>${count ? `<span class="count">${count}</span>` : ''}</button>`;
   }).join('');
   return `<div class="shell">
@@ -3957,9 +3959,9 @@ function viewHome() {
   const u = me(); const tasks = tasksFor(u); const a = authority(u.fn, u.level); const first = u.name.split(' ')[0]; const admin = isAdmin(u);
   const now = new Date(); const NOW = now.getTime(); const today = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const sc = homeScope(u); const mGo = extra => goAttr('modules', null, extra + (sc.team ? ' data-setf="mscope=team"' : '')); const aGo = f => goAttr('assets', null, ` data-setf="${f}${sc.team ? '&ascope=team' : ''}"`); const mods = S.modules.filter(sc.f); const seeAssets = can(u, 'page_assets'); const assets = seeAssets ? S.assets.filter(sc.f) : [];
-  const libOk = m => ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '');
+  const libOk = m => libValid(m);
   const mIn = mods.filter(m => m.review), mDraft = mods.filter(m => ['Draft', 'Awaiting Lead submission'].includes(statusOf(m))), mAmend = mods.filter(m => statusOf(m) === 'Amendment Requested');
-  const aAmend = assets.filter(x => statusOf(x) === 'Amendment Requested'); const aIn = assets.filter(x => x.review); const mLive = mods.filter(libOk); const mExp = mods.filter(m => libraryStatus(m) === 'Expiring');
+  const aAmend = assets.filter(x => statusOf(x) === 'Amendment Requested'); const aIn = assets.filter(x => x.review); const mLive = mods.filter(inLibrary); const mExp = mods.filter(m => libraryStatus(m) === 'Expiring');
   const cycAll = allCycles().filter(c => sc.f(c.obj));
   const P = (() => { try { return approvalStats(cycAll.filter(c => (c.end || NOW) > NOW - 90 * DAY)); } catch (e) { console.error('Approval statistics failed', e); return null; } })();
   const Pprev = (() => { try { return approvalStats(cycAll.filter(c => c.end && c.end <= NOW - 90 * DAY && c.end > NOW - 180 * DAY)); } catch (e) { return null; } })();
@@ -4136,10 +4138,10 @@ function viewTimeline(list, compact) {
 const MOD_STATUSES = ['Draft', 'Awaiting Lead submission', 'In Review', 'Amendment Requested', 'Rejected', 'Approved', 'Active', 'Expiring', 'Review Required', 'Archived'];
 function viewModules() {
   const u = me(); const q = F('mq').toLowerCase(); const ls = m => lifeStatus(m);
-  const tq = F('mtitle').toLowerCase().trim(); const rows = S.modules.filter(m => (!q || modText(m).includes(q)) && (!tq || m.title.toLowerCase().includes(tq)) && (!F('mscope') || homeScope(me()).f(m)) && (!F('mcat') || (F('mcat') === 'media') === isMediaType(m.type)) && (!F('mprod') || m.products.includes(F('mprod'))) && (!F('mtype') || m.type === F('mtype')) && (!F('mmkt') || m.markets.includes(F('mmkt'))) && (!F('mstat') || ls(m) === F('mstat') || (F('mstat') === 'live' && ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '')) || (F('mstat') === 'open' && ['Draft', 'Awaiting Lead submission'].includes(ls(m))) || (F('mstat') === 'issues' && ['Draft', 'Awaiting Lead submission', 'Amendment Requested', 'In Review'].includes(ls(m)) && validationIssues(m, 'Module').length)) && (!F('maud') || m.audience === F('maud')) && (!F('mch') || m.channels.includes(F('mch'))) && (!F('mown') || m.owner === F('mown')) && (!F('mwf') || (lastWf(m) || {}).id === F('mwf')) && (!F('mupd') || m.updatedAt > Date.now() - +F('mupd') * DAY) && (!F('mexp') || (F('mexp') === 'rev90' ? m.reviewDate && daysTo(m.reviewDate) <= 90 : F('mexp') === 'past' ? m.expiry && m.expiry < Date.now() : m.expiry && daysTo(m.expiry) >= 0 && daysTo(m.expiry) <= +F('mexp')))).sort((a, b) => b.updatedAt - a.updatedAt);
+  const tq = F('mtitle').toLowerCase().trim(); const rows = S.modules.filter(m => (!q || modText(m).includes(q)) && (!tq || m.title.toLowerCase().includes(tq)) && (!F('mscope') || homeScope(me()).f(m)) && (!F('mcat') || (F('mcat') === 'media') === isMediaType(m.type)) && (!F('mprod') || m.products.includes(F('mprod'))) && (!F('mtype') || m.type === F('mtype')) && (!F('mmkt') || m.markets.includes(F('mmkt'))) && (!F('mstat') || ls(m) === F('mstat') || (F('mstat') === 'live' && inLibrary(m)) || (F('mstat') === 'open' && ['Draft', 'Awaiting Lead submission'].includes(ls(m))) || (F('mstat') === 'issues' && ['Draft', 'Awaiting Lead submission', 'Amendment Requested', 'In Review'].includes(ls(m)) && validationIssues(m, 'Module').length)) && (!F('maud') || m.audience === F('maud')) && (!F('mch') || m.channels.includes(F('mch'))) && (!F('mown') || m.owner === F('mown')) && (!F('mwf') || (lastWf(m) || {}).id === F('mwf')) && (!F('mupd') || m.updatedAt > Date.now() - +F('mupd') * DAY) && (!F('mexp') || (F('mexp') === 'rev90' ? m.reviewDate && daysTo(m.reviewDate) <= 90 : F('mexp') === 'past' ? m.expiry && m.expiry < Date.now() : m.expiry && daysTo(m.expiry) >= 0 && daysTo(m.expiry) <= +F('mexp')))).sort((a, b) => b.updatedAt - a.updatedAt);
   const n = f => S.modules.filter(f).length;
   return pageHead('Modules', 'Reusable content, approved once and reused in every eligible material.', canCreateModule(u) ? goBtn('Create module', 'module-new', null, 'primary', 'plus') : '') +
-  statStrip([['In the Approved Library', n(m => ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '')), 'ok', 'Open the library →', 'go', 'library'], ['In review', n(m => ls(m) === 'In Review'), 'warn', 'With MLR reviewers', 'mstat', 'In Review'], ['Amendment requested', n(m => ls(m) === 'Amendment Requested'), 'warn', 'Resume after update', 'mstat', 'Amendment Requested'], ['Rejected', n(m => ls(m) === 'Rejected'), 'bad', 'New version needed', 'mstat', 'Rejected'], ['Expiring', n(m => ls(m) === 'Expiring'), 'warn', 'Within ' + S.settings.expiryWarnDays + ' days', 'mstat', 'Expiring'], ['Draft', n(m => ['Draft', 'Awaiting Lead submission'].includes(ls(m))), 'dim', 'Not submitted', 'mstat', 'open']]) +
+  statStrip([['In the Approved Library', n(m => inLibrary(m)), 'ok', 'Open the library →', 'go', 'library'], ['In review', n(m => ls(m) === 'In Review'), 'warn', 'With MLR reviewers', 'mstat', 'In Review'], ['Amendment requested', n(m => ls(m) === 'Amendment Requested'), 'warn', 'Resume after update', 'mstat', 'Amendment Requested'], ['Rejected', n(m => ls(m) === 'Rejected'), 'bad', 'New version needed', 'mstat', 'Rejected'], ['Expiring', n(m => ls(m) === 'Expiring'), 'warn', 'Within ' + S.settings.expiryWarnDays + ' days', 'mstat', 'Expiring'], ['Draft', n(m => ['Draft', 'Awaiting Lead submission'].includes(ls(m))), 'dim', 'Not submitted', 'mstat', 'open']]) +
   `${filterBar('modules', `${fsearch('mq', F('mq'), 'Search title, ID or text')}${fsel('mscope', F('mscope'), [['team', 'Your team’s content']], 'All content', 'Scope')}${fsel('mprod', F('mprod'), S.products.map(p => [p.id, p.name]), 'All products')}${fsel('mmkt', F('mmkt'), S.markets.map(m => [m.id, m.name]), 'All countries')}${fsel('mcat', F('mcat'), [['content', 'Content modules'], ['media', 'Media & document modules']], 'All categories')}${fsel('mtype', F('mtype'), S.moduleTypes.map(t => [t.id, t.name]), 'All module types')}${fsel('mstat', F('mstat'), [...MOD_STATUSES, ['live', 'In the Approved Library'], ['open', 'Not submitted'], ['issues', 'Failing validation']], 'All statuses')}${fsel('maud', F('maud'), S.audiences.map(a => [a.id, a.name]), 'All audiences')}${fsel('mch', F('mch'), S.channels.map(c => [c.id, c.name]), 'All channels')}${fpick('mown', S.users.filter(x => !isAdmin(x) || S.modules.some(m => m.owner === x.id)).sort((a, b) => a.name.localeCompare(b.name)).map(x => [x.id, x.name + ' · ' + roleLabel(x) + (x.status !== 'Active' ? ' · inactive' : '')]), 'Anyone', 'Person (Material Owner)', 'people')}${ftext('mtitle', 'Title', 'Words in the module title')}${fsel('mwf', F('mwf'), S.workflows.filter(w => !w.hidden && w.appliesTo === 'Module').map(w => [w.id, w.name]), 'All workflows')}${fsel('mupd', F('mupd'), [['7', 'Updated in last 7 days'], ['30', 'Updated in last 30 days'], ['90', 'Updated in last 90 days']], 'Any time')}${fsel('mexp', F('mexp'), [['30', 'Expires within 30 days'], ['90', 'Expires within 90 days'], ['rev90', 'Review due within 90 days'], ['past', 'Expired']], 'Any expiry / review')}`, `${rows.length} of ${S.modules.length}`)}
   <section class="panel table-wrap">${rows.length ? `<table class="tbl list-tbl"><thead><tr><th>Module</th><th>Products</th><th>Countries</th><th>Version</th><th>Status</th><th>Owner</th><th>Updated</th></tr></thead><tbody>
   ${rows.map(m => { const l = latest(m), lv = live(m); return `<tr class="click" ${goAttr('module', m.id)} tabindex="0"><td><div class="cell-title">${modThumb(m, latest(m))}<div><div class="title">${esc(m.title)}</div><span class="mono muted">${m.id} · ${esc(mtype(m.type).name)}</span></div></div></td><td>${tagList(m.products, 'p')}</td><td>${tagList(m.markets)}</td><td class="nw">${vtag(l.v)}${lv && lv.v !== l.v ? ` <span class="muted" style="font-size:11.5px">v${lv.v} live</span>` : ''}</td><td>${chip(lifeStatus(m))}</td><td>${userCell(m.owner)}</td><td class="muted num nw">${ago(m.updatedAt)}</td></tr>`; }).join('')}
@@ -4255,6 +4257,10 @@ function validateDraft(D) {
   if (!D.workflow) e.workflow = eligibleModuleWorkflows().length ? 'Choose the approval workflow for this module.' : 'No active module workflow exists yet. Add one in Workflow Management.';
   else if (!eligibleModuleWorkflows().some(w => w.id === D.workflow)) e.workflow = 'This workflow is no longer active or does not apply to modules. Choose another.';
   if (!D.markets.length) e.markets = 'Select at least one country.';
+  // Reference data deactivated after it was picked cannot go onto new content; values the module already had are kept.
+  const had = UI.route.p.id && modById(UI.route.p.id); const off = (coll, ids, keep) => ids.filter(id => { const x = coll.find(c => c.id === id); return x && !x.active && !(keep || []).includes(id); });
+  [['products', S.products, D.products, had && had.products, 'Product'], ['markets', S.markets, D.markets, had && had.markets, 'Country'], ['channels', S.channels, D.channels, had && had.channels, 'Channel'], ['audience', S.audiences, D.audience ? [D.audience] : [], had && [had.audience], 'Audience'], ['type', S.moduleTypes, D.type ? [D.type] : [], had && [had.type], 'Module type']]
+    .forEach(([k, coll, ids, keep, lbl]) => { const bad = off(coll, ids, keep); if (bad.length && !e[k]) e[k] = lbl + ' ' + bad.map(id => coll.find(c => c.id === id).name).join(', ') + (bad.length > 1 ? ' are' : ' is') + ' inactive. Remove it or reactivate it in Reference Data.'; });
   if (!D.channels.length) e.channels = 'Select at least one channel.';
   if (!D.expiry || fromISO(D.expiry) < Date.now()) e.expiry = 'Set an expiry date in the future.';
   if (D.reviewDate && D.expiry && fromISO(D.reviewDate) > fromISO(D.expiry)) e.reviewDate = 'The review date must be before expiry.';
@@ -4273,7 +4279,7 @@ function viewModule() {
   if (m.review && canActOn(u, m)) actions += goBtn('Open review', 'review', m.id, 'primary', 'shieldcheck');
   if (owns && can(u, 'create_version') && st === 'Approved' && !m.archived) actions += btn('Create new version', 'new-version', '', `data-id="${m.id}"`, 'copy');
   if (lv) actions += goBtn('Cover letter', 'cover', m.id, '', 'award', ` data-k="Module" data-v="${lv.v}"`);
-  if (canCreateAsset(u) && lv && ['Approved', 'Active', 'Expiring'].includes(libraryStatus(m) || '')) actions += btn('Use in asset', 'asset-new', '', `data-module="${m.id}"`, 'layers');
+  if (canCreateAsset(u) && lv && libValid(m)) actions += btn('Use in asset', 'asset-new', '', `data-module="${m.id}"`, 'layers');
   if (lv) actions += m.archived ? (can(u, 'restore') ? btn('Reinstate', 'mod-archive', '', `data-id="${m.id}"`, 'refresh') : '') : (can(u, 'withdraw') ? btn('Withdraw from library', 'mod-archive', 'ghost', `data-id="${m.id}"`, 'archive') : '');
   let banners = '';
   if (m.archived) banners += `<div class="banner">${icon('archive')}<div class="txt"><b>Withdrawn from the Approved Library</b><p>Archived ${m.archivedAt ? fmtD(m.archivedAt) + ' by ' + esc(user(m.archivedBy).name) : ''}. It cannot be added to new materials. Existing materials keep their approved version.</p></div></div>`;
@@ -4527,7 +4533,7 @@ function viewLibrary() {
   const showExp = S.settings.libraryShowExpiring;
   let body = '', count = 0;
   if (tab === 'modules') {
-    const rows = S.modules.filter(m => { const ls = libraryStatus(m); if (!ls || ls === 'Review Required' || (!showExp && ls === 'Expiring')) return false; const lv = live(m); const lm = liveMeta(m);
+    const rows = S.modules.filter(m => { if (!inLibrary(m)) return false; const lv = live(m); const lm = liveMeta(m);
       return (!q || (lm.title + m.id + lv.body + (lv.media ? lv.media.name + lv.media.source : '')).toLowerCase().includes(q)) && (!F('lcat') || (F('lcat') === 'media') === isMediaType(lm.type)) && (!F('lprod') || lm.products.includes(F('lprod'))) && (!F('lmkt') || lm.markets.includes(F('lmkt'))) && (!F('ltype') || lm.type === F('ltype')) && (!F('laud') || lm.audience === F('laud')) && (!F('lch') || lm.channels.includes(F('lch'))) && (!F('lstat') || ls === F('lstat')) && apOk(lv.approvedAt) && expOk(lm.expiry, lm.reviewDate) && verOk(lv.v); }).sort((a, b) => live(b).approvedAt - live(a).approvedAt);
     count = rows.length;
     body = rows.length ? `<table class="tbl lib-tbl"><thead><tr><th>Module</th><th>Products</th><th>Approved for</th><th>Version</th><th>Status</th><th>Approved</th><th>Valid until</th><th style="text-align:right"></th></tr></thead><tbody>${rows.map(m => { const lv = live(m); const lm = liveMeta(m); const ls = libraryStatus(m); const dl = daysTo(lm.expiry);
@@ -4998,6 +5004,10 @@ function assetValidation(a) {
   const mods = a.blocks.filter(b => b.kind === 'module').map(b => ({ b, m: modById(b.moduleId) })).filter(x => x.m);
   const bad = mods.filter(x => !eligibility(x.m, a).ok); const nNew = a.blocks.filter(b => b.kind === 'new').length;
   const sops = validationIssues(a, 'Asset');
+  // Inactive reference data on a draft asset blocks submission (an asset already approved keeps its values).
+  const off = [['Product', S.products, a.products], ['Country', S.markets, a.markets], ['Channel', S.channels, [a.channel]], ['Audience', S.audiences, [a.audience]], ['Material type', S.materialTypes, [a.type]]]
+    .flatMap(([l, c, ids]) => (ids || []).map(id => c.find(x => x.id === id)).filter(x => x && !x.active).map(x => l + ' “' + x.name + '”'));
+  if (off.length) sops.push({ sop: { guidance: 'Choose an active value or reactivate it in Reference Data.' }, ok: false, issue: off.join(', ') + (off.length > 1 ? ' are' : ' is') + ' inactive.', label: 'Active reference data' });
   return { mods, bad, nNew, sops, empty: !a.blocks.length, okAll: !bad.length && a.blocks.length > 0 && !sops.length };
 }
 function assetActions(a, where) {
@@ -5186,16 +5196,17 @@ function viewReports() {
     </div>`;
   } else if (tab === 'content') {
     const mods = S.modules.filter(objFilter); const ls = m => lifeStatus(m);
-    const c = { total: mods.length, approved: mods.filter(m => live(m) && !m.archived).length, review: mods.filter(m => ['In Review', 'Amendment Requested'].includes(ls(m))).length, draft: mods.filter(m => ['Draft', 'Awaiting Lead submission', 'Rejected'].includes(ls(m))).length, expiring: mods.filter(m => ls(m) === 'Expiring' || libraryStatus(m) === 'Expiring').length, sup: mods.reduce((s, m) => s + m.versions.filter(v => v.status === 'Superseded').length, 0) };
+    const bucket = m => libValid(m) ? 'approved' : ['In Review', 'Amendment Requested'].includes(ls(m)) ? 'review' : ['Draft', 'Awaiting Lead submission', 'Rejected'].includes(ls(m)) ? 'draft' : 'other'; // each module counted once
+    const c = { total: mods.length, approved: mods.filter(m => bucket(m) === 'approved').length, review: mods.filter(m => bucket(m) === 'review').length, draft: mods.filter(m => bucket(m) === 'draft').length, expiring: mods.filter(m => ls(m) === 'Expiring' || libraryStatus(m) === 'Expiring').length, sup: mods.reduce((s, m) => s + m.versions.filter(v => v.status === 'Superseded').length, 0) };
     const stages = LIFE.map(s => [s, s === 'Superseded' ? mods.filter(m => m.versions.some(v => v.status === 'Superseded')).length : mods.filter(m => lifeBucket(m) === s).length]);
     const types = S.moduleTypes.map(t => [esc(t.name), mods.filter(m => m.type === t.id).length]);
     const approvedPerMonth = []; for (let i = 5; i >= 0; i--) { const s = new Date(); s.setDate(1); s.setHours(0, 0, 0, 0); s.setMonth(s.getMonth() - i); const e = new Date(s); e.setMonth(e.getMonth() + 1); approvedPerMonth.push([MON[s.getMonth()] + ' ' + String(s.getFullYear()).slice(2), mods.reduce((n, m) => n + m.versions.filter(v => v.approvedAt >= s.getTime() && v.approvedAt < e.getTime()).length, 0)]); }
-    body = `<div class="kpis six" style="margin-bottom:18px">${kpi(c.total, 'Total modules', 'Matching the filters', '')}${kpi(c.approved, 'Approved', 'Have a live version', 'ok')}${kpi(c.review, 'In review', 'Incl. amendments', 'warn')}${kpi(c.draft, 'Draft', 'Incl. rejected', 'dim')}${kpi(c.expiring, 'Expiring', 'Within ' + S.settings.expiryWarnDays + ' days', 'warn')}${kpi(c.sup, 'Superseded versions', 'Replaced by a newer version', 'dim')}</div>
+    body = `<div class="kpis six" style="margin-bottom:18px">${kpi(c.total, 'Total modules', 'Matching the filters', '')}${kpi(c.approved, 'Approved', 'Live and in date', 'ok')}${kpi(c.review, 'In review', 'Incl. amendments · not yet live', 'warn')}${kpi(c.draft, 'Draft', 'Incl. rejected', 'dim')}${kpi(c.expiring, 'Expiring', 'Within ' + S.settings.expiryWarnDays + ' days', 'warn')}${kpi(c.sup, 'Superseded versions', 'Replaced by a newer version', 'dim')}</div>
     <div class="reports-grid">
     ${chartCard('stage', 'Modules by lifecycle stage', 'Current stage of every module', hbars(stages, Math.max(1, ...stages.map(x => x[1])), 's1'), stages, ['Stage', 'Modules'])}
     ${chartCard('mtype', 'Modules by type', 'Content modules and media & document modules', `<div class="hb grouped">${[['Content modules', false], ['Media & document modules', true]].map(([g, med]) => { const rows = S.moduleTypes.filter(t => isMediaType(t.id) === med).map(t => [esc(t.name), mods.filter(m => m.type === t.id).length, med ? 'o2' : 's1']); return `<div class="hb-group"><span class="hb-gl">${g} · ${rows.reduce((n, r) => n + r[1], 0)}</span>${hbars(rows, Math.max(1, ...types.map(x => x[1])))}</div>`; }).join('')}</div>`, S.moduleTypes.map(t => [esc(t.name), esc(modCategory(t.id)), mods.filter(m => m.type === t.id).length]), ['Module type', 'Category', 'Modules'])}
     ${(() => { const ms = lastMonths(6); const ser = [['Modules created', 's1', ms.map(M => mods.filter(m => inM(m.createdAt || m.versions[0].createdAt || 0, M)).length)], ['Versions approved', 'ok', ms.map(M => mods.reduce((n, m) => n + m.versions.filter(v => inM(v.approvedAt || 0, M)).length, 0))]]; return chartCard('crm', 'Content created over time', 'Modules created and versions approved per month', lineChart(ms.map(M => M.l), ser, { label: 'Content over time' }), ms.map((M, i) => [M.l, ser[0][2][i], ser[1][2][i]]), ['Month', 'Created', 'Approved']); })()}
-    ${(() => { const parts = [['Approved', c.approved, 'ok'], ['In review', c.review, 'warn'], ['Draft', c.draft, 'dim'], ...(c.total - c.approved - c.review - c.draft > 0 ? [['Withdrawn', c.total - c.approved - c.review - c.draft, 'o1']] : [])]; return chartCard('avr', 'Approved vs in review vs draft', 'Share of all modules', donut(parts, { unit: 'modules' }), parts.map(x => [x[0], x[1], pct(x[1], c.total) + '%']), ['Status', 'Modules', 'Share']); })()}
+    ${(() => { const parts = [['Approved', c.approved, 'ok'], ['In review', c.review, 'warn'], ['Draft', c.draft, 'dim'], ...(c.total - c.approved - c.review - c.draft > 0 ? [['Withdrawn or expired', c.total - c.approved - c.review - c.draft, 'o1']] : [])]; return chartCard('avr', 'Approved vs in review vs draft', 'Share of all modules', donut(parts, { unit: 'modules' }), parts.map(x => [x[0], x[1], pct(x[1], c.total) + '%']), ['Status', 'Modules', 'Share']); })()}
     ${chartCard('exp', 'Expiring and review due', 'Approved modules · next 90 days', hbars([['Expires ≤ 30 days', mods.filter(m => live(m) && m.expiry && daysTo(m.expiry) >= 0 && daysTo(m.expiry) <= 30).length, 'o2'], ['Expires 31–90 days', mods.filter(m => live(m) && m.expiry && daysTo(m.expiry) > 30 && daysTo(m.expiry) <= 90).length, 'o1'], ['Review due ≤ 90 days', mods.filter(m => live(m) && m.reviewDate && daysTo(m.reviewDate) <= 90).length, 's1'], ['Expired · review required', mods.filter(m => ls(m) === 'Review Required').length, 'o2']], Math.max(1, mods.length / 3)), [], ['', ''])}
     </div>`;
   } else if (tab === 'workflow') {
@@ -5884,7 +5895,7 @@ function countUp(root) {
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   root.querySelectorAll('.kpi b, .sb-legend b').forEach(el => {
     const m = /^(\d+)(%?)$/.exec(el.textContent.trim()); if (!m) return; const to = +m[1]; if (to < 2) return;
-    const t0 = performance.now(), dur = 650; const tick = now => { const k = Math.min(1, (now - t0) / dur); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + m[2]; if (k < 1) requestAnimationFrame(tick); };
+    const t0 = performance.now(), dur = 650; const tick = now => { const k = Math.max(0, Math.min(1, (now - t0) / dur)); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + m[2]; if (k < 1) requestAnimationFrame(tick); };
     el.textContent = '0' + m[2]; requestAnimationFrame(tick);
   });
 }
