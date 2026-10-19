@@ -21,7 +21,7 @@ const CASES = [
   ['Create asset', 'ali', 'assets', {}, `document.querySelector('[data-act=asset-new]').click()`, 'modal'],
   ['Asset submit', 'ali', 'asset', { id: 'AST-105' }, `document.querySelector('[data-act=asset-submit]').click()`, 'modal'],
   ['Asset new version', 'ali', 'asset', { id: 'AST-101' }, `document.querySelector('[data-act=asset-version]').click()`, 'modal'],
-  ['Asset new text', 'ali', 'assemble', { id: 'AST-105' }, `document.querySelector('[data-act=new-text]').click()`, 'modal'],
+  // 'Asset new text' removed: the asset builder no longer offers "Add new text".
   ['New SOP', 'ali', 'sops', {}, `document.querySelector('[data-act=sop-new]').click()`, 'modal'],
   ['Workflow preview', 'ali', 'workflows', {}, `document.querySelector('[data-act=wf-view]').click()`, 'modal'],
   ['Restore workspace confirm', 'ali', 'settings', { tab: 'data' }, `document.querySelector('[data-act=reset-open]').click()`, 'modal'],

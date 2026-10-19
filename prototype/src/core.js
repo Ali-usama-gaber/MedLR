@@ -5,7 +5,7 @@ const UI = { route: { name: S.signedIn ? 'home' : 'login', p: {} }, modal: null,
 
 function load() { try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const s = JSON.parse(raw); if (s && s.version === 8) return linkModuleWorkflows(s); if (s && s.version === 7) return linkModuleWorkflows(migrate7to8(s)); } } catch (e) {} return linkModuleWorkflows(SEED()); }
 // Every module records the workflow chosen for it. Older records take it from their approval history; drafts with no history stay unset until someone chooses.
-function linkModuleWorkflows(s) { s.notifications = s.notifications || []; s.notifSeenBy = s.notifSeenBy || {}; (s.teams || []).forEach(t => { if (t.active === undefined) t.active = true; }); if (s.settings.mentionEmail === undefined) s.settings.mentionEmail = true; if (s.settings.notifyEndpoint === undefined) s.settings.notifyEndpoint = ''; if (s.settings.idleSignOutMin === undefined) s.settings.idleSignOutMin = 30; s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
+function linkModuleWorkflows(s) { s.notifications = s.notifications || []; s.notifSeenBy = s.notifSeenBy || {}; (s.teams || []).forEach(t => { if (t.active === undefined) t.active = true; }); if (s.settings.mentionEmail === undefined) s.settings.mentionEmail = true; if (s.settings.notifyEndpoint === undefined) s.settings.notifyEndpoint = ''; if (s.settings.idleSignOutMin === undefined) s.settings.idleSignOutMin = 30; if (s.settings.maxUploadMb === undefined) s.settings.maxUploadMb = 50; if (!s.refKinds) s.refKinds = REF_KINDS.map(([id, name]) => ({ id, name, evidence: EVIDENCE_KINDS.includes(id), active: true })); s.moduleTypes.forEach(t => { if (!t.sops) t.sops = []; }); s.channels.forEach(c => { if (!c.sops) c.sops = []; }); s.modules.forEach(m => m.versions.forEach(v => { if (!Array.isArray(v.sopLinks)) v.sopLinks = []; })); s.modules.forEach(m => { if (m.workflow !== undefined) return; const c = m.versions.flatMap(v => v.cycles).slice(-1)[0]; m.workflow = c ? String(c.wf).split('@')[0] : null; }); return s; }
 // v7 → v8 keeps every user-created record: indications become records, permissions gain page access and authority, annotations start empty.
 function migrate7to8(s) {
   const valid = new Set(PERMS.map(p => p[0]));
@@ -75,6 +75,8 @@ const productInds = (pid, all) => S.indications.filter(i => i.product === pid &&
 const indsTxt = ids => (ids || []).map(indName).join(', ');
 const fnInfo = id => S.functions.find(f => f.id === id) || { id, desc: '', reviews: false };
 const funcIds = (all) => S.functions.filter(f => all || f.active).map(f => f.id);
+// First active review function: the starting choice for a new workflow step.
+const defaultReviewFn = () => (S.functions.find(f => f.active && f.reviews) || S.functions.find(f => f.active) || {}).id || '';
 const reviewFuncs = (all) => S.functions.filter(f => f.reviews && (all || f.active)).map(f => f.id);
 const channelsTxt = ids => (ids || []).map(i => chan(i).name).join(', ');
 const activeOf = (list, keep = []) => list.filter(x => x.active || [].concat(keep).includes(x.id));
@@ -86,7 +88,10 @@ const kindOf = o => o.blocks ? 'Asset' : 'Module';
 const nameOf = o => o.title || o.name;
 const wfById = id => S.workflows.find(w => w.id === id);
 const refById = id => S.references.find(r => r.id === id) || { id, title: id, source: '', kind: 'other' };
-const refKind = k => (REF_KINDS.find(x => x[0] === k) || [k, k])[1];
+const refKind = k => ((S.refKinds || []).find(x => x.id === k) || { name: k }).name;
+// Reference kinds the evidence SOP accepts as clinical evidence (Reference Data → Reference kinds).
+const evidenceKinds = () => (S.refKinds || []).filter(x => x.evidence).map(x => x.id);
+const refKindOpts = cur => (S.refKinds || []).filter(x => x.active || x.id === cur).map(x => [x.id, x.name]);
 const productsTxt = ids => (ids || []).map(i => product(i).name).join(', ');
 const marketsTxt = ids => (ids || []).map(i => market(i).name).join(', ');
 
@@ -105,6 +110,8 @@ const canCreateAsset = u => can(u, 'create');
 const sameTeam = (u, o) => !!o && (o.owner === u.id || user(o.owner).team === u.team);
 const canEditObj = (u, o) => isAdmin(u) || (can(u, 'edit') && (sameTeam(u, o) || can(u, 'manage')));
 const canAmendObj = (u, o) => isAdmin(u) || (can(u, 'amend') && (sameTeam(u, o) || can(u, 'manage')));
+// Who may download the current file and upload its replacement: amendment → whoever may amend; rejection → whoever may create a new version.
+const fileRework = (u, m) => { if (!m || m.archived || !isMediaType(m.type)) return null; const st = statusOf(m); return st === 'Amendment Requested' && canAmendObj(u, m) ? 'amend' : st === 'Rejected' && canEditObj(u, m) && can(u, 'create_version') ? 'reject' : null; };
 const canSubmit = u => can(u, 'submit');
 
 function authority(fn, level) {
@@ -226,12 +233,22 @@ function mediaUrl(fileId) {
 const fmtSize = n => n == null ? '—' : n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
 const fmtSecs = t => t == null ? '—' : Math.floor(t / 60) + ':' + String(Math.round(t % 60)).padStart(2, '0');
 const mediaOf = (m, v) => (v || latest(m)).media || null;
-const mediaFacts = md => !md ? [] : [['File', md.name], ['Format', md.format || md.mime], ['Size', fmtSize(md.size)], ...(md.duration != null ? [['Duration', fmtSecs(md.duration)]] : []), ...(md.pages != null ? [['Pages', md.pages]] : []), ...(md.width ? [['Dimensions', md.width + ' × ' + md.height + ' px']] : []), ['Checksum', (md.algo || '') + ' ' + String(md.checksum || '').slice(0, 16) + '…']];
+const mediaFacts = md => !md ? [] : [['File', md.name], ...(md.rev ? [['File revision', md.rev]] : []), ...(md.uploadedAt ? [['Uploaded', fmtD(md.uploadedAt) + (md.uploadedBy ? ' · ' + user(md.uploadedBy).name : '')]] : []), ['Format', md.format || md.mime], ['Size', fmtSize(md.size)], ...(md.duration != null ? [['Duration', fmtSecs(md.duration)]] : []), ...(md.pages != null ? [['Pages', md.pages]] : []), ...(md.width ? [['Dimensions', md.width + ' × ' + md.height + ' px']] : []), ['Checksum', (md.algo || '') + ' ' + String(md.checksum || '').slice(0, 16) + '…']];
 
 /* ---------- Validation SOPs ---------- */
+/* Module types and channels can name extra Validation SOPs ("validation checks"). An SOP applies when its own
+   scope matches OR a linked type/channel names it; each SOP runs once however many places link it.
+   A module version records the linked checks when it is saved (v.sopLinks), so later changes to a type or
+   channel apply to new modules and new versions only, never to versions already saved. */
+function configuredSops(obj, kind) {
+  const chans = kind === 'Module' ? (obj.channels || []) : obj.channel ? [obj.channel] : [];
+  return uniq([...(kind === 'Module' && S.moduleTypes.some(t => t.id === obj.type) ? mtype(obj.type).sops || [] : []), ...chans.flatMap(c => chan(c).sops || [])]);
+}
+function linkedSops(obj, kind) { const v = kind === 'Module' && obj.versions ? latest(obj) : null; return v && Array.isArray(v.sopLinks) ? v.sopLinks : configuredSops(obj, kind); }
 function sopApplies(sop, obj, kind) {
   if (!sop.active) return false;
   if (sop.appliesTo !== 'Both' && sop.appliesTo !== kind) return false;
+  if (linkedSops(obj, kind).includes(sop.id)) return true;
   const sc = sop.scope || {};
   if (sc.types && sc.types.length && !sc.types.includes(obj.type)) return false;
   if (sc.products && sc.products.length && !(obj.products || []).some(p => sc.products.includes(p))) return false;
@@ -244,7 +261,7 @@ function sopCheck(sop, obj, kind) {
     case 'product': return (obj.products || []).length > 0 ? null : 'No product selected.';
     case 'country': return (obj.markets || []).length > 0 ? null : 'No country selected.';
     case 'reference': return isM && !v.refs.length ? 'Attach at least one reference.' : null;
-    case 'evidence': return isM && !v.refs.some(r => EVIDENCE_KINDS.includes(refById(r).kind)) ? 'Cite a clinical study, registry or publication.' : null;
+    case 'evidence': return isM && !v.refs.some(r => evidenceKinds().includes(refById(r).kind)) ? 'Cite a reference of an evidence kind (' + (S.refKinds || []).filter(x => x.evidence).map(x => x.name).join(', ') + ').' : null;
     case 'safety': {
       if (isM) return null;
       const covered = uniq(obj.blocks.filter(b => b.kind === 'module').map(b => { const m = modById(b.moduleId); return m && metaOf(m, verOf(m, b.v)); }).filter(x => x && mtype(x.type).safety).flatMap(x => x.products));

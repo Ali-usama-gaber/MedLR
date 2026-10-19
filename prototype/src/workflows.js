@@ -2,7 +2,7 @@
 function viewWorkflows() {
   const list = S.workflows.filter(w => !w.hidden);
   const inflight = w => S.modules.filter(m => m.review && m.review.wf === w.id).length + S.assets.filter(a => a.review && a.review.wf === w.id).length;
-  return pageHead('Workflows', 'Review routes. Each step names a function, a level (Member or Lead) and whether it is a review or the final approval.', can(me(), 'manage_workflows') ? btn('New workflow', 'wf-new', 'primary', '', 'plus') : '') +
+  return pageHead('Workflows', 'Review routes: each step is a function, a level and a review or approval.', can(me(), 'manage_workflows') ? btn('New workflow', 'wf-new', 'primary', '', 'plus') : '') +
   `<section class="panel table-wrap"><table class="tbl"><thead><tr><th>Workflow</th><th>Applies to</th><th>Review flow</th><th>Steps</th><th>In flight</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody>
   ${list.map(w => { const n = inflight(w); return `<tr class="click" ${goAttr('workflow', w.id)} tabindex="0">
     <td><div class="row nowrap" style="gap:12px"><span class="type-ico">${icon('workflow', 'sm')}</span><div style="min-width:0"><div class="title">${esc(w.name)}</div><div class="muted" style="font-size:12px;max-width:42ch">${esc(w.desc)}</div></div></div></td>
@@ -91,7 +91,7 @@ function viewWorkflowNew(panel) {
     <div class="nwf-tools"><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="-1" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up', 'sm')}</button><button type="button" class="btn icon sm" data-act="nwf-move" data-i="${i}" data-dir="1" aria-label="Move down" ${i === D.steps.length - 1 ? 'disabled' : ''}>${icon('down', 'sm')}</button><button type="button" class="btn icon sm danger" data-act="nwf-del" data-i="${i}" aria-label="Remove step">${icon('trash', 'sm')}</button></div>
   </div>`;
   if (panel) return workflowBuilder(D, E, err, issues, row, hid, st, who, 'data-act="modal-close"');
-  return pageHead('New workflow', 'Build a review route step by step. Level and decision type are set per step.', '', [['Workflows', 'workflows'], ['New workflow']]) + workflowBuilder(D, E, err, issues, row, hid, st, who, goAttr('workflows'));
+  return pageHead('New workflow', 'Build a review route step by step.', '', [['Workflows', 'workflows'], ['New workflow']]) + workflowBuilder(D, E, err, issues, row, hid, st, who, goAttr('workflows'));
 }
 // The workflow wizard. Used on the New workflow page and in the side panel opened from Create Module (cancelAttr decides where Cancel goes).
 function workflowBuilder(D, E, err, issues, row, hid, st, who, cancelAttr) {

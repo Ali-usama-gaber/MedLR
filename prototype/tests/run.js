@@ -7,7 +7,7 @@ const { spawnSync, execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const dir = __dirname;
-const SUITES = ['e2e', 'perms', 'life', 'media.test', 'ann.test', 'ann2.test', 'fileview.test', 'forms.test', 'acceptance.test', 'smoke2', 'notif.test', 'rail.test', 'nav.test', 'home.test', 'formstate.test', 'v2.test', 'qa-perm.test', 'qa-popup.test', 'qa-crawl.test', 'qa-data.test', 'qa-forms.test', 'qa-adversary.test'];
+const SUITES = ['e2e', 'perms', 'life', 'media.test', 'ann.test', 'ann2.test', 'fileview.test', 'forms.test', 'acceptance.test', 'smoke2', 'notif.test', 'rail.test', 'nav.test', 'home.test', 'formstate.test', 'v2.test', 'qa-perm.test', 'qa-popup.test', 'qa-crawl.test', 'qa-data.test', 'qa-forms.test', 'qa-adversary.test', 'rework.test', 'config.test'];
 if (!fs.existsSync(path.join(dir, '..', 'dist', 'index.html'))) { console.error('dist/index.html is missing. Run: python build.py'); process.exit(2); }
 let globalRoot = ''; try { globalRoot = execSync('npm root -g', { encoding: 'utf8' }).trim(); } catch (e) {}
 const env = { ...process.env, NODE_PATH: [process.env.NODE_PATH, globalRoot].filter(Boolean).join(path.delimiter) };

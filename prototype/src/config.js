@@ -6,49 +6,55 @@ const asWorkflows = kind => S.workflows.filter(w => !w.hidden && w.appliesTo ===
 const useRow = (route, id, label, extra, k) => ({ route, id, label, extra: extra || '', k });
 const CONFIG = {
   products: { label: 'Product', plural: 'Products', icon: 'pill', perm: 'manage_settings', coll: () => S.products, prefix: 'P',
-    sub: 'Products and their indication. The indication is its own record linked to the product, so modules reference it by id and a product can carry more than one later without a data change.',
+    sub: 'Products and their indication.',
     fields: [['name', 'Product name', 'text', { req: true, ph: 'e.g. Product D' }], ['code', 'Abbreviation / code', 'text', { ph: 'e.g. PD', hint: 'Short code used in module IDs and exports, if applicable.' }], ['area', 'Therapy area', 'text', { req: true, ph: 'e.g. Oncology' }],
-      ['indication', 'Indication', 'text', { req: true, ph: 'e.g. Chronic heart failure', hint: 'One indication per product. Modules that select this product take it automatically.', get: x => (productInds(x.id)[0] || productInds(x.id, true)[0] || {}).name || '', set: setProductIndication }]],
+      ['indication', 'Indication', 'text', { req: true, ph: 'e.g. Chronic heart failure', hint: 'Modules for this product take it automatically.', get: x => (productInds(x.id)[0] || productInds(x.id, true)[0] || {}).name || '', set: setProductIndication }]],
     cols: [['Code', x => x.code ? `<span class="tag">${esc(x.code)}</span>` : '<span class="muted">—</span>'], ['Therapy area', x => esc(x.area)], ['Indication', x => esc(indsTxt(productInds(x.id).map(i => i.id)) || '—')]],
     usage: x => [['Modules', S.modules.filter(m => m.products.includes(x.id) || m.versions.some(v => v.meta && v.meta.products.includes(x.id))).map(m => useRow('module', m.id, m.title, m.id))], ['Assets', S.assets.filter(a => a.products.includes(x.id)).map(a => useRow('asset', a.id, a.name, a.id))], ['Validation SOPs', S.sops.filter(s => s.scope.products.includes(x.id)).map(s => useRow('sops', null, s.name, s.id))]] },
   markets: { label: 'Country', plural: 'Countries', icon: 'globe', perm: 'manage_settings', coll: () => S.markets, codeId: true,
-    sub: 'Countries content can be approved for. Asset eligibility checks every asset country against each module’s approved countries.',
-    fields: [['name', 'Country', 'text', { req: true, ph: 'e.g. Qatar' }], ['id', 'Country code', 'code', { req: true, ph: 'e.g. QA', createOnly: true, hint: 'Two or three letters. Used as the short label everywhere and cannot change later.' }], ['authority', 'Health authority', 'text', { ph: 'e.g. MOPH Qatar' }], ['lang', 'Languages', 'text', { ph: 'e.g. Arabic, English' }]],
+    sub: 'Countries content can be approved for.',
+    fields: [['name', 'Country', 'text', { req: true, ph: 'e.g. Qatar' }], ['id', 'Country code', 'code', { req: true, ph: 'e.g. QA', createOnly: true, hint: 'Two or three letters. Cannot change later.' }], ['authority', 'Health authority', 'text', { ph: 'e.g. MOPH Qatar' }], ['lang', 'Languages', 'text', { ph: 'e.g. Arabic, English' }]],
     cols: [['Code', x => `<span class="tag">${esc(x.id)}</span>`], ['Health authority', x => esc(x.authority || '—')], ['Languages', x => esc(x.lang || '—')]],
     usage: x => [['Modules', S.modules.filter(m => m.markets.includes(x.id)).map(m => useRow('module', m.id, m.title, m.id))], ['Assets', S.assets.filter(a => a.markets.includes(x.id)).map(a => useRow('asset', a.id, a.name, a.id))], ['Validation SOPs', S.sops.filter(s => s.scope.markets.includes(x.id)).map(s => useRow('sops', null, s.name, s.id))]] },
   moduletypes: { label: 'Module type', plural: 'Module Types', icon: 'type', perm: 'manage_settings', coll: () => S.moduleTypes, prefix: 'TY',
-    sub: 'The module types content owners can create. The kind decides the form and the approved artefact: content modules approve text with references, media & document modules approve an uploaded image, video or PDF. A type flagged as a safety statement satisfies the safety SOP in assets.',
-    fields: [['name', 'Name', 'text', { req: true, ph: 'e.g. Dosing Statement' }], ['kind', 'Kind', 'select', { req: true, createOnly: true, options: () => MODULE_KINDS.map(k => [k[0], k[1] + ' — ' + k[2]]), hint: 'Sets the form and preview. Cannot change once created, because existing modules store text or a file accordingly.' }], ['desc', 'Description', 'text', { req: true, ph: 'Shown when choosing the type' }], ['workflow', 'Suggested workflow', 'select', { options: () => asWorkflows('Module'), hint: 'Pre-selected when a module of this type is submitted.' }], ['icon', 'Icon', 'select', { options: () => TYPE_ICONS.map(i => [i, i]) }], ['tone', 'Colour', 'select', { options: () => TONES }], ['safety', 'Counts as a safety statement', 'bool', { hint: 'Used by the safety-statement Validation SOP for assets.' }]],
+    sub: 'Module types, their kind (text or file) and their validation checks.',
+    fields: [['name', 'Name', 'text', { req: true, ph: 'e.g. Dosing Statement' }], ['kind', 'Kind', 'select', { req: true, createOnly: true, options: () => MODULE_KINDS.map(k => [k[0], k[1] + ' — ' + k[2]]), hint: 'Sets the form and preview. Cannot change later.' }], ['desc', 'Description', 'text', { req: true, ph: 'Shown when choosing the type' }], ['sops', 'Validation checks', 'multi', { options: () => S.sops.filter(x => x.active).map(x => [x.id, x.name, x.appliesTo === 'Both' ? 'Modules & assets' : x.appliesTo + 's']), noun: 'checks', hint: 'Added to new modules and versions of this type.' }], ['workflow', 'Suggested workflow', 'select', { options: () => asWorkflows('Module'), hint: 'Pre-selected when a module of this type is submitted.' }], ['icon', 'Icon', 'select', { options: () => TYPE_ICONS.map(i => [i, i]) }], ['tone', 'Colour', 'select', { options: () => TONES }], ['safety', 'Counts as a safety statement', 'bool', { hint: 'Used by the safety-statement Validation SOP for assets.' }]],
     cols: [['Type', x => `<div class="row nowrap" style="gap:8px">${typeIco(x.id)}<span>${esc(x.desc)}</span></div>`], ['Category', x => `<span class="tag">${esc(modCategory(x.id))}</span><br><span class="muted" style="font-size:12px">${esc(kindLabel(x.kind || 'content'))}</span>`], ['Suggested workflow', x => esc(x.workflow ? (wfById(x.workflow) || {}).name || '—' : '—')], ['Safety statement', x => x.safety ? '<span class="chip ok">Yes</span>' : '<span class="muted">—</span>']],
-    usage: x => [['Modules', S.modules.filter(m => m.type === x.id).map(m => useRow('module', m.id, m.title, m.id))], ['Validation SOPs', S.sops.filter(s => s.scope.types.includes(x.id)).map(s => useRow('sops', null, s.name, s.id))]] },
+    usage: x => [['Modules', S.modules.filter(m => m.type === x.id).map(m => useRow('module', m.id, m.title, m.id))], ['Validation SOPs', S.sops.filter(s => s.scope.types.includes(x.id) || (x.sops || []).includes(s.id)).map(s => useRow('sops', null, s.name, s.id))]] },
   materials: { label: 'Material type', plural: 'Material Types', icon: 'file', perm: 'manage_settings', coll: () => S.materialTypes, prefix: 'MT',
     sub: 'Asset types, their default channel and the workflow used when an asset contains new text.',
     fields: [['name', 'Material type', 'text', { req: true, ph: 'e.g. Congress poster' }], ['channel', 'Default channel', 'select', { req: true, options: () => activeOf(S.channels).map(c => [c.id, c.name]) }], ['workflow', 'Workflow for new content', 'select', { req: true, options: () => asWorkflows('Asset'), hint: 'Assets made only of approved modules use the streamlined workflow set in Settings.' }]],
     cols: [['Default channel', x => esc(chan(x.channel).name)], ['Workflow (new content)', x => esc((wfById(x.workflow) || {}).name || '—')]],
     usage: x => [['Assets', S.assets.filter(a => a.type === x.id).map(a => useRow('asset', a.id, a.name, a.id))], ['Validation SOPs', S.sops.filter(s => s.scope.types.includes(x.id)).map(s => useRow('sops', null, s.name, s.id))]] },
   channels: { label: 'Channel', plural: 'Channels', icon: 'send', perm: 'manage_settings', coll: () => S.channels, prefix: 'CH',
-    sub: 'Where content is used. A module can be used in an asset only if it is approved for the asset’s channel.',
-    fields: [['name', 'Channel name', 'text', { req: true, ph: 'e.g. Congress' }]],
-    cols: [],
-    usage: x => [['Modules', S.modules.filter(m => m.channels.includes(x.id)).map(m => useRow('module', m.id, m.title, m.id))], ['Assets', S.assets.filter(a => a.channel === x.id).map(a => useRow('asset', a.id, a.name, a.id))], ['Material types', S.materialTypes.filter(t => t.channel === x.id).map(t => useRow('item', t.id, t.name, '', 'materials'))]] },
+    sub: 'Where content is used, and the validation checks each channel adds.',
+    fields: [['name', 'Channel name', 'text', { req: true, ph: 'e.g. Congress' }], ['sops', 'Validation checks', 'multi', { options: () => S.sops.filter(x => x.active).map(x => [x.id, x.name, x.appliesTo === 'Both' ? 'Modules & assets' : x.appliesTo + 's']), noun: 'checks', hint: 'Added to new modules and versions in this channel, and to its assets.' }]],
+    cols: [['Validation checks', x => (x.sops || []).length ? esc((x.sops || []).map(id => (S.sops.find(o => o.id === id) || { name: id }).name).join(', ')) : '<span class="muted">—</span>']],
+    usage: x => [['Modules', S.modules.filter(m => m.channels.includes(x.id)).map(m => useRow('module', m.id, m.title, m.id))], ['Assets', S.assets.filter(a => a.channel === x.id).map(a => useRow('asset', a.id, a.name, a.id))], ['Material types', S.materialTypes.filter(t => t.channel === x.id).map(t => useRow('item', t.id, t.name, '', 'materials'))], ['Validation SOPs', S.sops.filter(s => (x.sops || []).includes(s.id)).map(s => useRow('sops', null, s.name, s.id))]] },
   audiences: { label: 'Audience', plural: 'Audiences', icon: 'users', perm: 'manage_settings', coll: () => S.audiences, prefix: 'AU',
     sub: 'The audiences modules and assets are written for.',
     fields: [['name', 'Audience', 'text', { req: true, ph: 'e.g. HCP – Oncologists' }]],
     cols: [],
     usage: x => [['Modules', S.modules.filter(m => m.audience === x.id).map(m => useRow('module', m.id, m.title, m.id))], ['Assets', S.assets.filter(a => a.audience === x.id).map(a => useRow('asset', a.id, a.name, a.id))]] },
   references: { label: 'Reference', plural: 'References', icon: 'quote', perm: 'manage_library', viewPerm: ['page_modules', 'page_library'], coll: () => S.references, prefix: 'REF', nameKey: 'title',
-    sub: 'The reference library. Modules cite these records; the evidence SOP counts clinical studies, registries and publications.',
-    fields: [['title', 'Title', 'text', { req: true, ph: 'e.g. ALPHA-HF study — 36-month extension' }], ['source', 'Source', 'text', { req: true, ph: 'e.g. Clinical study report CSR-ALPHA-03, 2026' }], ['kind', 'Kind', 'select', { req: true, options: () => REF_KINDS }]],
+    sub: 'The reference library modules cite.',
+    fields: [['title', 'Title', 'text', { req: true, ph: 'e.g. ALPHA-HF study — 36-month extension' }], ['source', 'Source', 'text', { req: true, ph: 'e.g. Clinical study report CSR-ALPHA-03, 2026' }], ['kind', 'Kind', 'select', { req: true, options: () => refKindOpts() }]],
     cols: [['Source', x => esc(x.source)], ['Kind', x => `<span class="tag">${esc(refKind(x.kind))}</span>`]],
     usage: x => [['Modules', S.modules.filter(m => m.versions.some(v => v.refs.includes(x.id))).map(m => useRow('module', m.id, m.title, m.versions.filter(v => v.refs.includes(x.id)).map(v => 'v' + v.v).join(', ')))]] },
+  refkinds: { label: 'Reference kind', plural: 'Reference Kinds', icon: 'quote', perm: 'manage_settings', coll: () => S.refKinds, prefix: 'RK',
+    sub: 'Kinds offered when a reference is registered. The evidence SOP accepts references of the kinds marked as evidence.',
+    fields: [['name', 'Name', 'text', { req: true, ph: 'e.g. Real-world evidence' }], ['evidence', 'Counts as clinical evidence', 'bool', { hint: 'Satisfies the “Medical evidence for clinical claims” SOP.' }]],
+    cols: [['Clinical evidence', x => x.evidence ? '<span class="chip ok">Yes</span>' : '<span class="muted">—</span>']],
+    usage: x => [['References', S.references.filter(r => r.kind === x.id).map(r => useRow('item', r.id, r.title, '', 'references'))]],
+    blockDeactivate: x => (S.refKinds || []).filter(k => k.active && k.evidence && k.id !== x.id).length || !x.evidence ? '' : 'Mark another kind as clinical evidence first, or the evidence SOP can never pass.' },
   teams: { label: 'Team', plural: 'Teams', icon: 'team', perm: 'manage_users', coll: () => S.teams, prefix: 'T',
-    sub: 'Teams group people by function. A workflow step can be limited to one team; otherwise any team of that function can act.',
+    sub: 'Teams group people by function. A workflow step can be limited to one team.',
     fields: [['name', 'Team name', 'text', { req: true, ph: 'e.g. Medical Affairs — Respiratory' }], ['fn', 'Function', 'select', { req: true, options: () => [...funcIds().map(f => [f, f]), ['Administrator', 'Administrator']] }]],
     cols: [['Function', x => `<div class="row nowrap" style="gap:6px">${fnBadge(x.fn === 'Administrator' ? 'Admin' : x.fn, 'sm')}${esc(x.fn)}</div>`], ['Members', x => { const mem = S.users.filter(u => u.team === x.id && u.status === 'Active'); return `${mem.filter(u => u.level === 'Lead').length} Lead · ${mem.filter(u => u.level === 'Member').length} Member${isAdmin({ fn: x.fn }) ? ' · ' + mem.length + ' admin' : ''}`; }]],
     usage: x => [['Users', S.users.filter(u => u.team === x.id).map(u => useRow('user', u.id, u.name, roleLabel(u) + (u.status !== 'Active' ? ' · inactive' : '')))], ['Workflow steps', S.workflows.filter(w => !w.hidden && w.steps.some(s => s.team === x.id)).map(w => useRow('workflow', w.id, w.name))]],
     blockDeactivate: x => S.users.some(u => u.team === x.id && u.status === 'Active') ? 'Move its active members to another team first.' : '' },
   functions: { label: 'Function', plural: 'Functions', icon: 'shieldcheck', perm: 'manage_users', coll: () => S.functions, codeId: true, nameKey: 'id',
-    sub: 'Functions are the departments people work in. Each function has a Member and a Lead role in Roles & Permissions. Review functions can be used as workflow steps.',
+    sub: 'Departments people work in. Review functions can be workflow steps.',
     fields: [['id', 'Function name', 'code', { req: true, ph: 'e.g. Pharmacovigilance', createOnly: true, hint: 'The name is the function key and cannot change later.' }], ['desc', 'Description', 'text', { req: true, ph: 'e.g. Safety review of promotional content' }], ['reviews', 'Takes part in MLR review', 'bool', { hint: 'Review functions appear as workflow steps and in approval reports.' }]],
     cols: [['Description', x => esc(x.desc)], ['Review function', x => x.reviews ? '<span class="chip ok">Yes</span>' : '<span class="muted">—</span>'], ['People', x => S.users.filter(u => u.fn === x.id && u.status === 'Active').length]],
     usage: x => [['Users', S.users.filter(u => u.fn === x.id).map(u => useRow('user', u.id, u.name, roleLabel(u)))], ['Teams', S.teams.filter(t => t.fn === x.id).map(t => useRow('item', t.id, t.name, '', 'teams'))], ['Workflows', S.workflows.filter(w => !w.hidden && w.steps.some(s => s.fn === x.id)).map(w => useRow('workflow', w.id, w.name))]],
@@ -63,7 +69,7 @@ function setProductIndication(x, name) {
 }
 const cfgGet = (f, x) => f[3].get ? f[3].get(x) : x[f[0]];
 // Empty values for a new record of this kind.
-function cfgBlank(k) { const d = {}; CONFIG[k].fields.forEach(f => { d[f[0]] = f[2] === 'list' ? [] : f[2] === 'bool' ? false : f[2] === 'select' && f[3].req ? ((f[3].options()[0] || [])[0] || '') : ''; }); return d; }
+function cfgBlank(k) { const d = {}; CONFIG[k].fields.forEach(f => { d[f[0]] = f[2] === 'list' || f[2] === 'multi' ? [] : f[2] === 'bool' ? false : f[2] === 'select' && f[3].req ? ((f[3].options()[0] || [])[0] || '') : ''; }); return d; }
 const cfgName = (k, x) => x[CONFIG[k].nameKey || 'name'];
 const cfgUsage = (k, x) => CONFIG[k].usage(x);
 const cfgUseCount = (k, x) => cfgUsage(k, x).reduce((n, g) => n + g[1].length, 0);
@@ -81,6 +87,7 @@ function cfgFieldVal(k, f, x) {
   const v = cfgGet(f, x);
   if (f[2] === 'list') return (v || []).map(i => `<span class="tag">${esc(i)}</span>`).join(' ') || '—';
   if (f[2] === 'bool') return v ? 'Yes' : 'No';
+  if (f[2] === 'multi') return (v || []).map(i => `<span class="tag">${esc(((f[3].options() || []).find(o => o[0] === i) || [i, (S.sops.find(o => o.id === i) || { name: i }).name])[1])}</span>`).join(' ') || '—';
   if (f[2] === 'select') { const o = (f[3].options() || []).find(o => o[0] === v); if (k === 'materials' && f[0] === 'channel') return esc(chan(v).name); if (k === 'materials' && f[0] === 'workflow') return esc((wfById(v) || {}).name || v); if (f[0] === 'icon') return typeIco(x.id) + ' ' + esc(v); return esc(o ? o[1] : v); }
   return esc(v || '—');
 }
@@ -100,6 +107,7 @@ function cfgModal(M) {
   return modalShell(C.icon, '', (M.id ? 'Edit ' : 'Add ') + C.label.toLowerCase(), M.id ? `<span class="mono">${esc(M.id)}</span> · changes apply everywhere this ${C.label.toLowerCase()} is used.` : 'It becomes available in every form, filter and report that uses ' + C.plural.toLowerCase() + '.',
     C.fields.filter(f => !(f[3].createOnly && M.id)).map(f => { const id = 'cf-' + f[0]; const o = f[3]; const er = E[f[0]] ? `<span class="err">${esc(E[f[0]])}</span>` : ''; const hint = o.hint ? `<span class="hint">${esc(o.hint)}</span>` : '';
       if (f[2] === 'bool') return `<div class="set-row"><div><b>${esc(f[1])}</b>${o.hint ? `<span class="muted">${esc(o.hint)}</span>` : ''}</div>${toggleBtn(!!D[f[0]], 'cfg-bool', `data-f="${f[0]}"`, f[1])}</div>`;
+      if (f[2] === 'multi') return `<div class="field"><span class="label">${esc(f[1])}</span>${chipSelect(id, 'cfg-multi', f[0], o.options(), D[f[0]] || [], { ph: 'Select ' + (o.noun || ''), noun: o.noun })}${hint}${er}</div>`;
       if (f[2] === 'select') return `<div class="field"><label for="${id}">${esc(f[1])}</label><select class="select ${E[f[0]] ? 'invalid' : ''}" id="${id}" data-cfg="${f[0]}">${o.req ? '' : opt('', D[f[0]], '—')}${o.options().map(x => opt(x[0], D[f[0]], x[1])).join('')}</select>${hint}${er}</div>`;
       return `<div class="field"><label for="${id}">${esc(f[1])}</label><input class="input ${E[f[0]] ? 'invalid' : ''}" id="${id}" data-cfg="${f[0]}" value="${esc(f[2] === 'list' ? (D[f[0]] || []).join(', ') : D[f[0]] || '')}" placeholder="${esc(o.ph || '')}">${hint}${er}</div>`; }).join(''),
     `${btn('Cancel', 'modal-close')}${btn(M.id ? 'Save changes' : 'Add ' + C.label.toLowerCase(), 'cfg-save', 'primary', '', 'check')}`);
@@ -113,7 +121,7 @@ function cfgSave() {
   if (D[nk] && list.some(x => x.id !== M.id && String(cfgName(M.k, x)).toLowerCase() === String(D[nk]).toLowerCase())) errs[nk] = 'Another ' + C.label.toLowerCase() + ' already uses this name.';
   if (C.codeId && !M.id) { if (M.k === 'markets') D.id = String(D.id || '').toUpperCase(); if (M.k === 'markets' && D.id && !/^[A-Z]{2,3}$/.test(D.id)) errs.id = 'Use two or three letters.'; if (list.some(x => x.id.toLowerCase() === String(D.id).toLowerCase())) errs.id = 'This code is already used.'; }
   if (Object.keys(errs).length) { M.errs = errs; render(); return; }
-  const show = (f, v) => f[2] === 'list' ? (v || []).join(', ') : f[2] === 'bool' ? (v ? 'Yes' : 'No') : f[2] === 'select' ? cfgFieldVal(M.k, f, { [f[0]]: v, id: '' }).replace(/<[^>]+>/g, '').trim() : String(v == null ? '' : v);
+  const show = (f, v) => f[2] === 'multi' ? (v || []).map(i => (S.sops.find(o => o.id === i) || { name: i }).name).join(', ') : f[2] === 'list' ? (v || []).join(', ') : f[2] === 'bool' ? (v ? 'Yes' : 'No') : f[2] === 'select' ? cfgFieldVal(M.k, f, { [f[0]]: v, id: '' }).replace(/<[^>]+>/g, '').trim() : String(v == null ? '' : v);
   if (M.id) {
     const x = list.find(i => i.id === M.id); let n = 0;
     C.fields.forEach(f => { if (f[3].createOnly) return; const a = show(f, cfgGet(f, x)), b = show(f, D[f[0]]); if (a !== b) { log(C.label + ' updated', C.label, { id: x.id }, 1, { note: f[1], prev: a, next: b }); n++; } if (f[3].set) { if (a !== b) f[3].set(x, D[f[0]]); } else x[f[0]] = Array.isArray(D[f[0]]) ? [...D[f[0]]] : D[f[0]]; });
@@ -147,7 +155,7 @@ function cfgDelete(k, id) {
 /* ---------- Reference Data and Organisation: their own sections, outside Settings ----------
    Each hub has an overview (counts computed from the records) and one management table per entity. */
 const HUBS = {
-  refdata: { title: 'Reference Data', icon: 'database', keys: ['products', 'markets', 'moduletypes', 'materials', 'channels', 'audiences', 'references'], sub: 'The controlled lists offered when modules and assets are created, reviewed and filtered. Changes apply everywhere the list is used.' },
+  refdata: { title: 'Reference Data', icon: 'database', keys: ['products', 'markets', 'moduletypes', 'materials', 'channels', 'audiences', 'references', 'refkinds'], sub: 'The controlled lists offered when modules and assets are created, reviewed and filtered. Changes apply everywhere the list is used.' },
   org: { title: 'People & Teams', icon: 'users', keys: ['teams', 'functions'], sub: 'The people who use MedLR and where they belong. What each person can do is set by their role in Roles & Permissions.',
     // Lists that are not configuration records but live in the same section.
     extra: [{ k: 'users', label: 'Users', icon: 'users', perm: ['manage_users', ADMIN_VIEW], sub: 'People who can sign in, with their function, level and team.', coll: () => S.users, active: x => x.status === 'Active', used: x => S.modules.some(m => m.owner === x.id) || S.assets.some(a => a.owner === x.id) || S.audit.some(e => e.user === x.id), objType: 'User', view: cr => viewUsers(cr) }] }

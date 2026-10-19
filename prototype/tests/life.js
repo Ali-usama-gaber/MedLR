@@ -106,7 +106,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   const AID = await E(() => UI.route.p.id); ok(/^AST-/.test(AID), 'asset created ' + AID);
   await p.click(`[data-act=blk-add][data-module="${MID}"]`); await W(); await p.click('[data-act=asset-submit]'); await W();
   ok(await p.isDisabled('[data-act=asset-submit-confirm]') && (await p.textContent('.modal')).includes('Oncology Safety Statement'), 'safety SOP names the configured safety module type'); await p.click('[data-act=modal-close]');
-  await p.click(`[data-act=blk-add][data-module="${SID}"]`); await W(); await p.click('[data-act=new-text]'); await W(); await p.fill('#nt-text', 'Visit booth 12 at the regional oncology congress.'); await p.click('[data-act=new-text-confirm]'); await W();
+  await p.click(`[data-act=blk-add][data-module="${SID}"]`); await W(); await p.evaluate(() => ACT['new-text']({ dataset: { id: curAsset().id } })); /* entry button removed from the builder; the new-content route is still supported for assets */ await W(); await p.fill('#nt-text', 'Visit booth 12 at the regional oncology congress.'); await p.click('[data-act=new-text-confirm]'); await W();
   ok(await E(id => assetWorkflow(assetById(id)) === mat(assetById(id).type).workflow, AID), 'new text routes through the Material Type’s workflow');
   await p.click('[data-act=asset-submit]'); await W(); await p.click('[data-act=asset-submit-confirm]'); await W();
   const actA = async email => { await login(email); await G('asset-review', { id: AID }); await p.click('[data-act=sign]'); await W(); await p.click('label.choice'); await W(); await p.fill('#m-pass', 'pw'); await p.click('[data-act=sign-confirm]'); await W(200); };

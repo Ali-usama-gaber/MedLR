@@ -79,7 +79,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
   await G('assets'); await p.click('[data-act=asset-new]'); await W(); await p.selectOption('#an-type', 'MT-1'); await W(); await p.fill('#an-name', 'HCP Email — PASI 90');
   await pick('an-products', [PE]); await pick('an-markets', ['BH']); await p.selectOption('#an-ch', 'CH-EMAIL'); await W(); await p.selectOption('#an-aud', 'AU-GP'); await W(); await p.click('[data-act=asset-create]'); await W(300);
   const AID = await E(() => UI.route.p.id); await p.click(`[data-act=blk-add][data-module="${MID}"]`); await W(); await p.click(`[data-act=blk-add][data-module="${SID}"]`); await W();
-  await p.click('[data-act=new-text]'); await W(); await p.fill('#nt-text', 'Talk to your representative about Product E.'); await p.click('[data-act=new-text-confirm]'); await W();
+  await p.evaluate(() => ACT['new-text']({ dataset: { id: curAsset().id } })); /* entry button removed from the builder; the new-content route is still supported for assets */ await W(); await p.fill('#nt-text', 'Talk to your representative about Product E.'); await p.click('[data-act=new-text-confirm]'); await W();
   await p.fill('#ap-disc', 'For healthcare professionals in Bahrain. Full prescribing information available on request.'); await p.dispatchEvent('#ap-disc', 'change'); await W();
   const blockers = await E(id => validationIssues(assetById(id), 'Asset').map(x => x.issue), AID);
   await p.click('[data-act=asset-submit]'); await W(); const canSubmitAsset = !(await p.isDisabled('[data-act=asset-submit-confirm]'));

@@ -17,7 +17,8 @@ const TONES = [['claim', 'Green'], ['safety', 'Amber'], ['headline', 'Blue'], ['
 // media & document modules carry an approved file with its source and usage rules.
 const MODULE_KINDS = [['content', 'Content module', 'Approved text with references'], ['image', 'Image', 'Upload an image (PNG, JPG, GIF, WebP, SVG)'], ['video', 'Video', 'Upload a video (MP4, WebM, MOV)'], ['document', 'PDF / Document', 'Upload a PDF document']];
 const MEDIA_ACCEPT = { image: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'], video: ['video/mp4', 'video/webm', 'video/quicktime'], document: ['application/pdf'] };
-const MEDIA_MAX_MB = 50;
+const MEDIA_MAX_MB = 50; // default; the administrator sets the limit in Settings (maxUploadMb)
+const mediaMaxMb = () => Math.max(1, +((typeof S !== 'undefined' && S.settings && S.settings.maxUploadMb) || MEDIA_MAX_MB));
 // Version metadata snapshot: each version keeps the scope it was approved for.
 const MOD_META = ['title', 'type', 'products', 'indications', 'audience', 'markets', 'channels', 'expiry', 'reviewDate'];
 const ASSET_META = ['name', 'type', 'products', 'markets', 'channel', 'audience', 'disclaimer'];
@@ -129,7 +130,7 @@ const SEED = () => {
     version: 8,
     personaId: 'u-ali',
     signedIn: false,
-    settings: { orgName: 'SAJA Pharma', expiryWarnDays: 45, reviewReminderDays: 30, defaultValidityMonths: 12, libraryShowExpiring: true, requireSignature: true, adminActsOnAnyStep: true, reviewSlaDays: 3, blockOnOpenComments: true, defaultModuleWorkflow: 'WF-STD', assetStreamWorkflow: 'WF-ASSET-STREAM', newVersionWorkflow: 'WF-LOW', idleSignOutMin: 30 },
+    settings: { orgName: 'SAJA Pharma', expiryWarnDays: 45, reviewReminderDays: 30, defaultValidityMonths: 12, libraryShowExpiring: true, requireSignature: true, adminActsOnAnyStep: true, reviewSlaDays: 3, blockOnOpenComments: true, defaultModuleWorkflow: 'WF-STD', assetStreamWorkflow: 'WF-ASSET-STREAM', newVersionWorkflow: 'WF-LOW', idleSignOutMin: 30, maxUploadMb: 50 },
     roles: DEFAULT_ROLES(),
     products: [
       { id: 'P-A', name: 'Product A', code: 'PA', area: 'Cardiology', active: true },

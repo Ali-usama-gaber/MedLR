@@ -1,5 +1,5 @@
 /* ---------- Controller: routing, modals, actions ---------- */
-const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: () => viewHub('org', 'users'), user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, roles: viewRoles, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, refdata: () => viewHub('refdata'), org: () => viewHub('org'), products: () => viewHub('refdata', 'products'), markets: () => viewHub('refdata', 'markets'), moduletypes: () => viewHub('refdata', 'moduletypes'), materials: () => viewHub('refdata', 'materials'), channels: () => viewHub('refdata', 'channels'), audiences: () => viewHub('refdata', 'audiences'), references: () => viewHub('refdata', 'references'), teams: () => viewHub('org', 'teams'), functions: () => viewHub('org', 'functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
+const ROUTES = { home: viewHome, tasks: viewApprovals, approvals: viewApprovals, modules: viewModules, module: viewModule, 'module-new': viewModuleForm, 'module-edit': viewModuleForm, review: viewReview, library: viewLibrary, assets: viewAssets, assemble: viewAssemble, asset: viewAsset, 'asset-review': viewAssetReview, cover: viewCover, lifecycle: viewLifecycle, audit: viewAudit, reports: viewReports, users: () => viewHub('org', 'users'), user: viewUser, 'user-new': viewUserForm, 'user-edit': viewUserForm, roles: viewRoles, sops: viewSops, settings: () => viewSettings(), item: viewConfigItem, refdata: () => viewHub('refdata'), org: () => viewHub('org'), products: () => viewHub('refdata', 'products'), markets: () => viewHub('refdata', 'markets'), moduletypes: () => viewHub('refdata', 'moduletypes'), materials: () => viewHub('refdata', 'materials'), channels: () => viewHub('refdata', 'channels'), audiences: () => viewHub('refdata', 'audiences'), references: () => viewHub('refdata', 'references'), refkinds: () => viewHub('refdata', 'refkinds'), teams: () => viewHub('org', 'teams'), functions: () => viewHub('org', 'functions'), workflows: viewWorkflows, workflow: viewWorkflow, 'workflow-new': viewWorkflowNew };
 const app = document.getElementById('app');
 
 /* The current page lives in the URL hash (#/module?id=MOD-A-014&tab=versions), so browser Back/Forward,
@@ -324,7 +324,7 @@ function afterDecision(obj, kind, r) {
 function newVersion(obj, kind, reason) {
   const l = latest(obj); const nv = l.v + 1;
   if (kind === 'Asset') l.blocks = JSON.parse(JSON.stringify(obj.blocks));
-  obj.versions.push({ v: nv, body: kind === 'Asset' ? '' : l.body, refs: kind === 'Asset' ? [] : [...l.refs], media: l.media ? { ...l.media } : undefined, createdAt: Date.now(), createdBy: me().id, reason, status: 'Draft', cycles: [], approvedAt: null, approvedBy: null });
+  obj.versions.push({ v: nv, ...(kind === 'Module' ? { sopLinks: configuredSops(obj, 'Module') } : {}), body: kind === 'Asset' ? '' : l.body, refs: kind === 'Asset' ? [] : [...l.refs], media: l.media ? { ...l.media } : undefined, createdAt: Date.now(), createdBy: me().id, reason, status: 'Draft', cycles: [], approvedAt: null, approvedBy: null });
   obj.resume = null; obj.review = null; obj.updatedAt = Date.now();
   log('Version created', kind, obj, nv, { prev: 'v' + l.v + ' ' + l.status, next: 'v' + nv + ' Draft', note: reason });
   return nv;
@@ -362,7 +362,8 @@ const ACT = {
     const o = objById(n.objType, n.objId); const asset = n.objType === 'Asset'; if (!o || !canSeeObj(me(), o)) { toast('You no longer have access to this item'); render(); return; }
     if (o.review && canActOn(me(), o)) go(asset ? 'asset-review' : 'review', { id: o.id }); else go(asset ? 'asset' : 'module', { id: o.id, tab: 'comments' });
     const U = annUI(); U.focus = n.annId; U.goto = n.annId; render(); },
-  'notif-readall': () => { (S.notifications || []).forEach(n => { if (n.to === me().id && !n.read) { n.read = true; n.readAt = Date.now(); } }); S.notifSeenBy = { ...(S.notifSeenBy || {}), [me().id]: Date.now() }; save(); render(); },
+  'notif-rem': el => { const u = me(); S.remindersRead = S.remindersRead || {}; S.remindersRead[u.id] = uniq([...(S.remindersRead[u.id] || []), el.dataset.id]); save(); UI.pop = null; go('module', { id: el.dataset.obj, tab: 'lifecycle' }); },
+  'notif-readall': () => { S.remindersRead = S.remindersRead || {}; S.remindersRead[me().id] = uniq([...(S.remindersRead[me().id] || []), ...dueReminders(me()).map(r => r.id)]); (S.notifications || []).forEach(n => { if (n.to === me().id && !n.read) { n.read = true; n.readAt = Date.now(); } }); S.notifSeenBy = { ...(S.notifSeenBy || {}), [me().id]: Date.now() }; save(); render(); },
   logout: () => { log('Signed out', 'User', me(), 1); S.signedIn = false; save(); UI.modal = null; go('login'); },
   'modal-close': () => { UI.modal = (UI.modal && UI.modal.back) || null; UI.msel = null; render(); },
   'msel-open': el => { UI.msel = UI.msel === el.dataset.id ? null : el.dataset.id; UI.mselq = ''; render(); setTimeout(() => { const i = document.getElementById('mselq-' + el.dataset.id); i && i.focus(); }, 20); },
@@ -511,6 +512,7 @@ const ACT = {
   /* configuration (config.js) */
   'cfg-new': el => { const k = el.dataset.k; const d = cfgBlank(k); const back = UI.modal && UI.modal.type !== 'cfg' ? null : null; UI.modal = { type: 'cfg', k, d }; if (UI.route.name === 'user-new' || UI.route.name === 'user-edit') UI.modal.then = x => { UI.udraft.team = x.id; render(); toast('Team created'); }; render(); },
   'cfg-edit': el => { const k = el.dataset.k; const x = CONFIG[k].coll().find(i => i.id === el.dataset.id); const d = JSON.parse(JSON.stringify(x)); CONFIG[k].fields.forEach(f => { if (f[3].get) d[f[0]] = f[3].get(x); }); UI.modal = { type: 'cfg', k, id: x.id, d }; render(); },
+  'cfg-multi': el => { document.querySelectorAll('[data-cfg]').forEach(i => { UI.modal.d[i.dataset.cfg] = i.value; }); const d = UI.modal.d; const k = el.dataset.k; const cur = Array.isArray(d[k]) ? d[k] : []; d[k] = cur.includes(el.dataset.v) ? cur.filter(x => x !== el.dataset.v) : [...cur, el.dataset.v]; render(); },
   'cfg-bool': el => { document.querySelectorAll('[data-cfg]').forEach(i => { UI.modal.d[i.dataset.cfg] = i.value; }); UI.modal.d[el.dataset.f] = !UI.modal.d[el.dataset.f]; render(); },
   'cfg-save': () => cfgSave(),
   'cfg-toggle': el => cfgToggle(el.dataset.k, el.dataset.id),
@@ -553,7 +555,7 @@ const ACT = {
   'wf-view': el => { UI.modal = { type: 'wf-view', id: el.dataset.id }; render(); },
   'wf-open': el => { UI.modal = null; go('workflow', { id: el.dataset.id }); },
   'wf-add-mail': el => { const i = +el.dataset.i; UI.wfDraft.steps.splice(i, 0, notifyStep()); UI.wfSel = i; render(); toast('Email step added — choose who receives it'); },
-  'wf-kind': el => { const st = UI.wfDraft.steps; const cur = st[UI.wfSel]; if (el.dataset.v === 'notify' && !isNotify(cur)) st[UI.wfSel] = notifyStep(); if (el.dataset.v === 'review' && isNotify(cur)) st[UI.wfSel] = { id: uid('s'), fn: 'Medical', level: 'Member', req: 'review' }; render(); },
+  'wf-kind': el => { const st = UI.wfDraft.steps; const cur = st[UI.wfSel]; if (el.dataset.v === 'notify' && !isNotify(cur)) st[UI.wfSel] = notifyStep(); if (el.dataset.v === 'review' && isNotify(cur)) st[UI.wfSel] = { id: uid('s'), fn: defaultReviewFn(), level: 'Member', req: 'review' }; render(); },
   'wf-rcpt': el => { const s = UI.wfDraft.steps[UI.wfSel]; const r = s.recipients || (s.recipients = []); const k = r.indexOf(el.dataset.v); k < 0 ? r.push(el.dataset.v) : r.splice(k, 1); render(); },
   'nwf-rcpt': el => { const s = UI.nwf.steps[+el.dataset.i]; const r = s.recipients || (s.recipients = []); const k = r.indexOf(el.dataset.v); k < 0 ? r.push(el.dataset.v) : r.splice(k, 1); render(); },
   'nwf-use': el => { UI.nwf.appliesTo = el.dataset.v; render(); },
@@ -564,7 +566,7 @@ const ACT = {
   'nwf-del': el => { UI.nwf.steps.splice(+el.dataset.i, 1); render(); },
   'wf-sel': el => { UI.wfSel = +el.dataset.i; render(); if (window.innerWidth < 1180) { const c = document.querySelector('.builder > .stack'); c && c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } },
   'wf-set': el => { const s = UI.wfDraft.steps[UI.wfSel]; s[el.dataset.k] = el.dataset.v; if (el.dataset.k === 'req' && el.dataset.v === 'approve') s.level = 'Lead'; if (el.dataset.k === 'level' && el.dataset.v === 'Member') s.req = 'review'; render(); },
-  'wf-add': el => { const i = +el.dataset.i; const ref = UI.wfDraft.steps[i - 1] || UI.wfDraft.steps[i]; UI.wfDraft.steps.splice(i, 0, { id: uid('s'), fn: ref && !isNotify(ref) ? ref.fn : 'Medical', level: 'Member', req: 'review' }); UI.wfSel = i; render(); toast('Step added — configure it on the right'); },
+  'wf-add': el => { const i = +el.dataset.i; const ref = UI.wfDraft.steps[i - 1] || UI.wfDraft.steps[i]; UI.wfDraft.steps.splice(i, 0, { id: uid('s'), fn: ref && !isNotify(ref) ? ref.fn : defaultReviewFn(), level: 'Member', req: 'review' }); UI.wfSel = i; render(); toast('Step added — configure it on the right'); },
   'wf-del': () => { if (UI.wfDraft.steps.length <= 1) return; UI.wfDraft.steps.splice(UI.wfSel, 1); UI.wfSel = Math.max(0, UI.wfSel - 1); render(); },
   'wf-move': el => { const i = UI.wfSel, j = i + +el.dataset.dir; const st = UI.wfDraft.steps; if (j < 0 || j >= st.length) return; [st[i], st[j]] = [st[j], st[i]]; UI.wfSel = j; render(); },
   'wf-discard': () => { UI.wfDraft = null; render(); },
@@ -585,7 +587,7 @@ const ACT = {
 
 /* Write actions on admin pages need the matching manage permission; Administration view access alone is read-only. */
 const ACT_PERM = { 'cmp-toggle': 'manage_users', 'cmp-save': 'manage_users', 'user-status': 'manage_users', 'perm-toggle': 'manage_users', 'role-save': 'manage_users', 'sop-new': 'manage_sops', 'sop-edit': 'manage_sops', 'sop-save': 'manage_sops', 'sop-active': 'manage_sops', 'wf-new': 'manage_workflows', 'wf-save': 'manage_workflows', 'wf-del': 'manage_workflows', 'wf-add': 'manage_workflows', 'wf-add-mail': 'manage_workflows', 'wf-active': 'manage_workflows', 'wf-open': 'manage_workflows', 'audit-export': 'export' };
-const ACT_ADMIN = ['cfg-new', 'cfg-edit', 'cfg-toggle', 'cfg-delete', 'cfg-save'];
+const ACT_ADMIN = ['cfg-new', 'cfg-edit', 'cfg-toggle', 'cfg-delete', 'cfg-save', 'cfg-multi'];
 /* Object-level rules for actions that change records. They mirror the conditions the pages use to show each
    button, so a hidden or forged control cannot do what the role or the workflow step does not allow. */
 const actObj = el => { const M = UI.modal || {}; return objById(el.dataset.kind || M.kind || 'Module', el.dataset.id || M.id); };
@@ -648,6 +650,7 @@ document.addEventListener('input', ev => {
   if (t.id === 'global-search') { UI.search = t.value; render(); return; }
   if (t.id === 'rv-comment') { UI.f.rvc = t.value; return; }
   if (t.dataset.fd && UI.modal && UI.modal.d) { UI.modal.d[t.dataset.fd] = t.value; return; }
+  if (t.dataset.fq) { const q = t.value.toLowerCase(); const sel = document.getElementById(t.dataset.fq); if (sel) [...sel.options].forEach(o => { o.hidden = !!o.value && !o.text.toLowerCase().includes(q); }); return; }
   if (t.dataset.mselq) { UI.mselq = t.value; render(); return; }
   if (t.dataset.filter && t.tagName === 'INPUT') { UI.f[t.dataset.filter] = t.value; if (t.type === 'date') return; render(); return; }
   if (t.dataset.dm) { const D = UI.draft; D.media = D.media || {}; D.media[t.dataset.dm] = t.dataset.dm === 'duration' ? (+t.value || null) : t.value; renderSoon(); return; }
@@ -659,7 +662,7 @@ document.addEventListener('input', ev => {
   if (t.dataset.nwfn) { UI.nwf.steps[+t.dataset.i][t.dataset.nwfn] = t.value; renderSoon(); return; }
   if (t.dataset.an && t.tagName !== 'SELECT') { UI.modal.d[t.dataset.an] = t.value; return; }
   if (t.dataset.sop && t.tagName !== 'SELECT') { UI.modal.d[t.dataset.sop] = t.value; return; }
-  if (t.dataset.set && t.tagName === 'INPUT') { UI.setDraft[t.dataset.set] = t.value; renderSoon(); return; }
+  if (t.dataset.set && t.tagName === 'INPUT') { UI.setDraft[t.dataset.set] = t.value; const sb = document.querySelector('[data-act=set-save]'); if (sb) sb.disabled = false; renderSoon(); return; }
 });
 let rsT = null; function renderSoon() { clearTimeout(rsT); rsT = setTimeout(render, 300); }
 document.addEventListener('change', ev => {
@@ -676,6 +679,7 @@ document.addEventListener('change', ev => {
   if (textual && (t.dataset.dm || t.dataset.d || t.dataset.u || t.dataset.an || t.dataset.sop || t.dataset.set)) return;
   if (t.dataset.d) { UI.draft[t.dataset.d] = t.value; render(); return; }
   if (t.dataset.actChange === 'd-file') { uploadModuleFile(t.files && t.files[0]); return; }
+  if (t.dataset.actChange === 'rework-file') { const f = t.files && t.files[0]; t.value = ''; reworkUpload(t.dataset.id, f); return; }
   if (t.dataset.actChange === 'ws-import') { const f = t.files && t.files[0]; t.value = ''; if (f && can(me(), 'manage_settings')) readBackupFile(f); return; }
   if (t.dataset.actChange === 'd-addref' && t.value) { UI.draft.refs.push(t.value); render(); return; }
   if (t.dataset.actChange === 'sign-att') { UI.modal.att = t.checked; UI.modal.err = null; render(); return; }
@@ -730,20 +734,55 @@ async function probeFile(file, kind, buf) {
     return { pages, format: 'PDF' + (pages ? ' · ' + pages + ' page' + (pages > 1 ? 's' : '') : '') };
   } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
 }
-async function uploadModuleFile(file) {
-  const D = UI.draft; if (!file || !D) return; const kind = kindOfType(D.type);
-  if (!MEDIA_ACCEPT[kind] || !MEDIA_ACCEPT[kind].includes(file.type)) { toast('This ' + kindLabel(kind) + ' module accepts ' + (MEDIA_ACCEPT[kind] || []).map(x => x.split('/')[1]).join(', ') + ' files'); return; }
-  if (file.size > MEDIA_MAX_MB * 1048576) { toast('The file is larger than ' + MEDIA_MAX_MB + ' MB'); return; }
-  D.mediaBusy = true; render();
+// Checks and stores an uploaded file; returns { media, stored } or { error } with a message for the user.
+function mediaFileProblem(file, kind) {
+  if (!file) return 'No file was selected.';
+  if (!MEDIA_ACCEPT[kind] || !MEDIA_ACCEPT[kind].includes(file.type)) return 'This ' + kindLabel(kind).toLowerCase() + ' module accepts ' + (MEDIA_ACCEPT[kind] || []).map(x => x.split('/')[1].replace('svg+xml', 'svg').replace('quicktime', 'mov').toUpperCase()).join(', ') + ' files. “' + file.name + '” is ' + (file.type || 'an unknown type') + '.';
+  if (file.size > mediaMaxMb() * 1048576) return '“' + file.name + '” is ' + fmtSize(file.size) + '. The limit is ' + mediaMaxMb() + ' MB.';
+  if (!file.size) return '“' + file.name + '” is empty.';
+  return '';
+}
+async function ingestMediaFile(file, kind, prev) {
+  const bad = mediaFileProblem(file, kind); if (bad) return { error: bad };
   try {
     const buf = await file.arrayBuffer(); const sum = await fileChecksum(buf); const meta = await probeFile(file, kind, buf);
     const id = 'f-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); const stored = await mediaPut(id, file);
-    const prev = D.media || {};
-    D.media = { fileId: id, name: file.name, mime: file.type, size: file.size, checksum: sum.hex, algo: sum.algo, width: null, height: null, duration: null, pages: null, ...meta, source: prev.source || '', usage: prev.usage || '', uploadedAt: Date.now(), uploadedBy: me().id };
-    if (prev.fileId && prev.format && kind === 'video' && !meta.format) D.media.format = prev.format;
-    toast(stored ? file.name + ' uploaded' : file.name + ' kept for this session — the browser blocked file storage');
-  } catch (e) { toast('Could not read this file'); }
+    prev = prev || {};
+    const media = { fileId: id, name: file.name, mime: file.type, size: file.size, checksum: sum.hex, algo: sum.algo, width: null, height: null, duration: null, pages: null, ...meta, source: prev.source || '', usage: prev.usage || '', uploadedAt: Date.now(), uploadedBy: me().id };
+    if (prev.fileId && prev.format && kind === 'video' && !meta.format) media.format = prev.format;
+    return { media, stored };
+  } catch (e) { return { error: 'Could not read “' + file.name + '”.' }; }
+}
+async function uploadModuleFile(file) {
+  const D = UI.draft; if (!file || !D) return; const kind = kindOfType(D.type);
+  const bad = mediaFileProblem(file, kind); if (bad) { toast(bad); return; }
+  D.mediaBusy = true; render();
+  const r = await ingestMediaFile(file, kind, D.media);
+  if (r.error) toast(r.error); else { D.media = r.media; toast(r.stored ? file.name + ' uploaded' : file.name + ' kept for this session — the browser blocked file storage'); }
   D.mediaBusy = false; render();
+}
+/* Rework after a rejection or an amendment request: the responsible person downloads the current file,
+   edits it outside the app and uploads the replacement here. The module keeps its id, metadata, comments and audit.
+   Amendment — the file is replaced inside the current version (the old file stays in its file history) and
+     resubmitting resumes approval at the step that asked for the change; earlier approvals are kept.
+   Rejection — a new version is created with the new file; submitting it restarts the cycle from the first step. */
+async function reworkUpload(id, file) {
+  const m = modById(id); const mode = m && fileRework(me(), m); if (!mode) { toast('You cannot upload a new version of this module'); return; }
+  const kind = kindOfType(m.type); const bad = mediaFileProblem(file, kind);
+  UI.rework = { id, err: bad, busy: !bad }; render(); if (bad) return;
+  const l = latest(m); const r = await ingestMediaFile(file, kind, l.media);
+  if (r.error) { UI.rework = { id, err: r.error }; render(); return; }
+  const old = l.media || {}; const facts = md => md.name + ' · ' + fmtSize(md.size) + ' · ' + String(md.checksum || '').slice(0, 12);
+  if (mode === 'amend') {
+    l.files = l.files || []; if (old.fileId) l.files.push({ ...old, replacedAt: Date.now(), replacedBy: me().id });
+    r.media.rev = (old.rev || 1) + 1; l.media = r.media; m.updatedAt = Date.now();
+    log('Media replaced', 'Module', m, l.v, { prev: old.name ? facts(old) : '', next: facts(r.media), note: 'File revision ' + r.media.rev + ' of v' + l.v + ' uploaded for the amendment' });
+    UI.rework = null; save(); render(); toast('File revision ' + r.media.rev + ' uploaded — resubmit to resume at ' + m.resume.fn + ' ' + levelName(m.resume.level));
+  } else {
+    const nv = newVersion(m, 'Module', 'New file uploaded after rejection'); const v = latest(m); v.media = { ...r.media, source: old.source || '', usage: old.usage || '' };
+    log('Media uploaded', 'Module', m, nv, { prev: old.name ? facts(old) : '', next: facts(v.media), note: (v.media.algo || '') + ' ' + v.media.checksum });
+    UI.rework = null; save(); render(); toast('Version ' + nv + ' created — submit it to start a new approval cycle from the first step');
+  }
 }
 
 function wizDraft(form) { return form === 'user' ? UI.udraft : form === 'workflow' ? UI.nwf : UI.draft; }
@@ -788,18 +827,18 @@ function saveModuleForm() {
   if (p.id) {
     const m = modById(p.id); const l = latest(m); const before = { ...m, body: l.body, refs: [...l.refs], media: l.media ? { ...l.media } : null };
     if (p.newVersion) {
-      const nv = newVersion(m, 'Module', D.reason.trim()); Object.assign(m, base); const v = latest(m); v.body = D.body.trim(); v.refs = [...D.refs]; if (D.media) v.media = { ...D.media };
+      const nv = newVersion(m, 'Module', D.reason.trim()); Object.assign(m, base); const v = latest(m); v.sopLinks = configuredSops(m, 'Module'); v.body = D.body.trim(); v.refs = [...D.refs]; if (D.media) v.media = { ...D.media };
       logModuleDiff(m, before, D, nv); save(); UI.draft = null; go('module', { id: m.id });
       toast('Version ' + nv + ' created' + (live(m) ? ' — v' + live(m).v + ' stays live until v' + nv + ' is approved' : ' — submitting it restarts the full approval cycle')); return;
     }
-    Object.assign(m, base); l.body = D.body.trim(); l.refs = [...D.refs]; if (D.media) l.media = { ...D.media };
+    Object.assign(m, base); if (statusOf(m) !== 'Amendment Requested') l.sopLinks = configuredSops(m, 'Module'); l.body = D.body.trim(); l.refs = [...D.refs]; if (D.media) l.media = { ...D.media };
     logModuleDiff(m, before, D, l.v);
     if (statusOf(m) === 'Amendment Requested') { m.amendNote = D.reason.trim(); log('Amended', 'Module', m, l.v, { note: D.reason.trim() }); }
     save(); UI.draft = null; go('module', { id: m.id }); toast(statusOf(m) === 'Amendment Requested' ? 'Changes saved — resubmit to resume approval' : 'Changes saved'); return;
   }
   const id = nextModuleId(D.products);
   const m = { id, ...base, versions: [{ v: 1, body: D.body.trim(), refs: [...D.refs], media: D.media ? { ...D.media } : undefined, createdAt: now, createdBy: me().id, reason: 'Initial version', status: 'Draft', cycles: [], approvedAt: null, approvedBy: null }], createdAt: now, review: null, resume: null, archived: false };
-  S.modules.push(m); if (D.media && D.media.fileId) log('Media uploaded', 'Module', m, 1, { next: D.media.name + ' · ' + fmtSize(D.media.size), note: (D.media.algo || '') + ' ' + D.media.checksum });
+  m.versions[0].sopLinks = configuredSops(m, 'Module'); S.modules.push(m); if (D.media && D.media.fileId) log('Media uploaded', 'Module', m, 1, { next: D.media.name + ' · ' + fmtSize(D.media.size), note: (D.media.algo || '') + ' ' + D.media.checksum });
   log('Module created', 'Module', m, 1, { next: 'Draft', note: mtype(m.type).name + ' · ' + productsTxt(m.products) + ' · ' + m.markets.join(', ') + ' · owner ' + user(m.owner).name }); save(); UI.draft = null; go('module', { id }); toast('Draft saved — ' + id);
 }
 function saveWorkflowForm() {
