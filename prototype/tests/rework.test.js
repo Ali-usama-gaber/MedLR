@@ -27,10 +27,10 @@ let fails = 0, n = 0; const ok = (c, m) => { n++; console.log((c ? 'PASS ' : 'FA
   ok(await p.isVisible(`[data-rework="${A}"] a[download]`), 'amendment: "Download current version" is offered');
   const dl = p.waitForEvent('download', { timeout: 5000 }).catch(() => null); await p.click(`[data-rework="${A}"] a[download]`); const d = await dl;
   ok(!!d && d.suggestedFilename() === a0.name, 'amendment: download saves the current file (' + (d && d.suggestedFilename()) + ')');
-  await p.setInputFiles(`#rw-file-${A}`, path.join(__dirname, 'upload.pdf')); await W(600);
+  await p.setInputFiles(`#rw-file-${A}`, path.join(__dirname, 'upload.pdf')); await W(300); if (await p.$('[data-act=rework-confirm]')) await p.click('[data-act=rework-confirm]'); await W(600);
   ok(await E(() => /accepts PNG, JPEG/.test((document.querySelector('[data-rework] .err') || {}).textContent || '')), 'amendment: a PDF on an image module is refused with a clear message');
   ok((await snap(A)).file === a0.file, 'amendment: refused upload leaves the file unchanged');
-  await p.setInputFiles(`#rw-file-${A}`, path.join(__dirname, 'upload2.png')); await W(1500);
+  await p.setInputFiles(`#rw-file-${A}`, path.join(__dirname, 'upload2.png')); await W(300); if (await p.$('[data-act=rework-confirm]')) await p.click('[data-act=rework-confirm]'); await W(1500);
   const a1 = await snap(A);
   ok(a1.file !== a0.file && a1.name === 'upload2.png', 'amendment: the new file replaces the current one');
   ok(a1.v === a0.v && a1.nv === a0.nv && a1.rev === 2 && a1.files === 1, 'amendment: same version, file revision 2, previous file kept in its history');
@@ -46,7 +46,7 @@ let fails = 0, n = 0; const ok = (c, m) => { n++; console.log((c ? 'PASS ' : 'FA
   await E(id => go('module', { id }), R); await W(500);
   ok(await p.isVisible(`[data-rework="${R}"]`) && await p.isVisible(`[data-rework="${R}"] a[download]`), 'rejection: download and upload offered');
   const rk = await E(id => kindOfType(modById(id).type), R); const rf = rk === 'video' ? 'upload.webm' : rk === 'document' ? 'upload.pdf' : 'upload.png';
-  await p.setInputFiles(`#rw-file-${R}`, path.join(__dirname, rf)); await W(2500);
+  await p.setInputFiles(`#rw-file-${R}`, path.join(__dirname, rf)); await W(300); if (await p.$('[data-act=rework-confirm]')) await p.click('[data-act=rework-confirm]'); await W(2500);
   const b1 = await snap(R);
   ok(b1.nv === b0.nv + 1 && b1.v === b0.v + 1 && b1.st === 'Draft' && b1.name === rf, 'rejection: a new version v' + b1.v + ' is created as a draft with the new file');
   ok(await E(id => { const m = modById(id); return m.versions[m.versions.length - 2].status === 'Rejected' && !!m.versions[m.versions.length - 2].media; }, R), 'rejection: the rejected version and its file stay in version history');
@@ -56,6 +56,12 @@ let fails = 0, n = 0; const ok = (c, m) => { n++; console.log((c ? 'PASS ' : 'FA
   await E(id => go('module', { id, tab: 'versions' }), A); await W(300);
   ok(await E(() => /file revision 2/.test(document.querySelector('#content').innerText)), 'version history lists the file revision');
 
+  // ---- Confirmation names the module and the new version; nothing is uploaded before it
+  const cm = await E(() => { const m = S.modules.find(m => isMediaType(m.type) && !m.archived && latest(m).media && statusOf(m) === 'Amendment Requested') || (() => { const x = S.modules.find(m => isMediaType(m.type) && !m.archived && latest(m).media && !m.review && !m.resume); if (statusOf(x) !== 'Draft') newVersion(x, 'Module', 't'); startCycle(x, 'Module', x.workflow || eligibleModuleWorkflows()[0].id); decide(x, 'Module', 'amend', 'check'); return x; })(); save(); go('module', { id: m.id }); return [m.id, latest(m).media.fileId, latest(m).v, kindOfType(m.type)];}); await W(400);
+  await p.setInputFiles(`#rw-file-${cm[0]}`, path.join(__dirname, { image: 'upload.png', video: 'upload.webm', document: 'upload.pdf' }[cm[3]])); await W(300);
+  ok(await E(([id, f]) => latest(modById(id)).media.fileId === f, cm) && await E(id => { const c = document.querySelector(`[data-rw-confirm="${id}"]`); return !!c && c.innerText.includes(id) && /upload\.(png|webm|pdf)/.test(c.innerText) && /file revision/.test(c.innerText); }, cm[0]), 'choosing a file asks to confirm the module, file and new revision before uploading');
+  await p.click('[data-act=rework-cancel]'); await W();
+  ok(await E(([id, f]) => latest(modById(id)).media.fileId === f && !document.querySelector('[data-rw-confirm]'), cm), 'Cancel uploads nothing');
   // ---- Permissions: someone who may not amend sees no upload and a forged upload is refused
   const other = await E(id => { const m = modById(id); const u = S.users.find(x => x.status === 'Active' && !isAdmin(x) && !canAmendObj(x, m) && !canEditObj(x, m)); return u && u.email; }, A);
   // put module A back into "amendment requested" for the check

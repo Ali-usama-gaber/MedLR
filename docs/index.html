@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#12291f">
-<!-- SAJA MedLR build 2026-10-19 12:17 UTC -->
+<!-- SAJA MedLR build 2026-10-19 13:34 UTC -->
 <title>SAJA MedLR</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzEyMjkxZiIvPjxwYXRoIGQ9Ik05IDE2LjVsNC41IDQuNUwyMyAxMS41IiBmaWxsPSJub25lIiBzdHJva2U9IiM1ZmUwYTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=">
 <style>
@@ -2643,6 +2643,9 @@ html.ov-open, html.ov-open body { overflow: hidden; }
 /* Error / refusal toasts: distinct from confirmations (warning colour and alert icon). Kept last so it wins over the toast theme layers above. */
 .toast.err { background: linear-gradient(135deg, #3a1214, #2a0c0e); box-shadow: 0 20px 40px -14px rgba(60, 12, 14, .6), inset 0 0 0 1px rgba(255, 140, 140, .28); }
 .toast.err .ico { color: #ff9b9b; }
+/* Rework upload: the chosen file waits for an explicit confirmation naming the module and the new version. */
+.rw-confirm { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.rw-confirm p { margin: 0 0 8px; }
 
 </style>
 </head>
@@ -4297,7 +4300,9 @@ function viewModule() {
   if (st === 'Rejected') { const r = latest(m).cycles.slice(-1)[0].decisions.slice(-1)[0]; banners += `<div class="banner bad">${icon('x')}<div class="txt"><b>Rejected by ${esc(user(r.by).name)} · ${esc(r.fn + ' ' + levelName(r.level))}</b><p>“${esc(r.note)}” Create a new version to resubmit. The new version <b>restarts the full approval cycle</b> from the first step.</p></div>${owns ? btn('Create new version', 'new-version', 'sm', `data-id="${m.id}"`) : ''}</div>`; }
   const rw = fileRework(u, m);
   if (rw) { const md = l.media || {}; const url = md.fileId ? mediaUrl(md.fileId) : 'missing'; const R = UI.rework && UI.rework.id === m.id ? UI.rework : {}; const K = kindOfType(m.type);
-    banners += `<div class="banner info rework" data-rework="${m.id}">${icon('upload')}<div class="txt"><b>Update the file</b><p>${rw === 'amend' ? 'Download the current file, edit it and upload the replacement. It becomes a new file revision of v' + l.v + '; then resubmit.' : 'Download the current file, edit it and upload the replacement. This creates version ' + (l.v + 1) + '; then submit it.'}</p>${R.err ? `<p class="err" role="alert">${icon('alert', 'sm')} ${esc(R.err)}</p>` : ''}</div><div class="row nowrap" style="gap:8px">${url && url !== 'missing' ? `<a class="btn sm" href="${url}" download="${esc(md.name || 'file')}" data-file-dl="${esc(md.fileId)}">${icon('download', 'sm')}Download current version</a>` : `<span class="btn sm disabled" aria-disabled="true">${icon('download', 'sm')}${url ? 'File not stored here' : 'Loading…'}</span>`}<label class="btn sm primary ${R.busy ? 'disabled' : ''}" for="rw-file-${m.id}">${icon('upload', 'sm')}${R.busy ? 'Uploading…' : 'Upload new version'}<input type="file" id="rw-file-${m.id}" class="sr-only" accept="${MEDIA_ACCEPT[K].join(',')}" data-act-change="rework-file" data-id="${m.id}" ${R.busy ? 'disabled' : ''}></label></div></div>`; }
+    const nextLabel = rw === 'amend' ? 'v' + l.v + ' · file revision ' + ((md.rev || 1) + 1) : 'v' + (l.v + 1);
+    banners += `<div class="banner info rework" data-rework="${m.id}">${icon('upload')}<div class="txt"><b>Upload a new version of ${esc(m.id)} · ${esc(m.title)}</b><p>The file is added to this module (same ID, metadata, comments and history). Current: <b>v${l.v}${md.rev ? ' · file revision ' + md.rev : ''}</b> — ${esc(md.name || 'no file')}. New: <b>${nextLabel}</b>${rw === 'amend' ? ', then resubmit' : ', then submit'}.</p>${R.err ? `<p class="err" role="alert">${icon('alert', 'sm')} ${esc(R.err)}</p>` : ''}
+      ${R.file && !R.busy ? `<div class="rw-confirm" data-rw-confirm="${m.id}"><p><b>Upload “${esc(R.file.name)}”</b> (${esc(fmtSize(R.file.size))}) as <b>${nextLabel}</b> of <b>${esc(m.id)}</b>?</p><div class="row" style="gap:8px">${btn('Upload to ' + m.id, 'rework-confirm', 'primary sm', `data-id="${m.id}"`, 'check')}${btn('Cancel', 'rework-cancel', 'ghost sm')}</div></div>` : ''}</div><div class="row nowrap" style="gap:8px">${url && url !== 'missing' ? `<a class="btn sm" href="${url}" download="${esc(md.name || 'file')}" data-file-dl="${esc(md.fileId)}">${icon('download', 'sm')}Download current version</a>` : `<span class="btn sm disabled" aria-disabled="true">${icon('download', 'sm')}${url ? 'File not stored here' : 'Loading…'}</span>`}<label class="btn sm primary ${R.busy ? 'disabled' : ''}" for="rw-file-${m.id}">${icon('upload', 'sm')}${R.busy ? 'Uploading…' : R.file ? 'Choose another file' : 'Upload new version'}<input type="file" id="rw-file-${m.id}" class="sr-only" accept="${MEDIA_ACCEPT[K].join(',')}" data-act-change="rework-file" data-id="${m.id}" ${R.busy ? 'disabled' : ''}></label></div></div>`; }
   { const pv = m.versions.length > 1 ? m.versions[m.versions.length - 2] : null; if (st === 'Draft' && pv && pv.status === 'Rejected' && owns) banners += `<div class="banner info">${icon('send')}<div class="txt"><b>Next: submit version ${l.v}</b><p>Version ${pv.v} was rejected. Submitting v${l.v} starts a new approval cycle from the first step.</p></div></div>`; }
   if (st === 'Awaiting Lead submission') banners += `<div class="banner info">${icon('inbox')}<div class="txt"><b>Waiting for a Content Lead to submit</b><p>Content Members prepare drafts; a Content Lead submits them for MLR review.</p></div></div>`;
   if (m.review) { const cs = curStep(m); const as = assigneeFor(cs); banners += `<div class="banner pending">${icon('shieldcheck')}<div class="txt"><b>In review · ${esc(stepLabel(cs))}</b><p>Assigned to ${as.map(x => esc(x.name)).join(', ') || 'the ' + esc(cs.fn) + ' team'}. Step ${reviewPos(wfById(m.review.wf), m.review.step)} of ${reviewSteps(wfById(m.review.wf)).length} · cycle ${m.review.cycle} · waiting ${fmtDur(Date.now() - m.review.stepStartedAt)}.</p></div>${canActOn(u, m) ? goBtn('Open review', 'review', m.id, 'sm primary') : ''}</div>`; }
@@ -6313,6 +6318,8 @@ const ACT = {
   /* configuration (config.js) */
   'cfg-new': el => { const k = el.dataset.k; const d = cfgBlank(k); const back = UI.modal && UI.modal.type !== 'cfg' ? null : null; UI.modal = { type: 'cfg', k, d }; if (UI.route.name === 'user-new' || UI.route.name === 'user-edit') UI.modal.then = x => { UI.udraft.team = x.id; render(); toast('Team created'); }; render(); },
   'cfg-edit': el => { const k = el.dataset.k; const x = CONFIG[k].coll().find(i => i.id === el.dataset.id); const d = JSON.parse(JSON.stringify(x)); CONFIG[k].fields.forEach(f => { if (f[3].get) d[f[0]] = f[3].get(x); }); UI.modal = { type: 'cfg', k, id: x.id, d }; render(); },
+  'rework-confirm': el => { const R = UI.rework; if (R && R.id === el.dataset.id && R.file) reworkUpload(R.id, R.file); },
+  'rework-cancel': () => { UI.rework = null; render(); },
   'cfg-multi': el => { document.querySelectorAll('[data-cfg]').forEach(i => { UI.modal.d[i.dataset.cfg] = i.value; }); const d = UI.modal.d; const k = el.dataset.k; const cur = Array.isArray(d[k]) ? d[k] : []; d[k] = cur.includes(el.dataset.v) ? cur.filter(x => x !== el.dataset.v) : [...cur, el.dataset.v]; render(); },
   'cfg-bool': el => { document.querySelectorAll('[data-cfg]').forEach(i => { UI.modal.d[i.dataset.cfg] = i.value; }); UI.modal.d[el.dataset.f] = !UI.modal.d[el.dataset.f]; render(); },
   'cfg-save': () => cfgSave(),
@@ -6480,7 +6487,7 @@ document.addEventListener('change', ev => {
   if (textual && (t.dataset.dm || t.dataset.d || t.dataset.u || t.dataset.an || t.dataset.sop || t.dataset.set)) return;
   if (t.dataset.d) { UI.draft[t.dataset.d] = t.value; render(); return; }
   if (t.dataset.actChange === 'd-file') { uploadModuleFile(t.files && t.files[0]); return; }
-  if (t.dataset.actChange === 'rework-file') { const f = t.files && t.files[0]; t.value = ''; reworkUpload(t.dataset.id, f); return; }
+  if (t.dataset.actChange === 'rework-file') { const f = t.files && t.files[0]; t.value = ''; reworkStage(t.dataset.id, f); return; }
   if (t.dataset.actChange === 'ws-import') { const f = t.files && t.files[0]; t.value = ''; if (f && can(me(), 'manage_settings')) readBackupFile(f); return; }
   if (t.dataset.actChange === 'd-addref' && t.value) { UI.draft.refs.push(t.value); render(); return; }
   if (t.dataset.actChange === 'sign-att') { UI.modal.att = t.checked; UI.modal.err = null; render(); return; }
@@ -6567,6 +6574,11 @@ async function uploadModuleFile(file) {
    Amendment — the file is replaced inside the current version (the old file stays in its file history) and
      resubmitting resumes approval at the step that asked for the change; earlier approvals are kept.
    Rejection — a new version is created with the new file; submitting it restarts the cycle from the first step. */
+function reworkStage(id, file) {
+  const m = modById(id); if (!m || !fileRework(me(), m)) { toast('You cannot upload a new version of this module'); return; }
+  const bad = mediaFileProblem(file, kindOfType(m.type)); UI.rework = bad ? { id, err: bad } : { id, file }; render();
+  if (!bad) setTimeout(() => { const b = document.querySelector('[data-act="rework-confirm"]'); b && b.focus(); }, 30);
+}
 async function reworkUpload(id, file) {
   const m = modById(id); const mode = m && fileRework(me(), m); if (!mode) { toast('You cannot upload a new version of this module'); return; }
   const kind = kindOfType(m.type); const bad = mediaFileProblem(file, kind);

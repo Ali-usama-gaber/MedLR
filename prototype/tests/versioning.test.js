@@ -41,7 +41,7 @@ const FILE = { image: 'upload2.png', document: 'upload.pdf', video: 'upload.webm
     // 4. owner downloads and uploads a revised file
     await E(id => go('module', { id }), id); await W(400);
     ok(await p.isVisible(`[data-rework="${id}"] a[download]`), `${K} current file is offered for download`);
-    await p.setInputFiles(`#rw-file-${id}`, path.join(__dirname, FILE[kind])); await W(2500);
+    await p.setInputFiles(`#rw-file-${id}`, path.join(__dirname, FILE[kind])); await W(300); if (await p.$('[data-act=rework-confirm]')) await p.click('[data-act=rework-confirm]'); await W(2500);
     const s4 = await state(id);
     ok(s4.nv === s0.nv && s4.file !== s0.file && s4.rev === 2 && s4.files.includes(s0.file), `${K} upload adds file revision 2 within v${s4.v}; revision 1 kept`);
     ok(await fileExists(s0.file) || String(s0.file).startsWith('seed:'), `${K} the earlier file is still stored (not overwritten)`);
@@ -55,7 +55,7 @@ const FILE = { image: 'upload2.png', document: 'upload.pdf', video: 'upload.webm
     await E(id => { const m = modById(id); decide(m, 'Module', 'reject', 'Wrong study'); save(); }, id);
     const s5 = await state(id); ok(s5.nv === s0.nv && s5.st === 'Rejected', `${K} rejection creates no version`);
     await E(id => go('module', { id }), id); await W(400);
-    await p.setInputFiles(`#rw-file-${id}`, path.join(__dirname, FILE[kind])); await W(2500);
+    await p.setInputFiles(`#rw-file-${id}`, path.join(__dirname, FILE[kind])); await W(300); if (await p.$('[data-act=rework-confirm]')) await p.click('[data-act=rework-confirm]'); await W(2500);
     const s6 = await state(id);
     ok(s6.nv === s0.nv + 1 && s6.v === s0.v + 1 && s6.st === 'Draft' && s6.rev === 1, `${K} upload after rejection creates v${s6.v} (draft, file revision 1)`);
     ok(await E(([id, v]) => { const x = verOf(modById(id), v); return x.status === 'Rejected' && x.media && (x.files || []).length === 1; }, [id, s0.v]), `${K} the rejected v${s0.v} keeps both its file revisions`);

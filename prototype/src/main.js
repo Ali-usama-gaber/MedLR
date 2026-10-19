@@ -512,6 +512,8 @@ const ACT = {
   /* configuration (config.js) */
   'cfg-new': el => { const k = el.dataset.k; const d = cfgBlank(k); const back = UI.modal && UI.modal.type !== 'cfg' ? null : null; UI.modal = { type: 'cfg', k, d }; if (UI.route.name === 'user-new' || UI.route.name === 'user-edit') UI.modal.then = x => { UI.udraft.team = x.id; render(); toast('Team created'); }; render(); },
   'cfg-edit': el => { const k = el.dataset.k; const x = CONFIG[k].coll().find(i => i.id === el.dataset.id); const d = JSON.parse(JSON.stringify(x)); CONFIG[k].fields.forEach(f => { if (f[3].get) d[f[0]] = f[3].get(x); }); UI.modal = { type: 'cfg', k, id: x.id, d }; render(); },
+  'rework-confirm': el => { const R = UI.rework; if (R && R.id === el.dataset.id && R.file) reworkUpload(R.id, R.file); },
+  'rework-cancel': () => { UI.rework = null; render(); },
   'cfg-multi': el => { document.querySelectorAll('[data-cfg]').forEach(i => { UI.modal.d[i.dataset.cfg] = i.value; }); const d = UI.modal.d; const k = el.dataset.k; const cur = Array.isArray(d[k]) ? d[k] : []; d[k] = cur.includes(el.dataset.v) ? cur.filter(x => x !== el.dataset.v) : [...cur, el.dataset.v]; render(); },
   'cfg-bool': el => { document.querySelectorAll('[data-cfg]').forEach(i => { UI.modal.d[i.dataset.cfg] = i.value; }); UI.modal.d[el.dataset.f] = !UI.modal.d[el.dataset.f]; render(); },
   'cfg-save': () => cfgSave(),
@@ -679,7 +681,7 @@ document.addEventListener('change', ev => {
   if (textual && (t.dataset.dm || t.dataset.d || t.dataset.u || t.dataset.an || t.dataset.sop || t.dataset.set)) return;
   if (t.dataset.d) { UI.draft[t.dataset.d] = t.value; render(); return; }
   if (t.dataset.actChange === 'd-file') { uploadModuleFile(t.files && t.files[0]); return; }
-  if (t.dataset.actChange === 'rework-file') { const f = t.files && t.files[0]; t.value = ''; reworkUpload(t.dataset.id, f); return; }
+  if (t.dataset.actChange === 'rework-file') { const f = t.files && t.files[0]; t.value = ''; reworkStage(t.dataset.id, f); return; }
   if (t.dataset.actChange === 'ws-import') { const f = t.files && t.files[0]; t.value = ''; if (f && can(me(), 'manage_settings')) readBackupFile(f); return; }
   if (t.dataset.actChange === 'd-addref' && t.value) { UI.draft.refs.push(t.value); render(); return; }
   if (t.dataset.actChange === 'sign-att') { UI.modal.att = t.checked; UI.modal.err = null; render(); return; }
@@ -766,6 +768,11 @@ async function uploadModuleFile(file) {
    Amendment — the file is replaced inside the current version (the old file stays in its file history) and
      resubmitting resumes approval at the step that asked for the change; earlier approvals are kept.
    Rejection — a new version is created with the new file; submitting it restarts the cycle from the first step. */
+function reworkStage(id, file) {
+  const m = modById(id); if (!m || !fileRework(me(), m)) { toast('You cannot upload a new version of this module'); return; }
+  const bad = mediaFileProblem(file, kindOfType(m.type)); UI.rework = bad ? { id, err: bad } : { id, file }; render();
+  if (!bad) setTimeout(() => { const b = document.querySelector('[data-act="rework-confirm"]'); b && b.focus(); }, 30);
+}
 async function reworkUpload(id, file) {
   const m = modById(id); const mode = m && fileRework(me(), m); if (!mode) { toast('You cannot upload a new version of this module'); return; }
   const kind = kindOfType(m.type); const bad = mediaFileProblem(file, kind);

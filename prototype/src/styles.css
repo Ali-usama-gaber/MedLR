@@ -2620,3 +2620,6 @@ html.ov-open, html.ov-open body { overflow: hidden; }
 /* Error / refusal toasts: distinct from confirmations (warning colour and alert icon). Kept last so it wins over the toast theme layers above. */
 .toast.err { background: linear-gradient(135deg, #3a1214, #2a0c0e); box-shadow: 0 20px 40px -14px rgba(60, 12, 14, .6), inset 0 0 0 1px rgba(255, 140, 140, .28); }
 .toast.err .ico { color: #ff9b9b; }
+/* Rework upload: the chosen file waits for an explicit confirmation naming the module and the new version. */
+.rw-confirm { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.rw-confirm p { margin: 0 0 8px; }
